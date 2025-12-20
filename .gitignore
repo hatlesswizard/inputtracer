@@ -1,0 +1,45 @@
+# Binaries
+inputtracer
+patchleaks-extract
+trace
+*.phar
+
+# Test fixtures and apps (large, cloned repos)
+testapps/
+testdata/
+psalm-repo/
+benchmark_results/
+
+# Python/PHP dependencies
+*.pyc
+__pycache__/
+composer.lock
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test results (can be regenerated)
+test_results.txt
+benchmark_results.json
+BENCHMARK_RESULTS.md
+TEST_RESULTS.md
+
+# Scripts that are dev-only
+benchmark.py
+benchmark.sh
+generate_report.py
+memmonitor.sh
+memtest.sh
+quick_test.sh
+run_benchmark.sh
+test_all_apps.sh
