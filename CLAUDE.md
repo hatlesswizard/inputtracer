@@ -8,7 +8,7 @@ InputTracer is a semantic user input flow tracer written in Go. It analyzes code
 
 ## Build Commands
 
-Go 1.21 or later is required.
+Go 1.21 or later is required. CGO must be enabled (default) for tree-sitter bindings.
 
 ```bash
 # Build the main CLI tool
@@ -16,6 +16,7 @@ go build -o inputtracer ./cmd/inputtracer
 
 # Build auxiliary tools
 go build -o patchleaks-extract ./cmd/patchleaks-extract
+go build -o trace ./cmd/trace  # Simpler legacy tracer
 
 # Build all commands
 go build ./cmd/...
@@ -54,7 +55,7 @@ go build ./cmd/...
 
 ### Core Packages
 
-- **`pkg/semantic/`** - Main semantic tracer orchestrating analysis
+- **`pkg/semantic/`** - Main semantic tracer orchestrating analysis (used by `cmd/inputtracer`)
   - `tracer.go` - Core `Tracer` struct with `TraceDirectory()`, `ParseOnly()`, `TraceBackward()`
   - `types/types.go` - Universal data structures (`FlowNode`, `FlowEdge`, `SourceType`)
   - `analyzer/` - Language-specific analyzers implementing symbol table extraction and input source detection
@@ -84,10 +85,11 @@ go build ./cmd/...
   - `registry.go` - Source matcher registry and base matcher
   - Language files (`php.go`, `javascript.go`, etc.) - Define superglobals and input patterns
 
-- **`pkg/tracer/`** - Data flow propagation
+- **`pkg/tracer/`** - Legacy data flow propagation (used by `cmd/trace`)
   - `tracer.go` - Basic flow tracing
   - `interprocedural.go` - Cross-function flow analysis
   - `propagation.go` - Taint propagation rules
+  - Note: This is a simpler, older implementation. The main CLI uses `pkg/semantic/` instead.
 
 - **`pkg/output/`** - Output formatters (JSON, GraphViz DOT, Mermaid, HTML)
 
