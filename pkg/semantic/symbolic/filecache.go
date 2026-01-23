@@ -29,12 +29,11 @@ type LRUFileCache struct {
 }
 
 type fileCacheEntry struct {
-	key      string
-	root     *sitter.Node
-	tree     *sitter.Tree // Keep reference to close properly
-	content  []byte
-	memory   int64
-	refCount int32 // Track active references
+	key     string
+	root    *sitter.Node
+	tree    *sitter.Tree // Keep reference to close properly
+	content []byte
+	memory  int64
 }
 
 // NewLRUFileCache creates a new file cache with specified limits
