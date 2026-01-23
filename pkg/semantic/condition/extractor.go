@@ -12,7 +12,6 @@ package condition
 import (
 	"regexp"
 	"strings"
-	"sync"
 )
 
 // ConditionType classifies the type of condition
@@ -81,8 +80,6 @@ type ConditionPath struct {
 
 // Extractor extracts key conditions from code
 type Extractor struct {
-	mu sync.RWMutex
-
 	// Pattern databases
 	securityPatterns   map[string]*securityPattern
 	validationPatterns map[string]*regexp.Regexp
