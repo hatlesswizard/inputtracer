@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -88,18 +87,6 @@ func getMemoryUsageMB() uint64 {
 	// Sys includes memory the Go runtime reserves but hasn't released to OS,
 	// which causes false memory limit triggers when running inside larger applications
 	return m.Alloc / 1024 / 1024
-}
-
-// forceGC runs garbage collection and returns memory freed
-func forceGC() uint64 {
-	before := getMemoryUsageMB()
-	runtime.GC()
-	debug.FreeOSMemory()
-	after := getMemoryUsageMB()
-	if before > after {
-		return before - after
-	}
-	return 0
 }
 
 // DefaultConfig returns sensible defaults
