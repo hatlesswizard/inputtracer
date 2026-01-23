@@ -166,7 +166,6 @@ Test files are co-located with implementation (e.g., `manager_test.go` alongside
 - `testdata/` - Sample code snippets for each language to test input source detection
 - `testapps/` - Downloaded real-world applications (mybb) for integration testing
 - `psalm-repo/` - Psalm PHP codebase for large-scale testing
-- `internal/testapps/` - Go test harness for downloading and testing against real codebases
 
 Note: Unit tests are minimal; the project relies primarily on integration testing against real codebases.
 
