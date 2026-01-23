@@ -16,7 +16,6 @@ go build -o inputtracer ./cmd/inputtracer
 
 # Build auxiliary tools
 go build -o patchleaks-extract ./cmd/patchleaks-extract
-go build -o trace ./cmd/trace  # Simpler legacy tracer
 
 # Build all commands
 go build ./cmd/...
@@ -78,7 +77,7 @@ go build ./cmd/...
   - `registry.go` - Source matcher registry and base matcher
   - Language files (`php.go`, `javascript.go`, etc.) - Define superglobals and input patterns
 
-- **`pkg/tracer/`** - Legacy data flow propagation (used by `cmd/trace`)
+- **`pkg/tracer/`** - Legacy data flow propagation library (public API preserved)
   - `tracer.go` - Basic flow tracing
   - `interprocedural.go` - Cross-function flow analysis
   - `propagation.go` - Taint propagation rules
