@@ -1,0 +1,14 @@
+{
+  "codebase_path": "/Users/desktop-lthlb72/Documents/WPTraceLib/plugins/contact-form-7/contact-form-7",
+  "discovered_at": "2026-01-08T00:14:56.659591+04:00",
+  "framework": "unknown",
+  "carriers": [],
+  "statistics": {
+    "total_superglobal_usages": 0,
+    "unique_carriers": 0,
+    "total_taint_flows": 0,
+    "classes_analyzed": 66,
+    "by_source_type": {},
+    "by_class_name": {}
+  }
+}

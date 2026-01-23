@@ -64,11 +64,6 @@ go build ./cmd/...
   - `symbolic/` - Symbolic execution engine for deep expression tracing
   - `tracer/vartracer.go` - Variable tracing across definitions
 
-- **`pkg/semantic/sink/`** - Security sink registry (ATLANTIS-inspired)
-  - Categorizes sinks by vulnerability type (SQLi, XSS, command injection, etc.)
-  - Tracks dangerous parameters per sink function
-  - Provides severity ratings and CWE mappings
-
 - **`pkg/semantic/index/`** - Code indexer with O(1) symbol lookup
   - Signature-based matching (partial name, parameter patterns)
   - Cross-file reference resolution with LRU caching
@@ -78,8 +73,6 @@ go build ./cmd/...
 - **`pkg/semantic/condition/`** - Condition extraction from control flow
 
 - **`pkg/semantic/pathanalysis/`** - Path expansion for flow analysis
-
-- **`pkg/semantic/exploit/`** - Exploitability assessment
 
 - **`pkg/sources/`** - Language-specific input source definitions
   - `registry.go` - Source matcher registry and base matcher
@@ -161,10 +154,7 @@ type FlowEdge struct {
 go test ./...
 
 # Run tests for a specific package
-go test ./pkg/semantic/sink/...
-
-# Run a single test by name
-go test -run TestSinkRegistry ./pkg/semantic/sink/...
+go test ./pkg/semantic/callgraph/...
 
 # Run with verbose output
 go test -v ./pkg/semantic/callgraph/...
