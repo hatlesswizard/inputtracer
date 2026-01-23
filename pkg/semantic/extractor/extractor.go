@@ -26,13 +26,6 @@ type ExpressionExtractor struct {
 	methodCallPattern    *regexp.Regexp
 	propertyPattern      *regexp.Regexp
 	propertyArrayPattern *regexp.Regexp
-
-	// New SQL-specific patterns
-	sqlInterpolationPattern   *regexp.Regexp // '{$mybb->input['aid']}'
-	sqlConcatPattern          *regexp.Regexp // "' . $mybb->input['aid'] . '"
-	escapedExprPattern        *regexp.Regexp // escape_string($mybb->input['title'])
-	getInputMethodPattern     *regexp.Regexp // $mybb->get_input('aid')
-	curlyBraceInterpolation   *regexp.Regexp // {$var->prop['key']} in double-quoted strings
 }
 
 // New creates a new ExpressionExtractor
