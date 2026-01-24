@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
@@ -29,7 +30,7 @@ type frameworkTypeInfo struct {
 // NewCPPAnalyzer creates a new C++ analyzer
 func NewCPPAnalyzer() *CPPAnalyzer {
 	a := &CPPAnalyzer{
-		BaseAnalyzer: analyzer.NewBaseAnalyzer("cpp", []string{".cpp", ".cc", ".cxx", ".hpp", ".hxx", ".h"}),
+		BaseAnalyzer: analyzer.NewBaseAnalyzer("cpp", languages.GetExtensionsForLanguage("cpp")),
 	}
 
 	// Standard C/C++ input functions

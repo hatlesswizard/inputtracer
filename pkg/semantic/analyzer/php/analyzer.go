@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
@@ -29,7 +30,7 @@ type PHPAnalyzer struct {
 // NewPHPAnalyzer creates a new PHP analyzer
 func NewPHPAnalyzer() *PHPAnalyzer {
 	a := &PHPAnalyzer{
-		BaseAnalyzer: analyzer.NewBaseAnalyzer("php", []string{".php", ".php5", ".php7", ".phtml", ".inc"}),
+		BaseAnalyzer: analyzer.NewBaseAnalyzer("php", languages.GetExtensionsForLanguage("php")),
 	}
 
 	// Initialize PHP superglobals

@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
@@ -20,8 +21,11 @@ type TypeScriptAnalyzer struct {
 
 // NewTypeScriptAnalyzer creates a new TypeScript analyzer
 func NewTypeScriptAnalyzer() *TypeScriptAnalyzer {
+	// TypeScript analyzer handles both .ts and .tsx files
+	exts := languages.GetExtensionsForLanguage("typescript")
+	exts = append(exts, languages.GetExtensionsForLanguage("tsx")...)
 	a := &TypeScriptAnalyzer{
-		BaseAnalyzer: analyzer.NewBaseAnalyzer("typescript", []string{".ts", ".tsx", ".mts", ".cts"}),
+		BaseAnalyzer: analyzer.NewBaseAnalyzer("typescript", exts),
 	}
 
 	a.inputSources = map[string]types.SourceType{

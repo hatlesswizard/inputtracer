@@ -8,6 +8,8 @@ import (
 	"sync"
 
 	sitter "github.com/smacker/go-tree-sitter"
+
+	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 )
 
 // Service provides parsing capabilities for multiple languages
@@ -209,10 +211,9 @@ func (s *Service) ParseString(source string, language string) (*sitter.Node, err
 	return s.Parse([]byte(source), language)
 }
 
-// DetectLanguage detects the programming language from file path
+// DetectLanguage detects the programming language from file path.
+// Uses the centralized extension mappings from pkg/parser/languages.
 func (s *Service) DetectLanguage(filePath string) string {
-	ext := strings.ToLower(filepath.Ext(filePath))
-
 	// Check for special filenames first
 	basename := strings.ToLower(filepath.Base(filePath))
 	switch basename {
@@ -220,36 +221,8 @@ func (s *Service) DetectLanguage(filePath string) string {
 		return "" // Not supported yet
 	}
 
-	switch ext {
-	case ".php", ".php5", ".php7", ".phtml":
-		return "php"
-	case ".js", ".mjs", ".cjs":
-		return "javascript"
-	case ".ts", ".mts", ".cts":
-		return "typescript"
-	case ".tsx":
-		return "tsx"
-	case ".jsx":
-		return "javascript"
-	case ".py", ".pyw", ".pyi":
-		return "python"
-	case ".go":
-		return "go"
-	case ".java":
-		return "java"
-	case ".c", ".h":
-		return "c"
-	case ".cpp", ".cc", ".cxx", ".hpp", ".hxx", ".h++":
-		return "cpp"
-	case ".cs":
-		return "c_sharp"
-	case ".rb", ".rake", ".gemspec":
-		return "ruby"
-	case ".rs":
-		return "rust"
-	default:
-		return ""
-	}
+	ext := strings.ToLower(filepath.Ext(filePath))
+	return languages.GetLanguageByExtension(ext)
 }
 
 // IsSupported checks if a file type is supported

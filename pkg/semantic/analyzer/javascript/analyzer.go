@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
@@ -23,7 +24,7 @@ type JSAnalyzer struct {
 // NewJSAnalyzer creates a new JavaScript analyzer
 func NewJSAnalyzer() *JSAnalyzer {
 	a := &JSAnalyzer{
-		BaseAnalyzer: analyzer.NewBaseAnalyzer("javascript", []string{".js", ".mjs", ".cjs", ".jsx"}),
+		BaseAnalyzer: analyzer.NewBaseAnalyzer("javascript", languages.GetExtensionsForLanguage("javascript")),
 	}
 
 	// Browser global sources

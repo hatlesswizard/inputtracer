@@ -174,26 +174,50 @@ type FlowMap struct {
 	// Internal deduplication maps (not serialized)
 	nodeIndex map[string]bool `json:"-"` // nodeID -> exists
 	edgeIndex map[string]bool `json:"-"` // edgeKey -> exists
+
+	// Configurable limits (not serialized)
+	maxNodes int `json:"-"`
+	maxEdges int `json:"-"`
 }
 
-// NewFlowMap creates an optimized FlowMap with deduplication support
+// Default limits for flow graph size
+const (
+	// DefaultMaxFlowNodes limits total nodes to prevent unbounded memory growth in large codebases
+	DefaultMaxFlowNodes = 10000
+
+	// DefaultMaxFlowEdges limits total edges to prevent unbounded memory growth in large codebases
+	DefaultMaxFlowEdges = 20000
+)
+
+// NewFlowMap creates an optimized FlowMap with default limits and deduplication support
 // MEMORY FIX: Reduced pre-allocation sizes for multi-threaded usage
 func NewFlowMap() *FlowMap {
-	return &FlowMap{
-		Sources:   make([]FlowNode, 0, 16),   // Reduced from 64
-		Paths:     make([]FlowPath, 0, 8),    // Reduced from 32
-		Carriers:  make([]FlowNode, 0, 8),    // Reduced from 32
-		AllNodes:  make([]FlowNode, 0, 64),   // Reduced from 256
-		AllEdges:  make([]FlowEdge, 0, 128),  // Reduced from 512
-		Usages:    make([]FlowNode, 0, 16),   // Reduced from 64
-		CallGraph: make(map[string][]string),
-		nodeIndex: make(map[string]bool, 64),  // Reduced from 256
-		edgeIndex: make(map[string]bool, 128), // Reduced from 512
-	}
+	return NewFlowMapWithLimits(DefaultMaxFlowNodes, DefaultMaxFlowEdges)
 }
 
-// MaxFlowNodes limits total nodes to prevent unbounded memory growth in large codebases
-const MaxFlowNodes = 10000
+// NewFlowMapWithLimits creates a FlowMap with custom node/edge limits.
+// Use maxNodes=0 or maxEdges=0 to use the default limits.
+func NewFlowMapWithLimits(maxNodes, maxEdges int) *FlowMap {
+	if maxNodes <= 0 {
+		maxNodes = DefaultMaxFlowNodes
+	}
+	if maxEdges <= 0 {
+		maxEdges = DefaultMaxFlowEdges
+	}
+	return &FlowMap{
+		Sources:   make([]FlowNode, 0, 16),
+		Paths:     make([]FlowPath, 0, 8),
+		Carriers:  make([]FlowNode, 0, 8),
+		AllNodes:  make([]FlowNode, 0, 64),
+		AllEdges:  make([]FlowEdge, 0, 128),
+		Usages:    make([]FlowNode, 0, 16),
+		CallGraph: make(map[string][]string),
+		nodeIndex: make(map[string]bool, 64),
+		edgeIndex: make(map[string]bool, 128),
+		maxNodes:  maxNodes,
+		maxEdges:  maxEdges,
+	}
+}
 
 // AddNode adds a node with O(1) deduplication
 // MEMORY FIX: Limits total nodes to prevent unbounded growth
@@ -204,17 +228,18 @@ func (fm *FlowMap) AddNode(node FlowNode) bool {
 	if fm.nodeIndex[node.ID] {
 		return false // Already exists
 	}
-	// MEMORY FIX: Limit total nodes for very large codebases
-	if len(fm.AllNodes) >= MaxFlowNodes {
+	// Use instance limit, falling back to default if not set
+	limit := fm.maxNodes
+	if limit == 0 {
+		limit = DefaultMaxFlowNodes
+	}
+	if len(fm.AllNodes) >= limit {
 		return false // At capacity
 	}
 	fm.nodeIndex[node.ID] = true
 	fm.AllNodes = append(fm.AllNodes, node)
 	return true
 }
-
-// MaxFlowEdges limits total edges to prevent unbounded memory growth in large codebases
-const MaxFlowEdges = 20000
 
 // AddEdge adds an edge with O(1) deduplication
 // MEMORY FIX: Limits total edges to prevent unbounded growth
@@ -226,8 +251,12 @@ func (fm *FlowMap) AddEdge(edge FlowEdge) bool {
 	if fm.edgeIndex[edgeKey] {
 		return false // Already exists
 	}
-	// MEMORY FIX: Limit total edges for very large codebases
-	if len(fm.AllEdges) >= MaxFlowEdges {
+	// Use instance limit, falling back to default if not set
+	limit := fm.maxEdges
+	if limit == 0 {
+		limit = DefaultMaxFlowEdges
+	}
+	if len(fm.AllEdges) >= limit {
 		return false // At capacity
 	}
 	fm.edgeIndex[edgeKey] = true

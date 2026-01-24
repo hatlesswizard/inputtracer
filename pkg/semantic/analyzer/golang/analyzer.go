@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
@@ -21,7 +22,7 @@ type GoAnalyzer struct {
 // NewGoAnalyzer creates a new Go analyzer
 func NewGoAnalyzer() *GoAnalyzer {
 	a := &GoAnalyzer{
-		BaseAnalyzer: analyzer.NewBaseAnalyzer("go", []string{".go"}),
+		BaseAnalyzer: analyzer.NewBaseAnalyzer("go", languages.GetExtensionsForLanguage("go")),
 	}
 
 	a.inputSources = map[string]types.SourceType{

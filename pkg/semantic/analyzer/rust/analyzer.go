@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
@@ -19,7 +20,7 @@ type RustAnalyzer struct {
 // NewRustAnalyzer creates a new Rust analyzer
 func NewRustAnalyzer() *RustAnalyzer {
 	a := &RustAnalyzer{
-		BaseAnalyzer: analyzer.NewBaseAnalyzer("rust", []string{".rs"}),
+		BaseAnalyzer: analyzer.NewBaseAnalyzer("rust", languages.GetExtensionsForLanguage("rust")),
 	}
 
 	a.inputSources = map[string]types.SourceType{

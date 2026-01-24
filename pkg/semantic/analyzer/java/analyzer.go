@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
@@ -19,7 +20,7 @@ type JavaAnalyzer struct {
 // NewJavaAnalyzer creates a new Java analyzer
 func NewJavaAnalyzer() *JavaAnalyzer {
 	a := &JavaAnalyzer{
-		BaseAnalyzer: analyzer.NewBaseAnalyzer("java", []string{".java"}),
+		BaseAnalyzer: analyzer.NewBaseAnalyzer("java", languages.GetExtensionsForLanguage("java")),
 	}
 
 	a.inputMethods = map[string]types.SourceType{

@@ -1,6 +1,8 @@
 package languages
 
 import (
+	"sync"
+
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/smacker/go-tree-sitter/c"
 	"github.com/smacker/go-tree-sitter/cpp"
@@ -15,6 +17,51 @@ import (
 	"github.com/smacker/go-tree-sitter/typescript/tsx"
 	"github.com/smacker/go-tree-sitter/typescript/typescript"
 )
+
+// Extension lookup map (lazily initialized)
+var (
+	extToLanguage     map[string]string
+	extToLanguageOnce sync.Once
+)
+
+func initExtensionMap() {
+	extToLanguage = make(map[string]string)
+	for _, lang := range GetAllLanguages() {
+		for _, ext := range lang.Extensions {
+			extToLanguage[ext] = lang.Name
+		}
+	}
+}
+
+// GetLanguageByExtension returns the language name for a file extension (e.g., ".php" -> "php").
+// Returns empty string if extension is not recognized.
+func GetLanguageByExtension(ext string) string {
+	extToLanguageOnce.Do(initExtensionMap)
+	return extToLanguage[ext]
+}
+
+// GetExtensionsForLanguage returns all file extensions for a given language name.
+// Returns nil if the language is not found.
+func GetExtensionsForLanguage(langName string) []string {
+	for _, lang := range GetAllLanguages() {
+		if lang.Name == langName {
+			return lang.Extensions
+		}
+	}
+	return nil
+}
+
+// BuildIncludePatterns generates glob patterns for all supported file extensions.
+// Returns patterns like ["*.php", "*.php5", "*.js", ...].
+func BuildIncludePatterns() []string {
+	var patterns []string
+	for _, lang := range GetAllLanguages() {
+		for _, ext := range lang.Extensions {
+			patterns = append(patterns, "*"+ext)
+		}
+	}
+	return patterns
+}
 
 // LanguageInfo contains information about a supported language
 type LanguageInfo struct {

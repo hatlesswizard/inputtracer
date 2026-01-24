@@ -43,3 +43,6 @@ memtest.sh
 quick_test.sh
 run_benchmark.sh
 test_all_apps.sh
+
+# Snyk Security Extension - AI Rules (auto-generated)
+.github/instructions/snyk_rules.instructions.md

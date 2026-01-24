@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser"
+	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
@@ -77,6 +78,12 @@ type Config struct {
 
 	// MaxFiles is the maximum number of files to parse (0 = unlimited)
 	MaxFiles int
+
+	// MaxFlowNodes is the maximum number of nodes in the flow graph (0 = default 10000)
+	MaxFlowNodes int
+
+	// MaxFlowEdges is the maximum number of edges in the flow graph (0 = default 20000)
+	MaxFlowEdges int
 }
 
 // getMemoryUsageMB returns current memory usage in MB (allocated heap memory)
@@ -98,28 +105,7 @@ func DefaultConfig() *Config {
 		FollowImports:    true,
 		Verbose:          false,
 		MaxFileSizeBytes: 5 * 1024 * 1024, // 5MB - skip very large files (ASTs are ~10x source size)
-		IncludePatterns: []string{
-			// PHP
-			"*.php", "*.php5", "*.php7", "*.phtml", "*.inc",
-			// JavaScript/TypeScript
-			"*.js", "*.jsx", "*.mjs", "*.cjs",
-			"*.ts", "*.tsx", "*.mts", "*.cts",
-			// Python
-			"*.py", "*.pyw", "*.pyi",
-			// Go
-			"*.go",
-			// Java
-			"*.java",
-			// C/C++
-			"*.c", "*.h",
-			"*.cpp", "*.cc", "*.cxx", "*.hpp", "*.hxx", "*.h++",
-			// C#
-			"*.cs",
-			// Ruby
-			"*.rb", "*.rake", "*.gemspec",
-			// Rust
-			"*.rs",
-		},
+		IncludePatterns:  languages.BuildIncludePatterns(),
 		ExcludePatterns: []string{
 			"**/node_modules/**", "**/vendor/**", "**/.git/**",
 			"**/dist/**", "**/build/**", "**/__pycache__/**",
@@ -1682,8 +1668,8 @@ func (t *Tracer) collectSources() []*types.FlowNode {
 
 // traceAllFlows traces flows from all sources using parallel workers
 func (t *Tracer) traceAllFlows(sources []*types.FlowNode, rootPath string) *types.FlowMap {
-	// Use NewFlowMap for O(1) deduplication support
-	flowMap := types.NewFlowMap()
+	// Use NewFlowMapWithLimits for O(1) deduplication support with configurable limits
+	flowMap := types.NewFlowMapWithLimits(t.config.MaxFlowNodes, t.config.MaxFlowEdges)
 
 	// Add all sources as nodes using O(1) AddNode
 	for _, source := range sources {
@@ -1749,8 +1735,8 @@ func (t *Tracer) traceAllFlows(sources []*types.FlowNode, rootPath string) *type
 			localNodes := make([]types.FlowNode, 0, 64)
 			localEdges := make([]types.FlowEdge, 0, 128)
 
-			// Create worker-local flowMap for collection
-			localFlowMap := types.NewFlowMap()
+			// Create worker-local flowMap for collection with configurable limits
+			localFlowMap := types.NewFlowMapWithLimits(t.config.MaxFlowNodes, t.config.MaxFlowEdges)
 
 			for source := range sourceChan {
 				// Check if memory limit exceeded
@@ -2474,37 +2460,18 @@ func containsSourceName(expr, sourceName string) bool {
 	return strings.Contains(expr, sourceName)
 }
 
-// detectLanguage detects programming language from file extension
+// detectLanguage detects programming language from file extension.
+// Uses the centralized extension mappings from pkg/parser/languages.
 func detectLanguage(path string) string {
 	ext := strings.ToLower(filepath.Ext(path))
-	switch ext {
-	case ".php", ".php5", ".php7", ".phtml", ".inc":
-		return "php"
-	case ".js", ".jsx", ".mjs", ".cjs":
-		return "javascript"
-	case ".ts", ".mts", ".cts":
+	lang := languages.GetLanguageByExtension(ext)
+
+	// TSX uses typescript analyzer for semantic analysis
+	if lang == "tsx" {
 		return "typescript"
-	case ".tsx":
-		return "typescript" // TSX uses typescript parser
-	case ".py", ".pyw", ".pyi":
-		return "python"
-	case ".go":
-		return "go"
-	case ".java":
-		return "java"
-	case ".c", ".h":
-		return "c"
-	case ".cpp", ".cc", ".cxx", ".hpp", ".hxx", ".h++":
-		return "cpp"
-	case ".cs":
-		return "c_sharp"
-	case ".rb", ".rake", ".gemspec":
-		return "ruby"
-	case ".rs":
-		return "rust"
-	default:
-		return ""
 	}
+
+	return lang
 }
 
 // contains checks if a string slice contains a string

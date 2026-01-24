@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
@@ -19,7 +20,7 @@ type RubyAnalyzer struct {
 // NewRubyAnalyzer creates a new Ruby analyzer
 func NewRubyAnalyzer() *RubyAnalyzer {
 	a := &RubyAnalyzer{
-		BaseAnalyzer: analyzer.NewBaseAnalyzer("ruby", []string{".rb", ".rake", ".gemspec"}),
+		BaseAnalyzer: analyzer.NewBaseAnalyzer("ruby", languages.GetExtensionsForLanguage("ruby")),
 	}
 
 	a.inputSources = map[string]types.SourceType{

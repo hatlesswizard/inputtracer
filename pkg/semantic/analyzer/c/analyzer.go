@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
@@ -20,7 +21,7 @@ type CAnalyzer struct {
 // NewCAnalyzer creates a new C analyzer
 func NewCAnalyzer() *CAnalyzer {
 	a := &CAnalyzer{
-		BaseAnalyzer: analyzer.NewBaseAnalyzer("c", []string{".c", ".h"}),
+		BaseAnalyzer: analyzer.NewBaseAnalyzer("c", languages.GetExtensionsForLanguage("c")),
 	}
 
 	a.inputFunctions = map[string]types.SourceType{
