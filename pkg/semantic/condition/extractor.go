@@ -81,10 +81,9 @@ type ConditionPath struct {
 // Extractor extracts key conditions from code
 type Extractor struct {
 	// Pattern databases
-	securityPatterns   map[string]*securityPattern
-	validationPatterns map[string]*regexp.Regexp
-	sanitizationFuncs  map[string]bool
-	authPatterns       map[string]*regexp.Regexp
+	securityPatterns  map[string]*securityPattern
+	sanitizationFuncs map[string]bool
+	authPatterns      map[string]*regexp.Regexp
 
 	// Language-specific settings
 	language string
@@ -100,11 +99,10 @@ type securityPattern struct {
 // NewExtractor creates a new condition extractor for a language
 func NewExtractor(language string) *Extractor {
 	e := &Extractor{
-		language:           language,
-		securityPatterns:   make(map[string]*securityPattern),
-		validationPatterns: make(map[string]*regexp.Regexp),
-		sanitizationFuncs:  make(map[string]bool),
-		authPatterns:       make(map[string]*regexp.Regexp),
+		language:          language,
+		securityPatterns:  make(map[string]*securityPattern),
+		sanitizationFuncs: make(map[string]bool),
+		authPatterns:      make(map[string]*regexp.Regexp),
 	}
 	e.registerDefaults()
 	return e
