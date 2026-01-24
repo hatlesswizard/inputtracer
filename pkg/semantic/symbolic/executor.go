@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/smacker/go-tree-sitter/php"
 )
@@ -349,28 +350,8 @@ func (e *ExecutionEngine) TracePropertyAccess(expression string, contextFile str
 func (e *ExecutionEngine) traceSuperglobal(parsed *ParsedExpression, flow *PropertyFlow) (*PropertyFlow, error) {
 	flow.PropertyName = parsed.AccessKey
 
-	// Determine the source type
-	var sourceType string
-	switch parsed.SuperglobalName {
-	case "$_GET":
-		sourceType = "http_get"
-	case "$_POST":
-		sourceType = "http_post"
-	case "$_COOKIE":
-		sourceType = "http_cookie"
-	case "$_REQUEST":
-		sourceType = "http_request"
-	case "$_SERVER":
-		sourceType = "http_header"
-	case "$_FILES":
-		sourceType = "http_file"
-	case "$_ENV":
-		sourceType = "env_var"
-	case "$_SESSION":
-		sourceType = "session"
-	default:
-		sourceType = "unknown"
-	}
+	// Determine the source type using centralized mappings
+	sourceType := sources.GetSuperglobalSourceType(parsed.SuperglobalName)
 
 	// Add step showing direct superglobal access
 	flow.Steps = append(flow.Steps, FlowStep{
@@ -384,7 +365,7 @@ func (e *ExecutionEngine) traceSuperglobal(parsed *ParsedExpression, flow *Prope
 
 	// Add the source
 	flow.Sources = append(flow.Sources, UltimateSource{
-		Type:       sourceType,
+		Type:       string(sourceType),
 		Expression: fmt.Sprintf("%s['%s']", parsed.SuperglobalName, parsed.AccessKey),
 		FilePath:   "",
 		Line:       0,

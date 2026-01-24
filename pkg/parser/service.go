@@ -10,6 +10,7 @@ import (
 	sitter "github.com/smacker/go-tree-sitter"
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 )
 
 // Service provides parsing capabilities for multiple languages
@@ -214,11 +215,15 @@ func (s *Service) ParseString(source string, language string) (*sitter.Node, err
 // DetectLanguage detects the programming language from file path.
 // Uses the centralized extension mappings from pkg/parser/languages.
 func (s *Service) DetectLanguage(filePath string) string {
-	// Check for special filenames first
+	// Check for unsupported special filenames first using centralized sources
 	basename := strings.ToLower(filepath.Base(filePath))
-	switch basename {
-	case "makefile", "gnumakefile":
-		return "" // Not supported yet
+	if sources.IsUnsupportedFilename(basename) {
+		return "" // Not supported
+	}
+
+	// Check for special filenames with known languages
+	if lang := sources.GetSpecialFilenameLanguage(basename); lang != "" {
+		return lang
 	}
 
 	ext := strings.ToLower(filepath.Ext(filePath))

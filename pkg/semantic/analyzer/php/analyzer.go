@@ -9,8 +9,8 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
-	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -30,7 +30,7 @@ type PHPAnalyzer struct {
 
 // NewPHPAnalyzer creates a new PHP analyzer
 func NewPHPAnalyzer() *PHPAnalyzer {
-	m := mappings.GetMappings("php")
+	m := sources.GetMappings("php")
 	a := &PHPAnalyzer{
 		BaseAnalyzer:     analyzer.NewBaseAnalyzer("php", languages.GetExtensionsForLanguage("php")),
 		superglobals:     m.GetSuperglobalsMap(),

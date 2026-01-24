@@ -10,6 +10,7 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/discovery"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/extractor"
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 )
 
 // Classifier classifies code snippets for user input
@@ -228,28 +229,14 @@ func (c *Classifier) classifyExpression(expr extractor.ExtractedExpression) Expr
 	return result
 }
 
-// superglobalToSourceTypes maps superglobal names to source types
+// superglobalToSourceTypes maps superglobal names to source types using centralized mappings
 func superglobalToSourceTypes(sgType string) []string {
-	switch sgType {
-	case "GET":
-		return []string{"$_GET"}
-	case "POST":
-		return []string{"$_POST"}
-	case "COOKIE":
-		return []string{"$_COOKIE"}
-	case "REQUEST":
-		return []string{"$_REQUEST"}
-	case "SERVER":
-		return []string{"$_SERVER"}
-	case "FILES":
-		return []string{"$_FILES"}
-	case "SESSION":
-		return []string{"$_SESSION"}
-	case "ENV":
-		return []string{"$_ENV"}
-	default:
-		return []string{"$_" + sgType}
+	// Use centralized reverse mapping
+	superglobalName := sources.GetSuperglobalByShortName(sgType)
+	if superglobalName != "" {
+		return []string{superglobalName}
 	}
+	return []string{"$_" + sgType}
 }
 
 // ClassifyBatch analyzes multiple findings with snippets

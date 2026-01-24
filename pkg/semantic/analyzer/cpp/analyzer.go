@@ -7,8 +7,8 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
-	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -18,13 +18,13 @@ type CPPAnalyzer struct {
 	inputFunctions  map[string]types.SourceType
 	cgiEnvVars      map[string]types.SourceType
 	qtInputMethods  map[string]types.SourceType
-	frameworkTypes  map[string]mappings.FrameworkTypeInfo
+	frameworkTypes  map[string]sources.FrameworkTypeInfo
 	methodInputs    map[string]types.SourceType
 }
 
 // NewCPPAnalyzer creates a new C++ analyzer
 func NewCPPAnalyzer() *CPPAnalyzer {
-	m := mappings.GetMappings("cpp")
+	m := sources.GetMappings("cpp")
 	a := &CPPAnalyzer{
 		BaseAnalyzer:   analyzer.NewBaseAnalyzer("cpp", languages.GetExtensionsForLanguage("cpp")),
 		inputFunctions: m.GetInputFunctionsMap(),
@@ -762,7 +762,7 @@ func (a *CPPAnalyzer) FindInputSources(root *sitter.Node, source []byte) ([]*typ
 					Column:     int(node.StartPoint().Column),
 					Name:       typeName,
 					Snippet:    text,
-					SourceType: info.SourceType,
+					SourceType: types.SourceType(info.SourceType),
 					Metadata:   map[string]interface{}{"framework": info.Framework},
 				}
 				sources = append(sources, flowNode)
@@ -787,7 +787,7 @@ func (a *CPPAnalyzer) FindInputSources(root *sitter.Node, source []byte) ([]*typ
 						Column:     int(node.StartPoint().Column),
 						Name:       typeName + " (param)",
 						Snippet:    analyzer.GetNodeText(node, source),
-						SourceType: info.SourceType,
+						SourceType: types.SourceType(info.SourceType),
 						Metadata:   map[string]interface{}{"framework": info.Framework},
 					}
 					sources = append(sources, flowNode)
@@ -1004,7 +1004,7 @@ func (a *CPPAnalyzer) TraceExpression(target types.FlowTarget, state *types.Anal
 				Language:   "cpp",
 				Name:       typeName,
 				Snippet:    expr,
-				SourceType: info.SourceType,
+				SourceType: types.SourceType(info.SourceType),
 				Metadata:   map[string]interface{}{"framework": info.Framework},
 			}
 			flowMap.AddSource(sourceNode)

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -434,22 +435,14 @@ func (tp *TaintPropagator) extractReturnValue(node *sitter.Node, src []byte) str
 	return strings.TrimSpace(text)
 }
 
-// findContainingFunction finds the function containing a node
+// findContainingFunction finds the function containing a node using centralized AST patterns
 func (tp *TaintPropagator) findContainingFunction(node *sitter.Node) *sitter.Node {
-	funcTypes := []string{
-		"function_definition", "function_declaration", "method_definition",
-		"method_declaration", "function_item", "arrow_function",
-		"function_expression", "lambda", "def", "fn_item",
-	}
-
 	current := node.Parent()
 	for current != nil {
 		nodeType := current.Type()
-		for _, ft := range funcTypes {
-			if nodeType == ft || strings.Contains(nodeType, "function") ||
-				strings.Contains(nodeType, "method") {
-				return current
-			}
+		if sources.IsFunctionNode(nodeType) || strings.Contains(nodeType, "function") ||
+			strings.Contains(nodeType, "method") {
+			return current
 		}
 		current = current.Parent()
 	}
@@ -469,27 +462,18 @@ func (tp *TaintPropagator) extractFunctionNameFromDef(node *sitter.Node, src []b
 	return ""
 }
 
-// getCurrentScope returns the current scope identifier
+// getCurrentScope returns the current scope identifier using centralized AST patterns
 func (tp *TaintPropagator) getCurrentScope(node *sitter.Node) string {
 	// Walk up to find containing scope
-	scopeTypes := []string{
-		"function_definition", "function_declaration", "method_definition",
-		"method_declaration", "class_definition", "class_declaration",
-		"module", "program", "source_file",
-	}
-
 	parts := []string{}
 	current := node.Parent()
 	for current != nil {
 		nodeType := current.Type()
-		for _, st := range scopeTypes {
-			if nodeType == st || strings.Contains(nodeType, st) {
-				// Try to get name
-				name := tp.extractFunctionNameFromDef(current, nil)
-				if name != "" {
-					parts = append([]string{name}, parts...)
-				}
-				break
+		if sources.IsScopeNode(nodeType) {
+			// Try to get name
+			name := tp.extractFunctionNameFromDef(current, nil)
+			if name != "" {
+				parts = append([]string{name}, parts...)
 			}
 		}
 		current = current.Parent()

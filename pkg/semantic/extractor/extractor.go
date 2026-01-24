@@ -4,6 +4,8 @@ package extractor
 import (
 	"regexp"
 	"strings"
+
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 )
 
 // ExtractedExpression represents a PHP expression extracted from code
@@ -225,55 +227,14 @@ func findMatchingParen(s string) (int, bool) {
 	return -1, false
 }
 
-// isInputMethod checks if this method is known to return user input
+// isInputMethod checks if this method is known to return user input using centralized sources
 func isInputMethod(varName, methodName string) bool {
-	// MyBB patterns
-	if varName == "mybb" {
-		switch methodName {
-		case "get_input", "get_input_array", "input", "cookies":
-			return true
-		}
-	}
-
-	// Request patterns
-	if varName == "request" {
-		switch methodName {
-		case "variable", "get", "post", "cookie", "server", "header":
-			return true
-		}
-	}
-
-	// Generic patterns
-	switch methodName {
-	case "get", "post", "cookie", "header", "param", "input", "request", "query":
-		return true
-	}
-
-	return false
+	return sources.IsInputMethod(varName, methodName)
 }
 
-// isInterestingMethod checks if this method is worth tracing for security
+// isInterestingMethod checks if this method is worth tracing for security using centralized sources
 func isInterestingMethod(methodName string) bool {
-	// Database methods that might use user input
-	switch methodName {
-	case "query", "simple_select", "write_query", "delete_query", "update_query",
-		"escape_string", "prepare", "execute", "fetch", "fetch_array", "fetch_field":
-		return true
-	}
-
-	// File operations
-	switch methodName {
-	case "read", "write", "file_get_contents", "include", "require", "fopen":
-		return true
-	}
-
-	// Command execution
-	switch methodName {
-	case "exec", "shell_exec", "system", "passthru":
-		return true
-	}
-
-	return false
+	return sources.IsInterestingMethod(methodName)
 }
 
 // ExtractFromSnippet extracts ALL traceable expressions from a PHP code snippet

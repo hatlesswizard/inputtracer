@@ -12,6 +12,8 @@ package condition
 import (
 	"regexp"
 	"strings"
+
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 )
 
 // ConditionType classifies the type of condition
@@ -108,209 +110,71 @@ func NewExtractor(language string) *Extractor {
 	return e
 }
 
-// registerDefaults registers default patterns for the language
+// registerDefaults registers default patterns for the language using centralized sources
 func (e *Extractor) registerDefaults() {
-	switch e.language {
-	case "php":
-		e.registerPHPPatterns()
-	case "javascript", "typescript":
-		e.registerJavaScriptPatterns()
-	case "python":
-		e.registerPythonPatterns()
-	case "go":
-		e.registerGoPatterns()
-	case "java":
-		e.registerJavaPatterns()
+	// Get patterns from centralized sources
+	patterns := sources.GetSecurityPatterns(e.language)
+	if patterns == nil {
+		return
+	}
+
+	// Register validation patterns
+	for _, vp := range patterns.ValidationFuncs {
+		re, err := regexp.Compile(vp.PatternStr)
+		if err != nil {
+			continue
+		}
+		e.securityPatterns[vp.Name] = &securityPattern{
+			pattern:  re,
+			secType:  vp.SecType,
+			effect:   mapSecurityEffect(vp.Effect),
+			condType: mapSecurityPatternType(vp.Type),
+		}
+	}
+
+	// Register sanitization functions
+	for funcName := range patterns.SanitizationFuncs {
+		e.sanitizationFuncs[funcName] = true
+	}
+
+	// Register auth patterns
+	e.authPatterns = sources.GetAuthPatterns(e.language)
+}
+
+// mapSecurityEffect converts sources.SecurityPatternEffect to ConditionEffect
+func mapSecurityEffect(effect sources.SecurityPatternEffect) ConditionEffect {
+	switch effect {
+	case sources.EffectAllows:
+		return EffectAllows
+	case sources.EffectBlocks:
+		return EffectBlocks
+	case sources.EffectSanitizes:
+		return EffectSanitizes
+	case sources.EffectValidates:
+		return EffectValidates
+	default:
+		return EffectUnknown
 	}
 }
 
-func (e *Extractor) registerPHPPatterns() {
-	// Validation functions
-	e.securityPatterns["preg_match"] = &securityPattern{
-		pattern:  regexp.MustCompile(`preg_match\s*\(\s*['"].*['"]`),
-		secType:  "regex_validation",
-		effect:   EffectValidates,
-		condType: CondTypeValidation,
+// mapSecurityPatternType converts sources.SecurityPatternType to ConditionType
+func mapSecurityPatternType(patternType sources.SecurityPatternType) ConditionType {
+	switch patternType {
+	case sources.PatternValidation:
+		return CondTypeValidation
+	case sources.PatternSanitization:
+		return CondTypeSanitization
+	case sources.PatternAuthentication:
+		return CondTypeAuthentication
+	case sources.PatternAuthorization:
+		return CondTypeAuthorization
+	case sources.PatternNullCheck:
+		return CondTypeNullCheck
+	case sources.PatternTypeCheck:
+		return CondTypeTypeCheck
+	default:
+		return CondTypeUnknown
 	}
-	e.securityPatterns["filter_var"] = &securityPattern{
-		pattern:  regexp.MustCompile(`filter_var\s*\(`),
-		secType:  "filter_validation",
-		effect:   EffectValidates,
-		condType: CondTypeValidation,
-	}
-	e.securityPatterns["ctype_"] = &securityPattern{
-		pattern:  regexp.MustCompile(`ctype_\w+\s*\(`),
-		secType:  "ctype_validation",
-		effect:   EffectValidates,
-		condType: CondTypeValidation,
-	}
-	e.securityPatterns["is_numeric"] = &securityPattern{
-		pattern:  regexp.MustCompile(`is_numeric\s*\(`),
-		secType:  "numeric_validation",
-		effect:   EffectValidates,
-		condType: CondTypeTypeCheck,
-	}
-	e.securityPatterns["is_int"] = &securityPattern{
-		pattern:  regexp.MustCompile(`is_int\s*\(`),
-		secType:  "type_validation",
-		effect:   EffectValidates,
-		condType: CondTypeTypeCheck,
-	}
-
-	// Null/empty checks
-	e.securityPatterns["isset"] = &securityPattern{
-		pattern:  regexp.MustCompile(`isset\s*\(`),
-		secType:  "null_check",
-		effect:   EffectAllows,
-		condType: CondTypeNullCheck,
-	}
-	e.securityPatterns["empty"] = &securityPattern{
-		pattern:  regexp.MustCompile(`empty\s*\(`),
-		secType:  "empty_check",
-		effect:   EffectBlocks,
-		condType: CondTypeNullCheck,
-	}
-
-	// Sanitization functions
-	e.sanitizationFuncs["htmlspecialchars"] = true
-	e.sanitizationFuncs["htmlentities"] = true
-	e.sanitizationFuncs["addslashes"] = true
-	e.sanitizationFuncs["mysql_real_escape_string"] = true
-	e.sanitizationFuncs["mysqli_real_escape_string"] = true
-	e.sanitizationFuncs["pg_escape_string"] = true
-	e.sanitizationFuncs["strip_tags"] = true
-	e.sanitizationFuncs["escapeshellarg"] = true
-	e.sanitizationFuncs["escapeshellcmd"] = true
-	e.sanitizationFuncs["intval"] = true
-	e.sanitizationFuncs["floatval"] = true
-
-	// Auth patterns
-	e.authPatterns["logged_in"] = regexp.MustCompile(`(?i)(is_logged_in|logged_in|is_authenticated|isLoggedIn|isAuthenticated)`)
-	e.authPatterns["admin"] = regexp.MustCompile(`(?i)(is_admin|isAdmin|has_admin|hasAdmin|admin_check)`)
-	e.authPatterns["permission"] = regexp.MustCompile(`(?i)(has_permission|can_|has_access|hasPermission|checkPermission)`)
-	e.authPatterns["token"] = regexp.MustCompile(`(?i)(verify_token|check_token|csrf_token|validateToken)`)
-}
-
-func (e *Extractor) registerJavaScriptPatterns() {
-	// Validation
-	e.securityPatterns["regex_test"] = &securityPattern{
-		pattern:  regexp.MustCompile(`\.test\s*\(`),
-		secType:  "regex_validation",
-		effect:   EffectValidates,
-		condType: CondTypeValidation,
-	}
-	e.securityPatterns["validator"] = &securityPattern{
-		pattern:  regexp.MustCompile(`validator\.\w+\s*\(`),
-		secType:  "validator_library",
-		effect:   EffectValidates,
-		condType: CondTypeValidation,
-	}
-
-	// Type checks
-	e.securityPatterns["typeof"] = &securityPattern{
-		pattern:  regexp.MustCompile(`typeof\s+\w+\s*(===?|!==?)`),
-		secType:  "type_check",
-		effect:   EffectValidates,
-		condType: CondTypeTypeCheck,
-	}
-	e.securityPatterns["instanceof"] = &securityPattern{
-		pattern:  regexp.MustCompile(`\s+instanceof\s+`),
-		secType:  "instance_check",
-		effect:   EffectValidates,
-		condType: CondTypeTypeCheck,
-	}
-
-	// Sanitization
-	e.sanitizationFuncs["escape"] = true
-	e.sanitizationFuncs["encodeURIComponent"] = true
-	e.sanitizationFuncs["encodeURI"] = true
-	e.sanitizationFuncs["sanitize"] = true
-	e.sanitizationFuncs["DOMPurify.sanitize"] = true
-	e.sanitizationFuncs["parseInt"] = true
-	e.sanitizationFuncs["parseFloat"] = true
-
-	// Auth
-	e.authPatterns["auth"] = regexp.MustCompile(`(?i)(isAuthenticated|isLoggedIn|req\.user|req\.session\.user)`)
-	e.authPatterns["admin"] = regexp.MustCompile(`(?i)(isAdmin|req\.user\.admin|hasRole)`)
-}
-
-func (e *Extractor) registerPythonPatterns() {
-	// Validation
-	e.securityPatterns["re_match"] = &securityPattern{
-		pattern:  regexp.MustCompile(`re\.(match|search|fullmatch)\s*\(`),
-		secType:  "regex_validation",
-		effect:   EffectValidates,
-		condType: CondTypeValidation,
-	}
-	e.securityPatterns["isinstance"] = &securityPattern{
-		pattern:  regexp.MustCompile(`isinstance\s*\(`),
-		secType:  "type_validation",
-		effect:   EffectValidates,
-		condType: CondTypeTypeCheck,
-	}
-
-	// Sanitization
-	e.sanitizationFuncs["escape"] = true
-	e.sanitizationFuncs["quote"] = true
-	e.sanitizationFuncs["html.escape"] = true
-	e.sanitizationFuncs["bleach.clean"] = true
-	e.sanitizationFuncs["int"] = true
-	e.sanitizationFuncs["float"] = true
-	e.sanitizationFuncs["str"] = true
-
-	// Auth
-	e.authPatterns["login"] = regexp.MustCompile(`(?i)(login_required|is_authenticated|current_user)`)
-	e.authPatterns["admin"] = regexp.MustCompile(`(?i)(is_admin|is_superuser|has_perm)`)
-}
-
-func (e *Extractor) registerGoPatterns() {
-	// Validation
-	e.securityPatterns["regexp"] = &securityPattern{
-		pattern:  regexp.MustCompile(`regexp\.(Match|MatchString)\s*\(`),
-		secType:  "regex_validation",
-		effect:   EffectValidates,
-		condType: CondTypeValidation,
-	}
-	e.securityPatterns["validator"] = &securityPattern{
-		pattern:  regexp.MustCompile(`validator\.\w+\s*\(`),
-		secType:  "validator_library",
-		effect:   EffectValidates,
-		condType: CondTypeValidation,
-	}
-
-	// Sanitization
-	e.sanitizationFuncs["html.EscapeString"] = true
-	e.sanitizationFuncs["url.QueryEscape"] = true
-	e.sanitizationFuncs["strconv.Atoi"] = true
-	e.sanitizationFuncs["strconv.ParseInt"] = true
-
-	// Auth
-	e.authPatterns["auth"] = regexp.MustCompile(`(?i)(IsAuthenticated|GetUser|RequireAuth)`)
-}
-
-func (e *Extractor) registerJavaPatterns() {
-	// Validation
-	e.securityPatterns["matches"] = &securityPattern{
-		pattern:  regexp.MustCompile(`\.matches\s*\(`),
-		secType:  "regex_validation",
-		effect:   EffectValidates,
-		condType: CondTypeValidation,
-	}
-	e.securityPatterns["instanceof"] = &securityPattern{
-		pattern:  regexp.MustCompile(`\s+instanceof\s+`),
-		secType:  "instance_check",
-		effect:   EffectValidates,
-		condType: CondTypeTypeCheck,
-	}
-
-	// Sanitization
-	e.sanitizationFuncs["StringEscapeUtils.escapeHtml"] = true
-	e.sanitizationFuncs["ESAPI.encoder().encodeForHTML"] = true
-	e.sanitizationFuncs["Integer.parseInt"] = true
-	e.sanitizationFuncs["Long.parseLong"] = true
-
-	// Auth
-	e.authPatterns["auth"] = regexp.MustCompile(`(?i)(isAuthenticated|getPrincipal|hasRole|hasAuthority)`)
 }
 
 // ExtractFromCode extracts key conditions from code text

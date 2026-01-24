@@ -2,6 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Critical: Library Purpose & Constraints
+
+**This library traces INPUT SOURCES ONLY. It does NOT identify security vulnerabilities.**
+
+When writing code for this library:
+- **NEVER** create, add, or use sink patterns to identify security issues
+- **NEVER** create product/framework-specific code inside the core library packages
+- **NEVER** add security vulnerability detection, sink matching, or "dangerous function" lists
+- **ALWAYS** create new source matchers, framework patterns, or product-specific code inside `pkg/sources/` directory - nowhere else
+- If asked to create cases for a specific framework/product (e.g., WordPress, Laravel, Django), create it as a new file in `pkg/sources/` (e.g., `pkg/sources/wordpress.go`, `pkg/sources/laravel.go`)
+
+The library's sole purpose is to trace where user input enters code and how it propagates through variables and function calls. Security analysis (identifying what happens to that input) is intentionally out of scope.
+
 ## Build & Test Commands
 
 ```bash

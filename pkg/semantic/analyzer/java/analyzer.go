@@ -7,8 +7,8 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
-	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -20,7 +20,7 @@ type JavaAnalyzer struct {
 
 // NewJavaAnalyzer creates a new Java analyzer
 func NewJavaAnalyzer() *JavaAnalyzer {
-	m := mappings.GetMappings("java")
+	m := sources.GetMappings("java")
 	a := &JavaAnalyzer{
 		BaseAnalyzer: analyzer.NewBaseAnalyzer("java", languages.GetExtensionsForLanguage("java")),
 		inputMethods: m.GetInputMethodsMap(),

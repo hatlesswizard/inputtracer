@@ -9,8 +9,8 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
-	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -24,7 +24,7 @@ type JSAnalyzer struct {
 
 // NewJSAnalyzer creates a new JavaScript analyzer
 func NewJSAnalyzer() *JSAnalyzer {
-	m := mappings.GetMappings("javascript")
+	m := sources.GetMappings("javascript")
 	a := &JSAnalyzer{
 		BaseAnalyzer:  analyzer.NewBaseAnalyzer("javascript", languages.GetExtensionsForLanguage("javascript")),
 		globalSources: m.GetGlobalSourcesMap(),

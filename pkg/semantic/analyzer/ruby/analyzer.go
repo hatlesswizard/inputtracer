@@ -7,8 +7,8 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
-	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -20,7 +20,7 @@ type RubyAnalyzer struct {
 
 // NewRubyAnalyzer creates a new Ruby analyzer
 func NewRubyAnalyzer() *RubyAnalyzer {
-	m := mappings.GetMappings("ruby")
+	m := sources.GetMappings("ruby")
 	a := &RubyAnalyzer{
 		BaseAnalyzer: analyzer.NewBaseAnalyzer("ruby", languages.GetExtensionsForLanguage("ruby")),
 		inputSources: m.GetInputSourcesMap(),

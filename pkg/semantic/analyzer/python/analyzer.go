@@ -8,8 +8,8 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
-	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -22,7 +22,7 @@ type PythonAnalyzer struct {
 
 // NewPythonAnalyzer creates a new Python analyzer
 func NewPythonAnalyzer() *PythonAnalyzer {
-	m := mappings.GetMappings("python")
+	m := sources.GetMappings("python")
 	a := &PythonAnalyzer{
 		BaseAnalyzer:   analyzer.NewBaseAnalyzer("python", languages.GetExtensionsForLanguage("python")),
 		inputSources:   m.GetInputSourcesMap(),

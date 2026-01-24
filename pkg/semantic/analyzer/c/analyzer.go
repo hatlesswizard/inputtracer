@@ -7,8 +7,8 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
-	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -21,7 +21,7 @@ type CAnalyzer struct {
 
 // NewCAnalyzer creates a new C analyzer
 func NewCAnalyzer() *CAnalyzer {
-	m := mappings.GetMappings("c")
+	m := sources.GetMappings("c")
 	a := &CAnalyzer{
 		BaseAnalyzer:   analyzer.NewBaseAnalyzer("c", languages.GetExtensionsForLanguage("c")),
 		inputFunctions: m.GetInputFunctionsMap(),

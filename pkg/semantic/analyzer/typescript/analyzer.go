@@ -8,8 +8,8 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
-	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -25,7 +25,7 @@ func NewTypeScriptAnalyzer() *TypeScriptAnalyzer {
 	// TypeScript analyzer handles both .ts and .tsx files
 	exts := languages.GetExtensionsForLanguage("typescript")
 	exts = append(exts, languages.GetExtensionsForLanguage("tsx")...)
-	m := mappings.GetMappings("typescript")
+	m := sources.GetMappings("typescript")
 	a := &TypeScriptAnalyzer{
 		BaseAnalyzer:   analyzer.NewBaseAnalyzer("typescript", exts),
 		inputSources:   m.GetInputSourcesMap(),

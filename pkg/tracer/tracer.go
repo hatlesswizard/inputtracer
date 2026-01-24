@@ -36,13 +36,13 @@ type Config struct {
 	IncludePatterns []string
 }
 
-// DefaultConfig returns sensible defaults
+// DefaultConfig returns sensible defaults using centralized sources
 func DefaultConfig() *Config {
 	return &Config{
-		Languages:   []string{}, // All supported
-		MaxDepth:    5,
-		Workers:     runtime.NumCPU(),
-		SkipDirs:    []string{".git", "node_modules", "vendor", "__pycache__", ".venv", "venv", "target", "build", "dist"},
+		Languages:       []string{}, // All supported
+		MaxDepth:        sources.DefaultMaxDepth,
+		Workers:         runtime.NumCPU(),
+		SkipDirs:        sources.DefaultSkipDirs,
 		IncludePatterns: []string{},
 	}
 }

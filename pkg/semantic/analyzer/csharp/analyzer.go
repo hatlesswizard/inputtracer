@@ -7,8 +7,8 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
-	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -20,7 +20,7 @@ type CSharpAnalyzer struct {
 
 // NewCSharpAnalyzer creates a new C# analyzer
 func NewCSharpAnalyzer() *CSharpAnalyzer {
-	m := mappings.GetMappings("c_sharp")
+	m := sources.GetMappings("c_sharp")
 	a := &CSharpAnalyzer{
 		BaseAnalyzer: analyzer.NewBaseAnalyzer("c_sharp", languages.GetExtensionsForLanguage("c_sharp")),
 		inputSources: m.GetInputSourcesMap(),

@@ -10,21 +10,13 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/smacker/go-tree-sitter/php"
 )
 
-// PHPSuperglobals are the only hardcoded patterns - these are PHP language constants
-var PHPSuperglobals = []string{
-	"$_GET",
-	"$_POST",
-	"$_COOKIE",
-	"$_REQUEST",
-	"$_SERVER",
-	"$_FILES",
-	"$_ENV",
-	"$_SESSION",
-}
+// PHPSuperglobals references the centralized list from pkg/sources
+var PHPSuperglobals = sources.SuperglobalNames()
 
 // SuperglobalUsage tracks where a superglobal is used in the codebase
 type SuperglobalUsage struct {

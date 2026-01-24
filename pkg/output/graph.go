@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
 	"github.com/hatlesswizard/inputtracer/pkg/tracer"
 )
 
@@ -50,36 +51,14 @@ func (e *GraphExporter) ExportDOT(graph *tracer.FlowGraph) string {
 	return sb.String()
 }
 
-// getNodeColor returns the color for a node type
+// getNodeColor returns the color for a node type using centralized graph styles
 func (e *GraphExporter) getNodeColor(nodeType string) string {
-	switch nodeType {
-	case "source":
-		return "#ff6b6b" // Red - input sources
-	case "variable":
-		return "#4ecdc4" // Teal - tainted variables
-	case "function":
-		return "#45b7d1" // Blue - tainted functions
-	case "parameter":
-		return "#96ceb4" // Green - parameters
-	default:
-		return "#f9f9f9" // Light gray
-	}
+	return sources.GetNodeFillColor(sources.GraphNodeType(nodeType))
 }
 
-// getEdgeStyle returns DOT style for an edge type
+// getEdgeStyle returns DOT style for an edge type using centralized graph styles
 func (e *GraphExporter) getEdgeStyle(edgeType string) string {
-	switch edgeType {
-	case "assignment":
-		return "style=solid, color=black"
-	case "call":
-		return "style=dashed, color=blue"
-	case "return":
-		return "style=dotted, color=green"
-	case "taint":
-		return "style=bold, color=red"
-	default:
-		return "style=solid, color=gray"
-	}
+	return sources.GetDOTEdgeStyle(sources.GraphEdgeType(edgeType))
 }
 
 // escapeLabel escapes special characters in DOT labels
@@ -121,11 +100,11 @@ func (e *GraphExporter) ExportMermaid(graph *tracer.FlowGraph) string {
 		sb.WriteString(fmt.Sprintf("  %s %s %s\n", edge.From, arrowStyle, edge.To))
 	}
 
-	// Add styling
+	// Add styling using centralized graph styles
 	sb.WriteString("\n")
-	sb.WriteString("  classDef source fill:#ff6b6b,stroke:#333\n")
-	sb.WriteString("  classDef variable fill:#4ecdc4,stroke:#333\n")
-	sb.WriteString("  classDef function fill:#45b7d1,stroke:#333\n")
+	sb.WriteString(fmt.Sprintf("  classDef source fill:%s,stroke:%s\n", sources.GetNodeFillColor(sources.GraphNodeSource), sources.GetNodeStrokeColor(sources.GraphNodeSource)))
+	sb.WriteString(fmt.Sprintf("  classDef variable fill:%s,stroke:%s\n", sources.GetNodeFillColor(sources.GraphNodeVariable), sources.GetNodeStrokeColor(sources.GraphNodeVariable)))
+	sb.WriteString(fmt.Sprintf("  classDef function fill:%s,stroke:%s\n", sources.GetNodeFillColor(sources.GraphNodeFunction), sources.GetNodeStrokeColor(sources.GraphNodeFunction)))
 
 	// Apply classes
 	for _, node := range graph.Nodes {
@@ -141,27 +120,12 @@ type mermaidShape struct {
 }
 
 func (e *GraphExporter) getMermaidNodeShape(nodeType string) mermaidShape {
-	switch nodeType {
-	case "source":
-		return mermaidShape{"((", "))"}
-	case "function":
-		return mermaidShape{"[/", "/]"}
-	default:
-		return mermaidShape{"[", "]"}
-	}
+	open, close := sources.GetMermaidNodeShape(sources.GraphNodeType(nodeType))
+	return mermaidShape{open, close}
 }
 
 func (e *GraphExporter) getMermaidArrowStyle(edgeType string) string {
-	switch edgeType {
-	case "call":
-		return "-.->|call|"
-	case "return":
-		return "==>|return|"
-	case "taint":
-		return "-->|taint|"
-	default:
-		return "-->"
-	}
+	return sources.GetMermaidArrowStyle(sources.GraphEdgeType(edgeType))
 }
 
 // ExportJSON exports the flow graph as JSON
