@@ -1,0 +1,19 @@
+{
+  "sources": [],
+  "tainted_variables": [],
+  "tainted_functions": [],
+  "flow_graph": {
+    "nodes": [],
+    "edges": []
+  },
+  "stats": {
+    "files_analyzed": 0,
+    "sources_found": 0,
+    "tainted_variables_found": 0,
+    "tainted_functions_found": 0,
+    "propagation_paths": 0,
+    "analysis_duration_ns": 68625,
+    "analysis_duration_ms": 0,
+    "files_by_language": {}
+  }
+}
