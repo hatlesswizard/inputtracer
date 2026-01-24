@@ -297,9 +297,6 @@ type FullAnalysisState struct {
 
 	PropagationPaths map[string][]*PropagationPath // source ID -> paths
 	ReturnsTainted   map[string]*InputSource       // function name -> source
-
-	// Track if slices need rebuilding
-	slicesStale bool
 }
 
 // NewFullAnalysisState creates a complete analysis state with optimized maps
@@ -314,7 +311,6 @@ func NewFullAnalysisState() *FullAnalysisState {
 		TaintedFunctions: make([]*TaintedFunction, 0, 128),
 		PropagationPaths: make(map[string][]*PropagationPath, 64),
 		ReturnsTainted:   make(map[string]*InputSource, 64),
-		slicesStale:      true,
 	}
 }
 
@@ -333,7 +329,6 @@ func (s *FullAnalysisState) AddTaintedVariable(tv *TaintedVariable) {
 		// Update depth if this path is shorter
 		if tv.Depth < existing.Depth {
 			s.taintedVarsMap[key] = tv
-			s.slicesStale = true
 		}
 	} else {
 		s.taintedVarsMap[key] = tv
