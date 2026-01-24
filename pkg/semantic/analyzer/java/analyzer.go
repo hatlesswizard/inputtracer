@@ -7,6 +7,7 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
+	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
 )
@@ -19,49 +20,10 @@ type JavaAnalyzer struct {
 
 // NewJavaAnalyzer creates a new Java analyzer
 func NewJavaAnalyzer() *JavaAnalyzer {
+	m := mappings.GetMappings("java")
 	a := &JavaAnalyzer{
 		BaseAnalyzer: analyzer.NewBaseAnalyzer("java", languages.GetExtensionsForLanguage("java")),
-	}
-
-	a.inputMethods = map[string]types.SourceType{
-		// Servlet API
-		"getParameter":       types.SourceHTTPGet,
-		"getParameterValues": types.SourceHTTPGet,
-		"getParameterMap":    types.SourceHTTPGet,
-		"getParameterNames":  types.SourceHTTPGet,
-		"getHeader":          types.SourceHTTPHeader,
-		"getHeaders":         types.SourceHTTPHeader,
-		"getHeaderNames":     types.SourceHTTPHeader,
-		"getCookies":         types.SourceHTTPCookie,
-		"getInputStream":     types.SourceHTTPBody,
-		"getReader":          types.SourceHTTPBody,
-		"getQueryString":     types.SourceHTTPGet,
-		"getRequestURI":      types.SourceHTTPPath,
-		"getRequestURL":      types.SourceHTTPPath,
-		"getPathInfo":        types.SourceHTTPPath,
-		"getServletPath":     types.SourceHTTPPath,
-		"getRemoteAddr":      types.SourceHTTPHeader,
-		// Spring MVC
-		"getBody":            types.SourceHTTPBody,
-		// Vert.x
-		"getParam":           types.SourceHTTPGet,
-		"getParams":          types.SourceHTTPGet,
-		"bodyAsString":       types.SourceHTTPBody,
-		"bodyAsJson":         types.SourceHTTPBody,
-		"body":               types.SourceHTTPBody,
-		// Environment/CLI
-		"getenv":             types.SourceEnvVar,
-		"getProperty":        types.SourceEnvVar,
-		// Scanner/Reader
-		"nextLine":           types.SourceStdin,
-		"next":               types.SourceStdin,
-		"nextInt":            types.SourceStdin,
-		"nextDouble":         types.SourceStdin,
-		"nextBoolean":        types.SourceStdin,
-		"readLine":           types.SourceFile,
-		"read":               types.SourceFile,
-		"readAllBytes":       types.SourceFile,
-		"readAllLines":       types.SourceFile,
+		inputMethods: m.GetInputMethodsMap(),
 	}
 
 	a.registerFrameworkPatterns()

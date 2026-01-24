@@ -7,6 +7,7 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
+	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
 )
@@ -20,69 +21,11 @@ type CAnalyzer struct {
 
 // NewCAnalyzer creates a new C analyzer
 func NewCAnalyzer() *CAnalyzer {
+	m := mappings.GetMappings("c")
 	a := &CAnalyzer{
-		BaseAnalyzer: analyzer.NewBaseAnalyzer("c", languages.GetExtensionsForLanguage("c")),
-	}
-
-	a.inputFunctions = map[string]types.SourceType{
-		// Standard input functions
-		"gets":     types.SourceStdin,
-		"fgets":    types.SourceFile,
-		"scanf":    types.SourceStdin,
-		"fscanf":   types.SourceFile,
-		"sscanf":   types.SourceUserInput,
-		"getchar":  types.SourceStdin,
-		"getc":     types.SourceFile,
-		"fgetc":    types.SourceFile,
-		"getline":  types.SourceStdin,
-		"getdelim": types.SourceFile,
-
-		// POSIX file/socket read functions
-		"read":   types.SourceFile,
-		"pread":  types.SourceFile,
-		"readv":  types.SourceFile,
-		"preadv": types.SourceFile,
-		"fread":  types.SourceFile,
-
-		// Network input functions
-		"recv":     types.SourceNetwork,
-		"recvfrom": types.SourceNetwork,
-		"recvmsg":  types.SourceNetwork,
-		"recvmmsg": types.SourceNetwork,
-
-		// Environment variables
-		"getenv":        types.SourceEnvVar,
-		"secure_getenv": types.SourceEnvVar,
-
-		// Memory-mapped files
-		"mmap": types.SourceFile,
-
-		// File operations (potential user-controlled)
-		"fopen":  types.SourceFile,
-		"open":   types.SourceFile,
-		"fdopen": types.SourceFile,
-	}
-
-	// CGI environment variables that indicate HTTP input
-	a.cgiEnvVars = map[string]types.SourceType{
-		"QUERY_STRING":    types.SourceHTTPGet,
-		"REQUEST_METHOD":  types.SourceHTTPHeader,
-		"CONTENT_TYPE":    types.SourceHTTPHeader,
-		"CONTENT_LENGTH":  types.SourceHTTPBody,
-		"HTTP_COOKIE":     types.SourceHTTPCookie,
-		"HTTP_HOST":       types.SourceHTTPHeader,
-		"HTTP_USER_AGENT": types.SourceHTTPHeader,
-		"HTTP_REFERER":    types.SourceHTTPHeader,
-		"HTTP_ACCEPT":     types.SourceHTTPHeader,
-		"PATH_INFO":       types.SourceHTTPPath,
-		"PATH_TRANSLATED": types.SourceHTTPPath,
-		"SCRIPT_NAME":     types.SourceHTTPPath,
-		"REQUEST_URI":     types.SourceHTTPPath,
-		"REMOTE_ADDR":     types.SourceNetwork,
-		"REMOTE_HOST":     types.SourceNetwork,
-		"SERVER_NAME":     types.SourceHTTPHeader,
-		"SERVER_PORT":     types.SourceHTTPHeader,
-		"HTTPS":           types.SourceHTTPHeader,
+		BaseAnalyzer:   analyzer.NewBaseAnalyzer("c", languages.GetExtensionsForLanguage("c")),
+		inputFunctions: m.GetInputFunctionsMap(),
+		cgiEnvVars:     m.GetCGIEnvVarsMap(),
 	}
 
 	return a

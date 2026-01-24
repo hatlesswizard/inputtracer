@@ -8,6 +8,7 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
+	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
 )
@@ -21,70 +22,11 @@ type GoAnalyzer struct {
 
 // NewGoAnalyzer creates a new Go analyzer
 func NewGoAnalyzer() *GoAnalyzer {
+	m := mappings.GetMappings("go")
 	a := &GoAnalyzer{
-		BaseAnalyzer: analyzer.NewBaseAnalyzer("go", languages.GetExtensionsForLanguage("go")),
-	}
-
-	a.inputSources = map[string]types.SourceType{
-		"r.Form":      types.SourceHTTPPost,
-		"r.PostForm":  types.SourceHTTPPost,
-		"r.URL.Query": types.SourceHTTPGet,
-		"os.Args":     types.SourceCLIArg,
-	}
-
-	a.inputFunctions = map[string]types.SourceType{
-		// Standard HTTP
-		"r.FormValue":     types.SourceHTTPPost,
-		"r.PostFormValue": types.SourceHTTPPost,
-		"r.URL.Query":     types.SourceHTTPGet,
-		"r.Body":          types.SourceHTTPBody,
-		"http.Request":    types.SourceUserInput,
-		// Gin
-		"c.Query":         types.SourceHTTPGet,
-		"c.DefaultQuery":  types.SourceHTTPGet,
-		"c.Param":         types.SourceHTTPPath,
-		"c.PostForm":      types.SourceHTTPPost,
-		"c.DefaultPostForm": types.SourceHTTPPost,
-		"c.GetHeader":     types.SourceHTTPHeader,
-		"c.Bind":          types.SourceHTTPBody,
-		"c.BindJSON":      types.SourceHTTPBody,
-		"c.ShouldBind":    types.SourceHTTPBody,
-		"c.ShouldBindJSON": types.SourceHTTPBody,
-		"c.FormFile":      types.SourceHTTPBody,
-		"c.Cookie":        types.SourceHTTPCookie,
-		// Echo
-		"c.QueryParam":    types.SourceHTTPGet,
-		"c.QueryParams":   types.SourceHTTPGet,
-		"c.FormValue":     types.SourceHTTPPost,
-		"c.FormParams":    types.SourceHTTPPost,
-		"Bind":            types.SourceHTTPBody,
-		"c.Request":       types.SourceUserInput,
-		// Fiber
-		"c.Params":        types.SourceHTTPPath,
-		"c.Queries":       types.SourceHTTPGet,
-		"c.BodyParser":    types.SourceHTTPBody,
-		"c.Body":          types.SourceHTTPBody,
-		"c.Get":           types.SourceHTTPHeader,
-		"c.Cookies":       types.SourceHTTPCookie,
-		// Chi
-		"chi.URLParam":    types.SourceHTTPPath,
-		"URLParam":        types.SourceHTTPPath,
-		// Gorilla mux
-		"mux.Vars":        types.SourceHTTPPath,
-		"Vars":            types.SourceHTTPPath,
-		// OS/CLI
-		"os.Getenv":       types.SourceEnvVar,
-		"flag.String":     types.SourceCLIArg,
-		"flag.Int":        types.SourceCLIArg,
-		"flag.Bool":       types.SourceCLIArg,
-		"flag.Parse":      types.SourceCLIArg,
-		// File/stdin
-		"bufio.NewReader": types.SourceStdin,
-		"bufio.NewScanner": types.SourceStdin,
-		"ioutil.ReadFile": types.SourceFile,
-		"os.ReadFile":     types.SourceFile,
-		"os.Open":         types.SourceFile,
-		"io.ReadAll":      types.SourceUserInput,
+		BaseAnalyzer:   analyzer.NewBaseAnalyzer("go", languages.GetExtensionsForLanguage("go")),
+		inputSources:   m.GetInputSourcesMap(),
+		inputFunctions: m.GetInputFunctionsMap(),
 	}
 
 	a.registerFrameworkPatterns()

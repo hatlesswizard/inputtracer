@@ -7,6 +7,7 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
+	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
 )
@@ -17,217 +18,20 @@ type CPPAnalyzer struct {
 	inputFunctions  map[string]types.SourceType
 	cgiEnvVars      map[string]types.SourceType
 	qtInputMethods  map[string]types.SourceType
-	frameworkTypes  map[string]frameworkTypeInfo
+	frameworkTypes  map[string]mappings.FrameworkTypeInfo
 	methodInputs    map[string]types.SourceType
-}
-
-// frameworkTypeInfo holds information about framework types that carry user input
-type frameworkTypeInfo struct {
-	framework  string
-	sourceType types.SourceType
 }
 
 // NewCPPAnalyzer creates a new C++ analyzer
 func NewCPPAnalyzer() *CPPAnalyzer {
+	m := mappings.GetMappings("cpp")
 	a := &CPPAnalyzer{
-		BaseAnalyzer: analyzer.NewBaseAnalyzer("cpp", languages.GetExtensionsForLanguage("cpp")),
-	}
-
-	// Standard C/C++ input functions
-	a.inputFunctions = map[string]types.SourceType{
-		// C++ streams
-		"cin":     types.SourceStdin,
-		"getline": types.SourceStdin,
-
-		// C standard input
-		"gets":     types.SourceStdin,
-		"fgets":    types.SourceFile,
-		"scanf":    types.SourceStdin,
-		"fscanf":   types.SourceFile,
-		"sscanf":   types.SourceUserInput,
-		"getchar":  types.SourceStdin,
-		"getc":     types.SourceFile,
-		"fgetc":    types.SourceFile,
-		"getdelim": types.SourceFile,
-
-		// POSIX file/socket read
-		"read":    types.SourceFile,
-		"pread":   types.SourceFile,
-		"readv":   types.SourceFile,
-		"preadv":  types.SourceFile,
-		"fread":   types.SourceFile,
-
-		// Network input
-		"recv":     types.SourceNetwork,
-		"recvfrom": types.SourceNetwork,
-		"recvmsg":  types.SourceNetwork,
-		"recvmmsg": types.SourceNetwork,
-
-		// Environment
-		"getenv":        types.SourceEnvVar,
-		"secure_getenv": types.SourceEnvVar,
-
-		// Memory-mapped files
-		"mmap": types.SourceFile,
-
-		// Boost.Asio network
-		"async_read":       types.SourceNetwork,
-		"async_read_some":  types.SourceNetwork,
-		"async_read_until": types.SourceNetwork,
-	}
-
-	// CGI environment variables
-	a.cgiEnvVars = map[string]types.SourceType{
-		"QUERY_STRING":    types.SourceHTTPGet,
-		"REQUEST_METHOD":  types.SourceHTTPHeader,
-		"CONTENT_TYPE":    types.SourceHTTPHeader,
-		"CONTENT_LENGTH":  types.SourceHTTPBody,
-		"HTTP_COOKIE":     types.SourceHTTPCookie,
-		"HTTP_HOST":       types.SourceHTTPHeader,
-		"HTTP_USER_AGENT": types.SourceHTTPHeader,
-		"HTTP_REFERER":    types.SourceHTTPHeader,
-		"HTTP_ACCEPT":     types.SourceHTTPHeader,
-		"PATH_INFO":       types.SourceHTTPPath,
-		"PATH_TRANSLATED": types.SourceHTTPPath,
-		"SCRIPT_NAME":     types.SourceHTTPPath,
-		"REQUEST_URI":     types.SourceHTTPPath,
-		"REMOTE_ADDR":     types.SourceNetwork,
-		"REMOTE_HOST":     types.SourceNetwork,
-	}
-
-	// Qt input widget methods
-	a.qtInputMethods = map[string]types.SourceType{
-		// QLineEdit
-		"text":          types.SourceUserInput,
-		"displayText":   types.SourceUserInput,
-		"selectedText":  types.SourceUserInput,
-
-		// QTextEdit / QPlainTextEdit
-		"toPlainText": types.SourceUserInput,
-		"toHtml":      types.SourceUserInput,
-
-		// QComboBox
-		"currentText":  types.SourceUserInput,
-		"currentIndex": types.SourceUserInput,
-		"itemText":     types.SourceUserInput,
-
-		// QSpinBox / QDoubleSpinBox
-		"value":     types.SourceUserInput,
-		"cleanText": types.SourceUserInput,
-
-		// QSlider / QScrollBar
-		"sliderPosition": types.SourceUserInput,
-
-		// QDateEdit / QTimeEdit / QDateTimeEdit
-		"date":     types.SourceUserInput,
-		"time":     types.SourceUserInput,
-		"dateTime": types.SourceUserInput,
-
-		// QCheckBox / QRadioButton
-		"isChecked":   types.SourceUserInput,
-		"checkState":  types.SourceUserInput,
-
-		// QListWidget / QTreeWidget / QTableWidget
-		"currentItem": types.SourceUserInput,
-		"selectedItems": types.SourceUserInput,
-
-		// QFile / QIODevice / QNetworkReply
-		"readAll":  types.SourceFile, // Can be file or network depending on context
-		"readLine": types.SourceFile,
-
-		// QProcess
-		"readAllStandardOutput": types.SourceUserInput,
-		"readAllStandardError":  types.SourceUserInput,
-
-		// Qt environment
-		"qgetenv": types.SourceEnvVar,
-	}
-
-	// Framework types that carry user input
-	a.frameworkTypes = map[string]frameworkTypeInfo{
-		// Qt types
-		"QNetworkReply":  {framework: "qt", sourceType: types.SourceNetwork},
-		"QNetworkRequest": {framework: "qt", sourceType: types.SourceNetwork},
-		"QHttpPart":      {framework: "qt", sourceType: types.SourceHTTPBody},
-
-		// Boost.Beast types
-		"request":          {framework: "boost.beast", sourceType: types.SourceHTTPBody},
-		"http::request":    {framework: "boost.beast", sourceType: types.SourceHTTPBody},
-		"beast::http::request": {framework: "boost.beast", sourceType: types.SourceHTTPBody},
-		"websocket::stream": {framework: "boost.beast", sourceType: types.SourceNetwork},
-
-		// Crow framework types
-		"crow::request":    {framework: "crow", sourceType: types.SourceHTTPBody},
-		"crow::response":   {framework: "crow", sourceType: types.SourceHTTPBody},
-
-		// Drogon framework types
-		"HttpRequestPtr":   {framework: "drogon", sourceType: types.SourceHTTPBody},
-		"HttpRequest":      {framework: "drogon", sourceType: types.SourceHTTPBody},
-		"HttpResponsePtr":  {framework: "drogon", sourceType: types.SourceHTTPBody},
-		"WebSocketConnectionPtr": {framework: "drogon", sourceType: types.SourceNetwork},
-
-		// cpprestsdk (Casablanca)
-		"http_request":     {framework: "cpprestsdk", sourceType: types.SourceHTTPBody},
-		"http_response":    {framework: "cpprestsdk", sourceType: types.SourceHTTPBody},
-		"web::http::http_request": {framework: "cpprestsdk", sourceType: types.SourceHTTPBody},
-
-		// Poco framework types
-		"HTTPServerRequest": {framework: "poco", sourceType: types.SourceHTTPBody},
-		"HTTPRequest":       {framework: "poco", sourceType: types.SourceHTTPBody},
-		"HTMLForm":          {framework: "poco", sourceType: types.SourceHTTPPost},
-
-		// Standard streams as types
-		"ifstream":       {framework: "std", sourceType: types.SourceFile},
-		"fstream":        {framework: "std", sourceType: types.SourceFile},
-		"istringstream":  {framework: "std", sourceType: types.SourceUserInput},
-		"stringstream":   {framework: "std", sourceType: types.SourceUserInput},
-	}
-
-	// Method calls that return user input (method name -> source type)
-	a.methodInputs = map[string]types.SourceType{
-		// HTTP body access (Crow, Beast, cpprestsdk, etc.)
-		"body": types.SourceHTTPBody,
-
-		// Crow framework methods
-		"url_params":       types.SourceHTTPGet,
-		"get_header_value": types.SourceHTTPHeader,
-
-		// Drogon framework methods
-		"getBody":       types.SourceHTTPBody,
-		"getParameter":  types.SourceHTTPGet,
-		"getQuery":      types.SourceHTTPGet,
-		"getCookie":     types.SourceHTTPCookie,
-		"getHeader":     types.SourceHTTPHeader,
-		"getPath":       types.SourceHTTPPath,
-		"getJsonObject": types.SourceHTTPJSON,
-
-		// Boost.Beast methods
-		"target": types.SourceHTTPPath,
-		"at":     types.SourceHTTPHeader,
-		"find":   types.SourceHTTPHeader,
-
-		// cpprestsdk methods
-		"extract_json":   types.SourceHTTPJSON,
-		"extract_string": types.SourceHTTPBody,
-		"request_uri":    types.SourceHTTPPath,
-		"headers":        types.SourceHTTPHeader,
-
-		// Poco methods
-		"getURI":         types.SourceHTTPPath,
-		"getMethod":      types.SourceHTTPHeader,
-		"getContentType": types.SourceHTTPHeader,
-		"stream":         types.SourceHTTPBody,
-
-		// Standard stream methods (read can be HTTP or file)
-		"get":     types.SourceUserInput,
-		"getline": types.SourceUserInput,
-		"read":    types.SourceUserInput,
-		"peek":    types.SourceUserInput,
-
-		// Boost.Asio socket methods
-		"read_some":     types.SourceNetwork,
-		"receive":       types.SourceNetwork,
-		"async_receive": types.SourceNetwork,
+		BaseAnalyzer:   analyzer.NewBaseAnalyzer("cpp", languages.GetExtensionsForLanguage("cpp")),
+		inputFunctions: m.GetInputFunctionsMap(),
+		cgiEnvVars:     m.GetCGIEnvVarsMap(),
+		qtInputMethods: m.GetQtInputMethodsMap(),
+		frameworkTypes: m.GetFrameworkTypesMap(),
+		methodInputs:   m.GetMethodInputsMap(),
 	}
 
 	return a
@@ -671,7 +475,7 @@ func (a *CPPAnalyzer) isExpressionTainted(node *sitter.Node, source []byte) (boo
 	// Check for framework types
 	for typeName, info := range a.frameworkTypes {
 		if strings.Contains(text, typeName) {
-			return true, info.framework + ":" + typeName
+			return true, info.Framework + ":" + typeName
 		}
 	}
 
@@ -958,8 +762,8 @@ func (a *CPPAnalyzer) FindInputSources(root *sitter.Node, source []byte) ([]*typ
 					Column:     int(node.StartPoint().Column),
 					Name:       typeName,
 					Snippet:    text,
-					SourceType: info.sourceType,
-					Metadata:   map[string]interface{}{"framework": info.framework},
+					SourceType: info.SourceType,
+					Metadata:   map[string]interface{}{"framework": info.Framework},
 				}
 				sources = append(sources, flowNode)
 				break
@@ -983,8 +787,8 @@ func (a *CPPAnalyzer) FindInputSources(root *sitter.Node, source []byte) ([]*typ
 						Column:     int(node.StartPoint().Column),
 						Name:       typeName + " (param)",
 						Snippet:    analyzer.GetNodeText(node, source),
-						SourceType: info.sourceType,
-						Metadata:   map[string]interface{}{"framework": info.framework},
+						SourceType: info.SourceType,
+						Metadata:   map[string]interface{}{"framework": info.Framework},
 					}
 					sources = append(sources, flowNode)
 					break
@@ -1200,8 +1004,8 @@ func (a *CPPAnalyzer) TraceExpression(target types.FlowTarget, state *types.Anal
 				Language:   "cpp",
 				Name:       typeName,
 				Snippet:    expr,
-				SourceType: info.sourceType,
-				Metadata:   map[string]interface{}{"framework": info.framework},
+				SourceType: info.SourceType,
+				Metadata:   map[string]interface{}{"framework": info.Framework},
 			}
 			flowMap.AddSource(sourceNode)
 		}

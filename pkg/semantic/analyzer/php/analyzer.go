@@ -9,6 +9,7 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
+	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
 )
@@ -29,58 +30,12 @@ type PHPAnalyzer struct {
 
 // NewPHPAnalyzer creates a new PHP analyzer
 func NewPHPAnalyzer() *PHPAnalyzer {
+	m := mappings.GetMappings("php")
 	a := &PHPAnalyzer{
-		BaseAnalyzer: analyzer.NewBaseAnalyzer("php", languages.GetExtensionsForLanguage("php")),
-	}
-
-	// Initialize PHP superglobals
-	a.superglobals = map[string]types.SourceType{
-		"$_GET":     types.SourceHTTPGet,
-		"$_POST":    types.SourceHTTPPost,
-		"$_REQUEST": types.SourceHTTPGet, // Can be GET, POST, or COOKIE
-		"$_COOKIE":  types.SourceHTTPCookie,
-		"$_SERVER":  types.SourceHTTPHeader,
-		"$_FILES":   types.SourceHTTPBody,
-		"$_ENV":     types.SourceEnvVar,
-		"$_SESSION": types.SourceUserInput,
-	}
-
-	// Initialize input functions
-	a.inputFunctions = map[string]types.SourceType{
-		"file_get_contents": types.SourceFile,
-		"fgets":             types.SourceFile,
-		"fread":             types.SourceFile,
-		"fgetc":             types.SourceFile,
-		"fgetcsv":           types.SourceFile,
-		"file":              types.SourceFile,
-		"readfile":          types.SourceFile,
-		"getenv":            types.SourceEnvVar,
-		"apache_getenv":     types.SourceEnvVar,
-		"getallheaders":     types.SourceHTTPHeader,
-		"apache_request_headers": types.SourceHTTPHeader,
-	}
-
-	// Database fetch functions that return user-controlled data
-	a.dbFetchFunctions = map[string]bool{
-		"mysqli_fetch_array":  true,
-		"mysqli_fetch_assoc":  true,
-		"mysqli_fetch_row":    true,
-		"mysqli_fetch_object": true,
-		"mysqli_fetch_all":    true,
-		"mysql_fetch_array":   true,
-		"mysql_fetch_assoc":   true,
-		"mysql_fetch_row":     true,
-		"mysql_fetch_object":  true,
-		"pg_fetch_array":      true,
-		"pg_fetch_assoc":      true,
-		"pg_fetch_row":        true,
-		"pg_fetch_object":     true,
-		"pg_fetch_all":        true,
-		"sqlite_fetch_array":  true,
-		"oci_fetch_array":     true,
-		"oci_fetch_assoc":     true,
-		"oci_fetch_row":       true,
-		"db_fetch_array":      true,
+		BaseAnalyzer:     analyzer.NewBaseAnalyzer("php", languages.GetExtensionsForLanguage("php")),
+		superglobals:     m.GetSuperglobalsMap(),
+		inputFunctions:   m.GetInputFunctionsMap(),
+		dbFetchFunctions: m.GetDBFetchFunctionsMap(),
 	}
 
 	// Initialize universal pattern-based detection

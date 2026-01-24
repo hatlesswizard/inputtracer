@@ -8,6 +8,7 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
+	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
 )
@@ -21,71 +22,11 @@ type PythonAnalyzer struct {
 
 // NewPythonAnalyzer creates a new Python analyzer
 func NewPythonAnalyzer() *PythonAnalyzer {
+	m := mappings.GetMappings("python")
 	a := &PythonAnalyzer{
-		BaseAnalyzer: analyzer.NewBaseAnalyzer("python", languages.GetExtensionsForLanguage("python")),
-	}
-
-	// Initialize Python input sources
-	a.inputSources = map[string]types.SourceType{
-		// Flask
-		"request.args":      types.SourceHTTPGet,
-		"request.form":      types.SourceHTTPPost,
-		"request.data":      types.SourceHTTPBody,
-		"request.json":      types.SourceHTTPJSON,
-		"request.files":     types.SourceHTTPBody,
-		"request.cookies":   types.SourceHTTPCookie,
-		"request.headers":   types.SourceHTTPHeader,
-		"request.values":    types.SourceHTTPGet,
-		// Django
-		"request.GET":       types.SourceHTTPGet,
-		"request.POST":      types.SourceHTTPPost,
-		"request.FILES":     types.SourceHTTPBody,
-		"request.COOKIES":   types.SourceHTTPCookie,
-		"request.META":      types.SourceHTTPHeader,
-		"request.body":      types.SourceHTTPBody,
-		// aiohttp
-		"request.query":     types.SourceHTTPGet,
-		"request.match_info": types.SourceHTTPPath,
-		"request.rel_url":   types.SourceHTTPGet,
-		// Sanic
-		"request.ctx":       types.SourceUserInput,
-		// FastAPI / Starlette
-		"request.path_params": types.SourceHTTPPath,
-		"request.query_params": types.SourceHTTPGet,
-		// CLI
-		"sys.argv":          types.SourceCLIArg,
-		"os.environ":        types.SourceEnvVar,
-	}
-
-	// Initialize input functions
-	a.inputFunctions = map[string]types.SourceType{
-		// Built-in
-		"input":           types.SourceStdin,
-		"raw_input":       types.SourceStdin,
-		// OS
-		"getenv":          types.SourceEnvVar,
-		"os.getenv":       types.SourceEnvVar,
-		"environ.get":     types.SourceEnvVar,
-		// File
-		"open":            types.SourceFile,
-		"read":            types.SourceFile,
-		"readline":        types.SourceFile,
-		"readlines":       types.SourceFile,
-		// Tornado
-		"get_argument":     types.SourceHTTPGet,
-		"get_query_argument": types.SourceHTTPGet,
-		"get_body_argument": types.SourceHTTPPost,
-		// aiohttp
-		"request.post":     types.SourceHTTPPost,
-		"request.json":     types.SourceHTTPJSON,
-		// argparse
-		"parse_args":       types.SourceCLIArg,
-		"add_argument":     types.SourceCLIArg,
-		// requests (HTTP client)
-		"requests.get":     types.SourceNetwork,
-		"requests.post":    types.SourceNetwork,
-		"response.json":    types.SourceNetwork,
-		"response.text":    types.SourceNetwork,
+		BaseAnalyzer:   analyzer.NewBaseAnalyzer("python", languages.GetExtensionsForLanguage("python")),
+		inputSources:   m.GetInputSourcesMap(),
+		inputFunctions: m.GetInputFunctionsMap(),
 	}
 
 	// Register framework patterns

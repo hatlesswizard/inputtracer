@@ -7,6 +7,7 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
+	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
 )
@@ -19,27 +20,10 @@ type CSharpAnalyzer struct {
 
 // NewCSharpAnalyzer creates a new C# analyzer
 func NewCSharpAnalyzer() *CSharpAnalyzer {
+	m := mappings.GetMappings("c_sharp")
 	a := &CSharpAnalyzer{
 		BaseAnalyzer: analyzer.NewBaseAnalyzer("c_sharp", languages.GetExtensionsForLanguage("c_sharp")),
-	}
-
-	a.inputSources = map[string]types.SourceType{
-		"Console.ReadLine":                 types.SourceStdin,
-		"Console.Read":                     types.SourceStdin,
-		"Console.ReadKey":                  types.SourceStdin,
-		"Environment.GetEnvironmentVariable": types.SourceEnvVar,
-		"Environment.GetCommandLineArgs":  types.SourceCLIArg,
-		"Request.Query":                    types.SourceHTTPGet,
-		"Request.Form":                     types.SourceHTTPPost,
-		"Request.Body":                     types.SourceHTTPBody,
-		"Request.Headers":                  types.SourceHTTPHeader,
-		"Request.Cookies":                  types.SourceHTTPCookie,
-		"HttpContext.Request":              types.SourceUserInput,
-		"File.ReadAllText":                 types.SourceFile,
-		"File.ReadAllLines":                types.SourceFile,
-		"File.ReadAllBytes":                types.SourceFile,
-		"StreamReader.ReadLine":            types.SourceFile,
-		"StreamReader.ReadToEnd":           types.SourceFile,
+		inputSources: m.GetInputSourcesMap(),
 	}
 
 	return a

@@ -9,6 +9,7 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
+	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
 )
@@ -23,37 +24,12 @@ type JSAnalyzer struct {
 
 // NewJSAnalyzer creates a new JavaScript analyzer
 func NewJSAnalyzer() *JSAnalyzer {
+	m := mappings.GetMappings("javascript")
 	a := &JSAnalyzer{
-		BaseAnalyzer: analyzer.NewBaseAnalyzer("javascript", languages.GetExtensionsForLanguage("javascript")),
-	}
-
-	// Browser global sources
-	a.globalSources = map[string]types.SourceType{
-		"location.href":     types.SourceHTTPGet,
-		"location.search":   types.SourceHTTPGet,
-		"location.hash":     types.SourceHTTPGet,
-		"location.pathname": types.SourceHTTPPath,
-		"document.URL":      types.SourceHTTPGet,
-		"document.referrer": types.SourceHTTPHeader,
-		"document.cookie":   types.SourceHTTPCookie,
-		"window.location":   types.SourceHTTPGet,
-		"window.name":       types.SourceUserInput,
-	}
-
-	// DOM sources
-	a.domSources = map[string]types.SourceType{
-		"value":         types.SourceUserInput, // element.value
-		"innerHTML":     types.SourceUserInput,
-		"innerText":     types.SourceUserInput,
-		"textContent":   types.SourceUserInput,
-		"data":          types.SourceUserInput,
-	}
-
-	// Node.js sources
-	a.nodeSources = map[string]types.SourceType{
-		"process.argv":    types.SourceCLIArg,
-		"process.env":     types.SourceEnvVar,
-		"process.stdin":   types.SourceStdin,
+		BaseAnalyzer:  analyzer.NewBaseAnalyzer("javascript", languages.GetExtensionsForLanguage("javascript")),
+		globalSources: m.GetGlobalSourcesMap(),
+		domSources:    m.GetDOMSourcesMap(),
+		nodeSources:   m.GetNodeSourcesMap(),
 	}
 
 	// Register framework patterns

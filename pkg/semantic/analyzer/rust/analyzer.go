@@ -7,6 +7,7 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
+	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
 )
@@ -19,29 +20,10 @@ type RustAnalyzer struct {
 
 // NewRustAnalyzer creates a new Rust analyzer
 func NewRustAnalyzer() *RustAnalyzer {
+	m := mappings.GetMappings("rust")
 	a := &RustAnalyzer{
 		BaseAnalyzer: analyzer.NewBaseAnalyzer("rust", languages.GetExtensionsForLanguage("rust")),
-	}
-
-	a.inputSources = map[string]types.SourceType{
-		"env::args":       types.SourceCLIArg,
-		"env::args_os":    types.SourceCLIArg,
-		"env::var":        types.SourceEnvVar,
-		"env::var_os":     types.SourceEnvVar,
-		"stdin":           types.SourceStdin,
-		"read_line":       types.SourceStdin,
-		"BufRead":         types.SourceStdin,
-		"fs::read":        types.SourceFile,
-		"read_to_string":  types.SourceFile,
-		"File::open":      types.SourceFile,
-		"web::Query":      types.SourceHTTPGet,
-		"web::Form":       types.SourceHTTPPost,
-		"web::Json":       types.SourceHTTPBody,
-		"web::Path":       types.SourceHTTPGet,
-		"Query<":          types.SourceHTTPGet,
-		"Form<":           types.SourceHTTPPost,
-		"Json<":           types.SourceHTTPBody,
-		"Path<":           types.SourceHTTPGet,
+		inputSources: m.GetInputSourcesMap(),
 	}
 
 	return a

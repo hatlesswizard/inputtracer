@@ -8,6 +8,7 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
+	"github.com/hatlesswizard/inputtracer/pkg/semantic/mappings"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	sitter "github.com/smacker/go-tree-sitter"
 )
@@ -24,31 +25,11 @@ func NewTypeScriptAnalyzer() *TypeScriptAnalyzer {
 	// TypeScript analyzer handles both .ts and .tsx files
 	exts := languages.GetExtensionsForLanguage("typescript")
 	exts = append(exts, languages.GetExtensionsForLanguage("tsx")...)
+	m := mappings.GetMappings("typescript")
 	a := &TypeScriptAnalyzer{
-		BaseAnalyzer: analyzer.NewBaseAnalyzer("typescript", exts),
-	}
-
-	a.inputSources = map[string]types.SourceType{
-		"req.body":        types.SourceHTTPBody,
-		"req.query":       types.SourceHTTPGet,
-		"req.params":      types.SourceHTTPPath,
-		"req.headers":     types.SourceHTTPHeader,
-		"req.cookies":     types.SourceHTTPCookie,
-		"request.body":    types.SourceHTTPBody,
-		"request.query":   types.SourceHTTPGet,
-		"request.params":  types.SourceHTTPPath,
-		"request.headers": types.SourceHTTPHeader,
-		"request.cookies": types.SourceHTTPCookie,
-		"process.argv":    types.SourceCLIArg,
-		"process.env":     types.SourceEnvVar,
-	}
-
-	a.inputFunctions = map[string]types.SourceType{
-		"prompt":       types.SourceStdin,
-		"readline":     types.SourceStdin,
-		"readFileSync": types.SourceFile,
-		"readFile":     types.SourceFile,
-		"fetch":        types.SourceNetwork,
+		BaseAnalyzer:   analyzer.NewBaseAnalyzer("typescript", exts),
+		inputSources:   m.GetInputSourcesMap(),
+		inputFunctions: m.GetInputFunctionsMap(),
 	}
 
 	a.registerFrameworkPatterns()
