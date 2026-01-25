@@ -1124,69 +1124,21 @@ func (t *Tracer) identifySource(expr string, filePath string, line int) *types.S
 		}
 	}
 
-	// Check for input functions
-	inputFuncs := []string{
-		"file_get_contents", "fgets", "fread", "fgetc",
-		"getenv", "getallheaders", "apache_request_headers",
-	}
-	for _, fn := range inputFuncs {
-		if strings.Contains(expr, fn+"(") {
-			return &types.SourceInfo{
-				Type:       types.SourceFile,
-				Expression: expr,
-				FilePath:   filePath,
-				Line:       line,
-			}
-		}
-	}
-
-	// =====================================================
-	// UNIVERSAL PHP FRAMEWORK PATTERNS (from pkg/sources/php)
-	// These detect user input across ALL PHP frameworks
-	// =====================================================
-
-	// Check property array access patterns using centralized patterns
-	if phpPatterns.IsInputPropertyAccess(expr) {
+	// Check for input/deserialization/network functions using centralized definitions
+	// from pkg/sources/php/functions.go (replaces hardcoded inline arrays)
+	if sourceType, confidence := phpPatterns.IdentifyExternalDataSource(expr); confidence > 0 {
 		return &types.SourceInfo{
-			Type:       types.SourceUserInput,
+			Type:       types.SourceType(sourceType),
 			Expression: expr,
 			FilePath:   filePath,
 			Line:       line,
 		}
 	}
 
-	// Check method call patterns using centralized patterns
-	if phpPatterns.IsInputMethodCall(expr) {
+	// Check property array access and method call patterns using centralized patterns
+	if phpPatterns.IsInputPropertyAccess(expr) || phpPatterns.IsInputMethodCall(expr) {
 		return &types.SourceInfo{
 			Type:       types.SourceUserInput,
-			Expression: expr,
-			FilePath:   filePath,
-			Line:       line,
-		}
-	}
-
-	// Deserialization functions (receive potentially tainted data)
-	deserializeFuncs := []string{
-		"unserialize(",
-		"json_decode(",
-		"simplexml_load_string(",
-		"yaml_parse(",
-	}
-	for _, fn := range deserializeFuncs {
-		if strings.Contains(expr, fn) {
-			return &types.SourceInfo{
-				Type:       types.SourceUserInput,
-				Expression: expr,
-				FilePath:   filePath,
-				Line:       line,
-			}
-		}
-	}
-
-	// cURL responses (external data)
-	if strings.Contains(expr, "curl_exec(") || strings.Contains(expr, "curl_multi_getcontent(") {
-		return &types.SourceInfo{
-			Type:       types.SourceType("network"),
 			Expression: expr,
 			FilePath:   filePath,
 			Line:       line,

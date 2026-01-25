@@ -1,6 +1,7 @@
 # InputTracer Complete Codebase Documentation
-Generated: 2026-01-25
+Generated: 2026-01-25 (refreshed)
 Project Type: Go Library
+Total Lines of Code: 40,717 (Go)
 Total Files Analyzed: 95+ core library files
 
 ---
@@ -37,7 +38,7 @@ Total Files Analyzed: 95+ core library files
 - **Flow Graph Generation**: Outputs DOT/Mermaid/JSON/HTML visualizations
 
 ### 1.3 Technology Stack
-- **Primary Language**: Go 1.21
+- **Primary Language**: Go 1.23
 - **Parser**: Tree-Sitter (via go-tree-sitter bindings)
 - **Dependencies**:
   - `github.com/smacker/go-tree-sitter` - Multi-language AST parsing
@@ -128,12 +129,9 @@ inputtracer/
 │   │   │
 │   │   ├── php/                     # PHP-specific patterns
 │   │   │   ├── matcher.go          # PHP source matcher (superglobals, PSR-7)
-│   │   │   ├── frameworks.go       # PHP framework patterns
-│   │   │   ├── laravel.go          # Laravel-specific patterns
-│   │   │   ├── symfony.go          # Symfony-specific patterns
-│   │   │   ├── codeigniter.go      # CodeIgniter patterns
-│   │   │   ├── wordpress.go        # WordPress patterns
-│   │   │   └── mybb.go             # MyBB patterns
+│   │   │   ├── patterns.go         # Centralized PHP regex patterns (432 lines)
+│   │   │   ├── laravel.go          # Laravel-specific patterns (generated, 541 lines)
+│   │   │   └── symfony.go          # Symfony-specific patterns (generated, 288 lines)
 │   │   │
 │   │   ├── javascript/              # JavaScript-specific patterns
 │   │   │   ├── matcher.go          # JS source matcher
@@ -619,13 +617,8 @@ html := result.ToHTML()
 ### 8.1 PHP Frameworks
 | Framework | Indicators |
 |-----------|------------|
-| MyBB | `inc/class_core.php`, `inc/init.php` |
-| WordPress | `wp-config.php`, `wp-includes/version.php` |
 | Laravel | `artisan`, `bootstrap/app.php` |
-| Symfony | `symfony.lock`, `config/bundles.php` |
-| CodeIgniter | `system/core/CodeIgniter.php` |
-| Drupal | `core/includes/bootstrap.inc` |
-| phpBB | `phpbb/request/request.php` |
+| Symfony | `symfony.lock`, `config/bundles.php`, `src/Kernel.php` |
 
 ### 8.2 JavaScript Frameworks
 | Framework | Indicators |
@@ -791,12 +784,12 @@ Create framework patterns in the language-specific subdirectory:
 | pkg/parser/ | 3 |
 | pkg/sources/ (root) | 10 |
 | pkg/sources/common/ | 4 |
-| pkg/sources/frameworks/ | 1 |
-| pkg/sources/php/ | 7 |
-| pkg/sources/javascript/ | 6 |
+| pkg/sources/constants/ | 3 |
+| pkg/sources/php/ | 4 (matcher.go, patterns.go, laravel.go, symfony.go) |
+| pkg/sources/javascript/ | 2 |
 | pkg/sources/python/ | 2 |
 | pkg/sources/golang/ | 2 |
-| pkg/sources/java/ | 3 |
+| pkg/sources/java/ | 2 |
 | pkg/sources/ruby/ | 2 |
 | pkg/sources/rust/ | 2 |
 | pkg/sources/c/ | 2 |
@@ -805,7 +798,7 @@ Create framework patterns in the language-specific subdirectory:
 | pkg/ast/ | 2 |
 | pkg/output/ | 2 |
 | pkg/semantic/ | 25+ |
-| **Total** | ~95 |
+| **Total** | ~75+ |
 
 ---
 
@@ -1138,4 +1131,158 @@ symbols := indexer.FindByMethod("ClassName.methodName")
 
 ---
 
-*Last updated: 2026-01-25 (refreshed)*
+*Last updated: 2026-01-25 (refreshed via /use-context)*
+
+---
+
+## 22. PHP Centralized Patterns Reference
+
+### 22.1 Universal Input Detection Patterns (`pkg/sources/php/patterns.go`)
+
+```go
+// InputMethodPattern - Methods that ALWAYS indicate user input
+// Matches: input, getInput, getPost, getQuery, getCookie, getHeader, etc.
+InputMethodPattern = regexp.MustCompile(`(?i)^(get_?)?(input|var|variable|query_?params?|parsed_?body|cookie_?params?|server_?params?|uploaded_?files?|headers?|all)$|^(get_?)?(post|cookie|param)s?$`)
+
+// InputPropertyPattern - Properties that hold user input
+// Matches: input, request, params, query, cookies, headers, body, data, args, etc.
+InputPropertyPattern = regexp.MustCompile(`(?i)^(input|request|params?|query|cookies?|headers?|body|data|args?|post|get|files?|server|attributes?|payload)s?$`)
+
+// InputObjectPattern - Objects that carry user input
+InputObjectPattern = regexp.MustCompile(`(?i)(request|input|req|params?|http|ctx|context|getRequest\(\)|getApplication\(\))`)
+
+// ExcludeMethodPattern - Methods to EXCLUDE (false positive prevention)
+ExcludeMethodPattern = regexp.MustCompile(`(?i)^(getData|getBody|getContent|fetch|find|load|read)$`)
+```
+
+### 22.2 SQL Embedded Expression Patterns
+
+```go
+// SQLCurlyBracePattern - {$var->prop['key']} in SQL strings
+SQLCurlyBracePattern = regexp.MustCompile(`\{\s*\$(\w+)->(\w+)\s*\[\s*['""]([^'""]+)['"]\s*\]\s*\}`)
+
+// SQLSimpleCurlyPattern - {$var->prop} without array access
+SQLSimpleCurlyPattern = regexp.MustCompile(`\{\s*\$(\w+)->(\w+)\s*\}`)
+
+// SQLNoCurlyPattern - "$var->prop['key']" direct interpolation
+SQLNoCurlyPattern = regexp.MustCompile(`"\s*[^"]*\$(\w+)->(\w+)\s*\[\s*['""]([^'""]+)['"]\s*\]`)
+```
+
+### 22.3 Helper Functions
+
+```go
+// Detection helpers
+IsInputMethod(methodName string) bool
+IsInputProperty(propName string) bool
+IsInputObject(objName string) bool
+IsExcludedMethod(methodName string) bool
+IsContextDependentMethod(methodName string) bool
+MatchesInputCarrier(objName, propOrMethodName string, isMethod bool) bool
+
+// Extraction helpers
+ExtractSQLEmbeddedExpressions(line string) []SQLEmbeddedMatch
+ExtractConcatenatedExpressions(line string) []ConcatMatch
+ExtractEscapedExpressions(line string) []EscapeMatch
+ContainsSuperglobal(text string) (bool, string)
+
+// Dynamic pattern builders
+BuildPropertyAssignLoopPattern(propertyName, keyVar, valVar string) *regexp.Regexp
+BuildDirectAssignPattern(propertyName string) *regexp.Regexp
+BuildThisPropertyAssignPattern(paramName string) *regexp.Regexp
+BuildReturnPropertyPattern(propertyName string) *regexp.Regexp
+BuildMethodCallPattern(methodName string) *regexp.Regexp
+GetTypeHintPatterns(varName string) []*regexp.Regexp
+```
+
+---
+
+## 23. Constants Reference (`pkg/sources/constants/`)
+
+### 23.1 Input Labels (`input_labels.go`)
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `SourceHTTPGet` | `HTTP_GET` | GET query parameters |
+| `SourceHTTPPost` | `HTTP_POST` | POST form data |
+| `SourceHTTPCookie` | `HTTP_COOKIE` | Cookie values |
+| `SourceHTTPHeader` | `HTTP_HEADER` | HTTP headers |
+| `SourceHTTPBody` | `HTTP_BODY` | Raw request body |
+| `SourceHTTPFile` | `HTTP_FILE` | Uploaded files |
+| `SourceHTTPPath` | `HTTP_PATH` | URL path parameters |
+| `SourceCLIArg` | `CLI_ARG` | Command line arguments |
+| `SourceEnvVar` | `ENV_VAR` | Environment variables |
+| `SourceFileRead` | `FILE_READ` | File system reads |
+| `SourceDatabase` | `DATABASE` | Database queries |
+| `SourceNetwork` | `NETWORK` | Network socket data |
+| `SourceSession` | `SESSION` | Session data |
+| `SourceUserInput` | `USER_INPUT` | Generic user input |
+
+### 23.2 Propagation Types (`propagation_types.go`)
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `PropagationDirect` | `direct` | Direct variable assignment |
+| `PropagationFunction` | `function` | Through function call |
+| `PropagationReturn` | `return` | Function return value |
+| `PropagationParameter` | `parameter` | Function parameter |
+| `PropagationProperty` | `property` | Object property access |
+| `PropagationArray` | `array` | Array element access |
+
+### 23.3 Scope Types (`scope_types.go`)
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `ScopeGlobal` | `global` | Global scope |
+| `ScopeFunction` | `function` | Function scope |
+| `ScopeMethod` | `method` | Method scope |
+| `ScopeClass` | `class` | Class scope |
+| `ScopeBlock` | `block` | Block scope |
+| `ScopeClosure` | `closure` | Closure scope |
+
+---
+
+## 24. AST Node Types Reference (`pkg/sources/ast_patterns.go`)
+
+### 24.1 Universal Node Types (All Languages)
+```go
+UniversalASTNodeTypes = ASTNodeTypes{
+    FunctionTypes: []string{
+        "function_definition", "function_declaration", "method_definition",
+        "method_declaration", "function_item", "arrow_function",
+        "function_expression", "lambda", "def", "fn_item",
+    },
+    ScopeTypes: []string{
+        "function_definition", "function_declaration", "method_definition",
+        "method_declaration", "class_definition", "class_declaration",
+        "module", "program", "source_file",
+    },
+    AssignmentTypes: []string{
+        "assignment_expression", "assignment_statement", "augmented_assignment",
+        "variable_declarator", "short_var_declaration",
+    },
+    CallTypes: []string{
+        "call_expression", "function_call_expression", "member_call_expression",
+        "method_invocation",
+    },
+    IdentifierTypes: []string{
+        "identifier", "variable_name", "name", "property_identifier",
+        "attribute", "constant",
+    },
+}
+```
+
+### 24.2 Language-Specific Node Types
+Supported languages with custom AST mappings:
+- PHP, JavaScript, TypeScript, TSX, Python, Go, Java, C, C++, C#, Ruby, Rust
+
+### 24.3 Helper Functions
+```go
+IsFunctionNode(nodeType string) bool
+IsFunctionNodeForLanguage(nodeType, language string) bool
+IsScopeNode(nodeType string) bool
+IsScopeNodeForLanguage(nodeType, language string) bool
+IsAssignmentNode(nodeType string) bool
+IsAssignmentNodeForLanguage(nodeType, language string) bool
+IsCallNode(nodeType string) bool
+IsCallNodeForLanguage(nodeType, language string) bool
+IsIdentifierNode(nodeType string) bool
+IsIdentifierNodeForLanguage(nodeType, language string) bool
+GetASTNodeTypesForLanguage(language string) ASTNodeTypes
+```

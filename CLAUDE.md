@@ -176,6 +176,21 @@ go build ./...           # Builds successfully
 
 When all tests pass, use `superpowers:verification-before-completion` skill to mark INTERACTIVE_TEST complete.
 
+### Debugging Workflow Issues
+
+If workflow steps aren't auto-marking, check the debug log:
+
+```bash
+tail -f ~/.claude/logs/workflow-debug.log
+```
+
+**Plan file detection**: The PLAN step searches for `.md` files (modified within 10 min) in:
+- `~/.claude/plans/`
+- `./docs/plans/` (this project uses this)
+- `./plans/`
+
+If PLAN doesn't mark after invoking `superpowers:writing-plans`, ensure your plan file is in one of these directories.
+
 ### Quick Start
 
 Use `/enforced-implementation` to run the complete workflow:
