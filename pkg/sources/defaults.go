@@ -2,6 +2,8 @@
 // All default values should be defined here and referenced from other packages
 package sources
 
+import "strings"
+
 // DefaultSkipDirs contains directories that should be skipped during analysis
 // Replaces hardcoded array in tracer.go DefaultConfig()
 var DefaultSkipDirs = []string{
@@ -29,6 +31,7 @@ var LanguageSkipDirs = map[string][]string{
 	"java":       {"target", "build", "bin", "out"},
 	"c_sharp":    {"bin", "obj", "packages"},
 	"ruby":       {"vendor", ".bundle"},
+	"php":        {"vendor", "cache", "tests", "tmp", "storage"},
 	"ide":        {".idea", ".vscode", ".vs"},
 }
 
@@ -99,4 +102,25 @@ func GetSkipDirsForLanguages(languages []string) []string {
 		result = append(result, d)
 	}
 	return result
+}
+
+// PHPDiscoverySkipDirs returns directories to skip during PHP discovery
+// These include vendor, cache, tests, and VCS directories
+var PHPDiscoverySkipDirs = []string{
+	"/vendor/",
+	"/cache/",
+	"/tests/",
+	"/.git/",
+	"/tmp/",
+	"/storage/",
+}
+
+// ShouldSkipPHPPath checks if a path should be skipped during PHP discovery
+func ShouldSkipPHPPath(path string) bool {
+	for _, skip := range PHPDiscoverySkipDirs {
+		if strings.Contains(path, skip) {
+			return true
+		}
+	}
+	return false
 }
