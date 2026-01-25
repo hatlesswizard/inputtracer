@@ -12,6 +12,7 @@ import (
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	pkgSources "github.com/hatlesswizard/inputtracer/pkg/sources"
 	"github.com/hatlesswizard/inputtracer/pkg/sources/common"
+	"github.com/hatlesswizard/inputtracer/pkg/sources/patterns"
 	phpPatterns "github.com/hatlesswizard/inputtracer/pkg/sources/php"
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/smacker/go-tree-sitter/php"
@@ -446,7 +447,7 @@ func (e *ExecutionEngine) findVariableAssignments(varName string) []variableAssi
 	// Search all file contents for assignments
 	for file, content := range e.fileContents {
 		// Pattern: $varname = something
-		assignPattern := getOrCompileRegex(`\$` + regexp.QuoteMeta(varNameClean) + `\s*=\s*([^;]+);`)
+		assignPattern := patterns.BuildVariableAssignPattern(varNameClean)
 		lines := strings.Split(string(content), "\n")
 
 		for lineNum, line := range lines {
@@ -477,9 +478,9 @@ func (e *ExecutionEngine) findExternalPropertyAssignments(varName string, proper
 		// or $varname->property['key'] = something
 		assignPatterns := []*regexp.Regexp{
 			// $var->property = value;
-			getOrCompileRegex(`\$` + regexp.QuoteMeta(varNameWithoutDollar) + `->` + regexp.QuoteMeta(propertyName) + `\s*=\s*([^;]+);`),
+			patterns.BuildPropertyExternalAssignPattern(varNameWithoutDollar, propertyName),
 			// $var->property['key'] = value; (array element assignment)
-			getOrCompileRegex(`\$` + regexp.QuoteMeta(varNameWithoutDollar) + `->` + regexp.QuoteMeta(propertyName) + `\[['"]?\w+['"]?\]\s*=\s*([^;]+);`),
+			patterns.BuildPropertyArrayExternalAssignPattern(varNameWithoutDollar, propertyName),
 		}
 
 		lines := strings.Split(string(content), "\n")
@@ -540,8 +541,7 @@ func (e *ExecutionEngine) traceExternalPropertyAssignment(parsed *ParsedExpressi
 		}
 
 		// If source is a function call, trace into that function
-		funcCallPattern := getOrCompileRegex(`^(\w+)\(([^)]*)\)$`)
-		if matches := funcCallPattern.FindStringSubmatch(assign.Source); len(matches) >= 2 {
+		if matches := patterns.FunctionCallPattern.FindStringSubmatch(assign.Source); len(matches) >= 2 {
 			funcName := matches[1]
 			funcArgs := ""
 			if len(matches) >= 3 {
@@ -624,8 +624,7 @@ func (e *ExecutionEngine) checkMagicPropertyPattern(classDef *types.ClassDef, cl
 	if method, ok := classDef.Methods["__get"]; ok {
 		info.HasMagicGet = true
 		// Look for return $this->property[$name] pattern
-		backingPattern := getOrCompileRegex(`return\s+\$this->(\w+)\[\$\w+\]`)
-		if matches := backingPattern.FindStringSubmatch(method.BodySource); len(matches) >= 2 {
+		if matches := patterns.BackingPropertyPattern.FindStringSubmatch(method.BodySource); len(matches) >= 2 {
 			info.BackingProperty = matches[1]
 		}
 		return info
@@ -633,10 +632,9 @@ func (e *ExecutionEngine) checkMagicPropertyPattern(classDef *types.ClassDef, cl
 
 	// Check for dynamic property assignment pattern: $this->$key = $val
 	// This is used in classes like MyLanguage that load properties dynamically
-	dynamicAssignPattern := getOrCompileRegex(`\$this->\$(\w+)\s*=\s*\$(\w+)`)
 	for methodName, method := range classDef.Methods {
 		if method.BodySource != "" {
-			if dynamicAssignPattern.MatchString(method.BodySource) {
+			if patterns.DynamicPropertyAssignPattern.MatchString(method.BodySource) {
 				info.HasDynamicAssign = true
 				info.AssignMethodName = methodName
 
@@ -646,8 +644,7 @@ func (e *ExecutionEngine) checkMagicPropertyPattern(classDef *types.ClassDef, cl
 				}
 
 				// Check for foreach pattern: foreach($array as $key => $val) { $this->$key = $val; }
-				foreachPattern := getOrCompileRegex(`foreach\s*\(\s*\$(\w+)\s+as\s+\$\w+\s*=>\s*\$\w+`)
-				if matches := foreachPattern.FindStringSubmatch(method.BodySource); len(matches) >= 2 {
+				if matches := patterns.ForeachWithKVPattern.FindStringSubmatch(method.BodySource); len(matches) >= 2 {
 					info.BackingProperty = matches[1]
 				}
 
@@ -1011,14 +1008,12 @@ func (e *ExecutionEngine) inferMethodReturnType(classDef *types.ClassDef, method
 	}
 
 	// Check for return new ClassName()
-	newPattern := getOrCompileRegex(`return\s+new\s+(\w+)\(`)
-	if matches := newPattern.FindStringSubmatch(body); len(matches) >= 2 {
+	if matches := patterns.ReturnNewPattern.FindStringSubmatch(body); len(matches) >= 2 {
 		return matches[1]
 	}
 
 	// Check for @return PHPDoc annotation
-	returnDocPattern := getOrCompileRegex(`@return\s+(\w+)`)
-	if matches := returnDocPattern.FindStringSubmatch(body); len(matches) >= 2 {
+	if matches := patterns.PHPDocReturnPattern.FindStringSubmatch(body); len(matches) >= 2 {
 		returnType := matches[1]
 		if returnType != "void" && returnType != "self" && returnType != "static" && returnType != "mixed" {
 			return returnType
@@ -1047,8 +1042,7 @@ func (e *ExecutionEngine) parseExpression(expr string) *ParsedExpression {
 
 	// GAP #1 FIX: Try superglobal pattern first: $_GET['key'], $_POST['key'], etc.
 	// Pattern: $_SUPERGLOBAL['key'] or $_SUPERGLOBAL["key"]
-	superglobalPattern := getOrCompileRegex(`^\$_(GET|POST|COOKIE|REQUEST|SERVER|FILES|ENV|SESSION)\[['"]?(\w+)['"]?\]$`)
-	if matches := superglobalPattern.FindStringSubmatch(expr); len(matches) >= 3 {
+	if matches := patterns.SuperglobalAccessPattern.FindStringSubmatch(expr); len(matches) >= 3 {
 		parsed.Type = ExprTypeSuperglobal
 		parsed.SuperglobalName = "$_" + matches[1]
 		parsed.AccessKey = matches[2]
@@ -1072,8 +1066,7 @@ func (e *ExecutionEngine) parseExpression(expr string) *ParsedExpression {
 	}
 
 	// GAP #3 FIX: Try static property/constant pattern: Class::$property or Class::CONSTANT
-	staticPropPattern := getOrCompileRegex(`^(\w+)::\$?(\w+)$`)
-	if matches := staticPropPattern.FindStringSubmatch(expr); len(matches) >= 3 {
+	if matches := patterns.StaticPropertyPattern.FindStringSubmatch(expr); len(matches) >= 3 {
 		parsed.Type = ExprTypeStaticProperty
 		parsed.ClassName = matches[1]
 		parsed.PropertyName = matches[2]
@@ -1096,8 +1089,7 @@ func (e *ExecutionEngine) parseExpression(expr string) *ParsedExpression {
 	}
 
 	// Try property access pattern: $var->property or $var->property['key']
-	propPattern := getOrCompileRegex(`^\$(\w+)->(\w+)(?:\[['"]?(\w+)['"]?\])?$`)
-	if matches := propPattern.FindStringSubmatch(expr); len(matches) >= 3 {
+	if matches := patterns.PropertyAccessPattern.FindStringSubmatch(expr); len(matches) >= 3 {
 		parsed.Type = ExprTypePropertyAccess
 		parsed.VarName = "$" + matches[1]
 		parsed.PropertyName = matches[2]
@@ -1109,8 +1101,7 @@ func (e *ExecutionEngine) parseExpression(expr string) *ParsedExpression {
 
 	// GAP #2 FIX: Try simple local variable pattern: $varname
 	// This must come LAST as it's the most generic pattern
-	localVarPattern := getOrCompileRegex(`^\$(\w+)$`)
-	if matches := localVarPattern.FindStringSubmatch(expr); len(matches) >= 2 {
+	if matches := patterns.LocalVariablePattern.FindStringSubmatch(expr); len(matches) >= 2 {
 		parsed.Type = ExprTypeLocalVariable
 		parsed.VarName = "$" + matches[1]
 		return parsed
@@ -1136,7 +1127,7 @@ func (e *ExecutionEngine) parseChainedExpression(expr string) *ParsedExpression 
 	}
 
 	basePart := expr[1:varNameEnd] // Remove $ prefix
-	if !getOrCompileRegex(`^\w+$`).MatchString(basePart) {
+	if !patterns.WordPattern.MatchString(basePart) {
 		return nil
 	}
 	varName := "$" + basePart
@@ -1146,8 +1137,8 @@ func (e *ExecutionEngine) parseChainedExpression(expr string) *ParsedExpression 
 	var steps []ChainStep
 
 	// Patterns for parsing chain steps (property access only - method calls use extractChainMethodCall)
-	propWithKeyPattern := getOrCompileRegex(`^->(\w+)\[['"]?(\w+)['"]?\]`)
-	propPattern := getOrCompileRegex(`^->(\w+)`)
+	propWithKeyPattern := patterns.ChainPropertyWithKeyPattern
+	propPattern := patterns.ChainSimplePropertyPattern
 
 	for len(remainder) > 0 && strings.HasPrefix(remainder, "->") {
 		var step ChainStep
@@ -1316,7 +1307,7 @@ func (e *ExecutionEngine) extractMethodCall(expr string) (string, string, string
 
 	varName := expr[:arrowIdx]
 	// Validate variable name: $word
-	if !getOrCompileRegex(`^\$\w+$`).MatchString(varName) {
+	if !patterns.DollarVariablePattern.MatchString(varName) {
 		return "", "", "", false
 	}
 
@@ -1329,7 +1320,7 @@ func (e *ExecutionEngine) extractMethodCall(expr string) (string, string, string
 
 	methodName := remainder[:parenIdx]
 	// Validate method name: word characters only
-	if !getOrCompileRegex(`^\w+$`).MatchString(methodName) {
+	if !patterns.WordPattern.MatchString(methodName) {
 		return "", "", "", false
 	}
 
@@ -1369,7 +1360,7 @@ func (e *ExecutionEngine) extractStaticMethodCall(expr string) (string, string, 
 	}
 
 	className := expr[:colonIdx]
-	if !getOrCompileRegex(`^\w+$`).MatchString(className) {
+	if !patterns.WordPattern.MatchString(className) {
 		return "", "", "", false
 	}
 
@@ -1382,7 +1373,7 @@ func (e *ExecutionEngine) extractStaticMethodCall(expr string) (string, string, 
 	}
 
 	methodName := remainder[:parenIdx]
-	if !getOrCompileRegex(`^\w+$`).MatchString(methodName) {
+	if !patterns.WordPattern.MatchString(methodName) {
 		return "", "", "", false
 	}
 
@@ -1422,7 +1413,7 @@ func (e *ExecutionEngine) extractChainMethodCall(s string) (string, string, int,
 	}
 
 	methodName := remainder[:parenIdx]
-	if !getOrCompileRegex(`^\w+$`).MatchString(methodName) {
+	if !patterns.WordPattern.MatchString(methodName) {
 		return "", "", 0, false
 	}
 
@@ -1828,8 +1819,7 @@ func (e *ExecutionEngine) analyzeMethodReturns(classDef *types.ClassDef, method 
 	body := method.BodySource
 
 	// Find all return statements
-	returnPattern := getOrCompileRegex(`return\s+([^;]+);`)
-	returnMatches := returnPattern.FindAllStringSubmatch(body, -1)
+	returnMatches := patterns.ReturnStatementPattern.FindAllStringSubmatch(body, -1)
 
 	for _, match := range returnMatches {
 		if len(match) >= 2 {
@@ -1843,8 +1833,7 @@ func (e *ExecutionEngine) analyzeMethodReturns(classDef *types.ClassDef, method 
 
 			// PHASE 2.1: Check if it returns TYPE-CASTED $this->property[$param]
 			// Pattern: (int)$this->property[$paramName] or (float)$this->... etc.
-			castPropParamPattern := getOrCompileRegex(`\((\w+)\)\s*\$this->(\w+)\[\$(\w+)\]`)
-			if propMatch := castPropParamPattern.FindStringSubmatch(returnExpr); len(propMatch) >= 4 {
+			if propMatch := patterns.TypeCastPropertyReturnPattern.FindStringSubmatch(returnExpr); len(propMatch) >= 4 {
 				info.ReturnsProperty = true
 				info.PropertyName = propMatch[2] // property name
 				paramName := propMatch[3]        // param used as key
@@ -1862,8 +1851,7 @@ func (e *ExecutionEngine) analyzeMethodReturns(classDef *types.ClassDef, method 
 			// Check if it returns $this->property[$param] (without type cast)
 			// Pattern: $this->property[$paramName]
 			if !info.ReturnsProperty {
-				propParamPattern := getOrCompileRegex(`\$this->(\w+)\[\$(\w+)\]`)
-				if propMatch := propParamPattern.FindStringSubmatch(returnExpr); len(propMatch) >= 3 {
+				if propMatch := patterns.PropertyWithParamKeyPattern.FindStringSubmatch(returnExpr); len(propMatch) >= 3 {
 					info.ReturnsProperty = true
 					info.PropertyName = propMatch[1]
 					paramName := propMatch[2]
@@ -1882,8 +1870,7 @@ func (e *ExecutionEngine) analyzeMethodReturns(classDef *types.ClassDef, method 
 			// PHASE 2.2: Check for null coalescing pattern
 			// Pattern: $this->property[$param] ?? $default
 			if !info.ReturnsProperty {
-				nullCoalescePattern := getOrCompileRegex(`\$this->(\w+)\[\$(\w+)\]\s*\?\?`)
-				if propMatch := nullCoalescePattern.FindStringSubmatch(returnExpr); len(propMatch) >= 3 {
+				if propMatch := patterns.NullCoalescePropertyPattern.FindStringSubmatch(returnExpr); len(propMatch) >= 3 {
 					info.ReturnsProperty = true
 					info.PropertyName = propMatch[1]
 					paramName := propMatch[2]
@@ -1901,8 +1888,7 @@ func (e *ExecutionEngine) analyzeMethodReturns(classDef *types.ClassDef, method 
 			// PHASE 2.2: Check for ternary isset pattern
 			// Pattern: isset($this->property[$param]) ? $this->property[$param] : default
 			if !info.ReturnsProperty {
-				ternaryPattern := getOrCompileRegex(`isset\s*\(\s*\$this->(\w+)\[\$(\w+)\]\s*\)\s*\?\s*\$this->(\w+)\[\$(\w+)\]`)
-				if propMatch := ternaryPattern.FindStringSubmatch(returnExpr); len(propMatch) >= 5 {
+				if propMatch := patterns.TernaryIssetPattern.FindStringSubmatch(returnExpr); len(propMatch) >= 5 {
 					// Verify both property refs match
 					if propMatch[1] == propMatch[3] && propMatch[2] == propMatch[4] {
 						info.ReturnsProperty = true
@@ -1922,8 +1908,7 @@ func (e *ExecutionEngine) analyzeMethodReturns(classDef *types.ClassDef, method 
 
 			// Check if it returns $this->property directly
 			if !info.ReturnsProperty {
-				directPropPattern := getOrCompileRegex(`^\$this->(\w+)$`)
-				if propMatch := directPropPattern.FindStringSubmatch(returnExpr); len(propMatch) >= 2 {
+				if propMatch := patterns.DirectPropertyReturnPattern.FindStringSubmatch(returnExpr); len(propMatch) >= 2 {
 					info.ReturnsProperty = true
 					info.PropertyName = propMatch[1]
 				}
@@ -2255,7 +2240,7 @@ func (e *ExecutionEngine) traceMethod(classDef *types.ClassDef, method *types.Me
 		if sourceType != "" {
 			// Look for property assignment inside the loop FIRST
 			// Pattern: $this->property[$key] = $val
-			propAssignPattern := getOrCompileRegex(`\$this->(\w+)\[\$` + keyVar + `\]\s*=\s*\$` + valVar)
+			propAssignPattern := patterns.BuildPropertyAssignInLoopPattern(keyVar, valVar)
 			propMatches := propAssignPattern.FindAllStringSubmatch(body, -1)
 
 			for _, propMatch := range propMatches {
@@ -2313,7 +2298,7 @@ func (e *ExecutionEngine) traceMethod(classDef *types.ClassDef, method *types.Me
 		if len(method.Parameters) > 0 && method.Parameters[0].Name == arrayVar {
 			// Look for property assignment inside the loop FIRST
 			// Pattern: $this->property[$key] = $val
-			propAssignPattern := getOrCompileRegex(`\$this->(\w+)\[\$` + keyVar + `\]\s*=\s*\$` + valVar)
+			propAssignPattern := patterns.BuildPropertyAssignInLoopPattern(keyVar, valVar)
 			propMatches := propAssignPattern.FindAllStringSubmatch(body, -1)
 
 			for _, propMatch := range propMatches {

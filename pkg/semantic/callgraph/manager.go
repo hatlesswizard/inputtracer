@@ -10,15 +10,19 @@ package callgraph
 import (
 	"container/list"
 	"sync"
+
+	"github.com/hatlesswizard/inputtracer/pkg/sources/constants"
 )
 
 // NodeType represents the type of a call graph node
-type NodeType int
+// Re-exported from pkg/sources/constants for backward compatibility
+type NodeType = constants.CallGraphNodeType
 
+// Re-export NodeType constants for backward compatibility
 const (
-	NodeTypeRegular NodeType = iota
-	NodeTypeEntryPoint       // HTTP handlers, main functions, CLI entry points
-	NodeTypeSource           // Input source functions
+	NodeTypeRegular    = constants.CGNodeTypeRegular
+	NodeTypeEntryPoint = constants.CGNodeTypeEntryPoint
+	NodeTypeSource     = constants.CGNodeTypeSource
 )
 
 // Node represents a function in the call graph

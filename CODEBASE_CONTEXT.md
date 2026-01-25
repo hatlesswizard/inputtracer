@@ -809,4 +809,333 @@ Create framework patterns in the language-specific subdirectory:
 
 ---
 
-*Last updated: 2026-01-25*
+---
+
+## 14. Semantic Types Reference
+
+### 14.1 FlowNode & FlowEdge Types (`pkg/semantic/types/types.go`)
+
+```go
+// FlowNodeType - Type of node in data flow graph
+const (
+    NodeSource   FlowNodeType = "source"    // Input source
+    NodeCarrier  FlowNodeType = "carrier"   // Object carrying input
+    NodeVariable FlowNodeType = "variable"  // Variable
+    NodeFunction FlowNodeType = "function"  // Function
+    NodeProperty FlowNodeType = "property"  // Object property
+    NodeParam    FlowNodeType = "param"     // Function parameter
+    NodeReturn   FlowNodeType = "return"    // Return value
+)
+
+// FlowEdgeType - How data flows between nodes
+const (
+    EdgeAssignment  FlowEdgeType = "assignment"   // Direct assignment
+    EdgeParameter   FlowEdgeType = "parameter"    // Param passing
+    EdgeReturn      FlowEdgeType = "return"       // Return value
+    EdgeProperty    FlowEdgeType = "property"     // Property access
+    EdgeArraySet    FlowEdgeType = "array_set"    // Array element set
+    EdgeArrayGet    FlowEdgeType = "array_get"    // Array element get
+    EdgeMethodCall  FlowEdgeType = "method_call"  // Method invocation
+    EdgeConstructor FlowEdgeType = "constructor"  // Object construction
+    EdgeFramework   FlowEdgeType = "framework"    // Framework-specific
+    EdgeConcatenate FlowEdgeType = "concatenate"  // String concat
+    EdgeDestructure FlowEdgeType = "destructure"  // Destructuring
+    EdgeIteration   FlowEdgeType = "iteration"    // Loop iteration
+    EdgeConditional FlowEdgeType = "conditional"  // Conditional branch
+    EdgeCall        FlowEdgeType = "call"         // Function call
+    EdgeDataFlow    FlowEdgeType = "data_flow"    // Generic data flow
+)
+```
+
+### 14.2 TaintChain (`pkg/semantic/types/types.go:665`)
+
+```go
+// TaintChain tracks complete propagation path of tainted data
+type TaintChain struct {
+    OriginalSource   string     // e.g., "$_GET['id']"
+    OriginalType     SourceType // e.g., "http_get"
+    OriginalFile     string
+    OriginalLine     int
+    Steps            []TaintStep
+    CurrentExpression string    // What the taint looks like now
+    Depth            int        // How many hops from source
+}
+
+// TaintStep represents one step in the taint propagation chain
+type TaintStep struct {
+    StepType    string // "assignment", "parameter", "return", "property", "method_call"
+    Expression  string // The code at this step
+    FilePath    string
+    Line        int
+    Description string // Human-readable description
+}
+
+// Usage:
+chain := NewTaintChain("$_GET['id']", "http_get", "/path/to/file.php", 10)
+chain.AddStep("assignment", "$userId = $_GET['id']", file, 11, "Assigned to $userId")
+chain.AddStep("parameter", "processUser($userId)", file, 20, "Passed to processUser()")
+cloned := chain.Clone() // For branching flows
+```
+
+### 14.3 FlowMap with O(1) Deduplication
+
+```go
+// FlowMap - Complete flow analysis result with O(1) dedup
+type FlowMap struct {
+    Sources   []FlowNode
+    Paths     []FlowPath
+    Carriers  []FlowNode
+    AllNodes  []FlowNode
+    AllEdges  []FlowEdge
+    Usages    []FlowNode
+    CallGraph map[string][]string
+
+    // Internal O(1) deduplication
+    nodeIndex map[string]bool // nodeID -> exists
+    edgeIndex map[string]bool // edgeKey -> exists
+
+    // Configurable limits
+    maxNodes int // Default: 10000
+    maxEdges int // Default: 20000
+}
+
+// Memory-safe operations
+fm := NewFlowMap() // Uses default limits
+fm := NewFlowMapWithLimits(5000, 10000) // Custom limits
+
+added := fm.AddNode(node)  // Returns false if duplicate or at capacity
+added := fm.AddEdge(edge)  // Returns false if duplicate or at capacity
+exists := fm.HasNode(id)   // O(1) lookup
+exists := fm.HasEdge(from, to, edgeType) // O(1) lookup
+```
+
+### 14.4 Symbol Table (`pkg/semantic/types/types.go:373`)
+
+```go
+type SymbolTable struct {
+    FilePath   string
+    Language   string
+    Imports    []ImportInfo
+    Classes    map[string]*ClassDef
+    Functions  map[string]*FunctionDef
+    Variables  map[string]*VariableDef
+    Constants  map[string]*ConstantDef
+    Namespace  string
+    Framework  string
+    Metadata   map[string]interface{}
+}
+
+// Memory optimization - call after analysis
+st.ReleaseBodySources() // Frees method body strings
+```
+
+---
+
+## 15. Symbolic Execution Patterns
+
+### 15.1 Expression Patterns (`pkg/sources/patterns/symbolic_patterns.go`)
+
+```go
+// SuperglobalAccessPattern - $_GET['key'], $_POST["name"]
+SuperglobalAccessPattern = regexp.MustCompile(`^\$_(GET|POST|COOKIE|REQUEST|SERVER|FILES|ENV|SESSION)\[['"]?(\w+)['"]?\]$`)
+
+// PropertyAccessPattern - $var->property['key']
+PropertyAccessPattern = regexp.MustCompile(`^\$(\w+)->(\w+)(?:\[['"]?(\w+)['"]?\])?$`)
+
+// ChainPropertyWithKeyPattern - ->property['key']
+ChainPropertyWithKeyPattern = regexp.MustCompile(`^->(\w+)\[['"]?(\w+)['"]?\]`)
+
+// FunctionCallPattern - functionName(args)
+FunctionCallPattern = regexp.MustCompile(`^(\w+)\(([^)]*)\)$`)
+
+// Dynamic pattern builders
+BuildVariableAssignPattern(varName) // $varname = something;
+BuildPropertyExternalAssignPattern(varName, propName) // $var->prop = something;
+BuildPropertyArrayExternalAssignPattern(varName, propName) // $var->prop['key'] = something;
+```
+
+### 15.2 PHP Taint Patterns (`pkg/sources/php/taint_patterns.go`)
+
+```go
+TaintPatterns.ThisArrayPattern      // $this->prop[$key] = ...
+TaintPatterns.DynamicPropPattern    // $this->$key = $val
+TaintPatterns.ReturnThisPattern     // return $this->prop
+TaintPatterns.SuperglobalKeyPattern // $_GET['key']
+TaintPatterns.LoopVariablePattern   // foreach($x as $key => $value)
+TaintPatterns.ForeachValueOnlyPattern // foreach($x as $value)
+```
+
+---
+
+## 16. Memory Optimization Strategies
+
+### 16.1 LRU Cache with Proper Cleanup (`pkg/parser/cache.go`)
+- Memory limit: 32MB default
+- O(1) get/put operations
+- **CRITICAL**: Calls `tree.Close()` on eviction to free Tree-sitter memory
+
+### 16.2 Symbolic File Cache (`pkg/semantic/symbolic/filecache.go`)
+- Memory limit: 64MB default
+- Lazy loading of file content and AST
+- Automatic tree cleanup on eviction
+
+### 16.3 Assignment Caching (`pkg/semantic/tracer.go`)
+- Caches extracted assignments (tiny) instead of full ASTs (5-10x source size)
+- Reduces memory footprint dramatically
+
+### 16.4 FlowMap Limits
+```go
+DefaultMaxFlowNodes = 10000 // Prevents unbounded node growth
+DefaultMaxFlowEdges = 20000 // Prevents unbounded edge growth
+```
+
+### 16.5 Body Source Release
+```go
+// After analysis, free large strings
+symbolTable.ReleaseBodySources()
+classDef.ReleaseBodySources()
+```
+
+---
+
+## 17. Scope Management (`pkg/tracer/scope.go`)
+
+```go
+type ScopeManager struct {
+    scopes    []*Scope
+    current   *Scope
+    variables map[string][]*ScopedVariable // name -> definitions
+}
+
+type ScopedVariable struct {
+    Name      string
+    Scope     *Scope
+    Tainted   bool
+    Source    *InputSource
+    Depth     int
+    Location  Location
+    Shadowing *ScopedVariable // Previous definition being shadowed
+}
+
+// Key operations
+sm := NewScopeManager()
+scope := sm.EnterScope(ScopeFunction, "myFunc", loc) // Enter new scope
+sm.ExitScope() // Return to parent scope
+
+sv := sm.DeclareVariable("$var", true, source, depth, loc) // Declare tainted var
+sv := sm.LookupVariable("$var") // Look up in scope chain
+isTainted := sm.IsTainted("$var") // Check if tainted in current scope
+
+sm.MarkTainted("$var", source, depth) // Mark existing var as tainted
+tainted := sm.GetAllTaintedInScope() // Get all visible tainted vars
+chain := sm.GetScopeChain() // Get scope chain (current to global)
+name := sm.GetScopeQualifiedName() // e.g., "MyClass.myMethod"
+
+sm.Reset() // Reset to initial state
+clone := sm.Clone() // Clone for parallel analysis
+```
+
+---
+
+## 18. Call Graph Management (`pkg/semantic/callgraph/manager.go`)
+
+```go
+type Manager struct {
+    nodes     map[string]*CallNode
+    edges     map[string]map[string]*CallEdge
+    backEdges map[string]map[string]*CallEdge // For backward traversal
+}
+
+// Key operations
+mgr := NewManager()
+mgr.AddNode("myFunc", &CallNodeInfo{...})
+mgr.AddEdge("caller", "callee", &CallEdgeInfo{...})
+
+// Distance computation (BFS from entry points)
+distances := mgr.ComputeDistanceFromEntryPoints()
+
+// Path finding (with caching)
+path := mgr.GetShortestPath("fromFunc", "toFunc")
+
+// Bidirectional lookup
+callers := mgr.GetCallers("funcName")  // Who calls this?
+callees := mgr.GetCallees("funcName")  // What does this call?
+```
+
+---
+
+## 19. Condition Extraction (`pkg/semantic/condition/extractor.go`)
+
+```go
+type KeyCondition struct {
+    Type      string // "isset", "empty", "array_key_exists", etc.
+    ArrayExpr string // The array expression
+    KeyExpr   string // The key expression
+}
+
+type ConditionPath struct {
+    Conditions []KeyCondition
+    Reachable  bool
+}
+
+// Extract conditions from code
+conditions := ExtractFromCode(source)
+
+// Classify condition type
+condType := classifyCondition(node, source)
+```
+
+---
+
+## 20. Path Analysis (`pkg/semantic/pathanalysis/expander.go`)
+
+```go
+type PathExpander struct {
+    callGraph   *callgraph.Manager
+    symbolTable map[string]*types.SymbolTable
+    maxDepth    int
+}
+
+type PathNode struct {
+    FunctionName string
+    FilePath     string
+    Line         int
+    CallSite     *types.CallSite
+}
+
+type ExecutionPath struct {
+    Nodes []PathNode
+    Depth int
+}
+
+// Expand paths between functions
+expander := NewPathExpander(callGraph, symbolTables, maxDepth)
+paths := expander.ExpandPaths(startFunc, endFunc)
+```
+
+---
+
+## 21. Code Indexer (`pkg/semantic/index/indexer.go`)
+
+```go
+type Indexer struct {
+    symbolsByName     map[string][]*Symbol
+    symbolsByFile     map[string][]*Symbol
+    symbolsByFunction map[string][]*Symbol
+    symbolsByClass    map[string][]*Symbol
+    symbolsByMethod   map[string][]*Symbol
+}
+
+// O(1) symbol lookups
+indexer := NewIndexer()
+indexer.AddSymbol(symbol)
+
+symbols := indexer.FindByName("functionName")
+symbols := indexer.FindByFile("/path/to/file.php")
+symbols := indexer.FindByClass("ClassName")
+symbols := indexer.FindByMethod("ClassName.methodName")
+```
+
+---
+
+*Last updated: 2026-01-25 (refreshed)*

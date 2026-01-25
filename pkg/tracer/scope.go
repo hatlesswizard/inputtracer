@@ -3,18 +3,22 @@ package tracer
 import (
 	"strings"
 	"sync"
+
+	"github.com/hatlesswizard/inputtracer/pkg/sources/constants"
 )
 
 // ScopeType represents the type of scope
-type ScopeType string
+// Re-exported from pkg/sources/constants for backward compatibility
+type ScopeType = constants.ScopeType
 
+// Re-export ScopeType constants for backward compatibility
 const (
-	ScopeGlobal   ScopeType = "global"
-	ScopeFile     ScopeType = "file"
-	ScopeModule   ScopeType = "module"
-	ScopeClass    ScopeType = "class"
-	ScopeFunction ScopeType = "function"
-	ScopeBlock    ScopeType = "block"
+	ScopeGlobal   = constants.ScopeGlobal
+	ScopeFile     = constants.ScopeFile
+	ScopeModule   = constants.ScopeModule
+	ScopeClass    = constants.ScopeClass
+	ScopeFunction = constants.ScopeFunction
+	ScopeBlock    = constants.ScopeBlock
 )
 
 // ScopeManager manages variable scopes during analysis

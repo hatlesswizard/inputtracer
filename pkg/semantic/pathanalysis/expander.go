@@ -9,31 +9,37 @@ package pathanalysis
 
 import (
 	"sync"
+
+	"github.com/hatlesswizard/inputtracer/pkg/sources/constants"
 )
 
 // PathNodeType represents the type of a path node
-type PathNodeType string
+// Re-exported from pkg/sources/constants for backward compatibility
+type PathNodeType = constants.PathNodeType
 
+// Re-export PathNodeType constants for backward compatibility
 const (
-	PathNodeSource    PathNodeType = "source"    // Input source
-	PathNodeCall      PathNodeType = "call"      // Function call
-	PathNodeReturn    PathNodeType = "return"    // Return from function
-	PathNodeAssign    PathNodeType = "assign"    // Variable assignment
-	PathNodeCondition PathNodeType = "condition" // Conditional branch
-	PathNodeTransform PathNodeType = "transform" // Data transformation
+	PathNodeSource    = constants.PathNodeSource
+	PathNodeCall      = constants.PathNodeCall
+	PathNodeReturn    = constants.PathNodeReturn
+	PathNodeAssign    = constants.PathNodeAssign
+	PathNodeCondition = constants.PathNodeCondition
+	PathNodeTransform = constants.PathNodeTransform
 )
 
 // PruneReason explains why a path was pruned
-type PruneReason string
+// Re-exported from pkg/sources/constants for backward compatibility
+type PruneReason = constants.PruneReason
 
+// Re-export PruneReason constants for backward compatibility
 const (
-	PruneNone        PruneReason = ""
-	PruneMaxDepth    PruneReason = "max_depth_exceeded"
-	PruneCycle       PruneReason = "cycle_detected"
-	PruneInfeasible  PruneReason = "infeasible_condition"
-	PruneDead        PruneReason = "dead_code"
-	PruneUnreachable PruneReason = "unreachable"
-	PruneLowPriority PruneReason = "low_priority"
+	PruneNone        = constants.PruneNone
+	PruneMaxDepth    = constants.PruneMaxDepth
+	PruneCycle       = constants.PruneCycle
+	PruneInfeasible  = constants.PruneInfeasible
+	PruneDead        = constants.PruneDead
+	PruneUnreachable = constants.PruneUnreachable
+	PruneLowPriority = constants.PruneLowPriority
 )
 
 // PathNode represents a node in an execution path

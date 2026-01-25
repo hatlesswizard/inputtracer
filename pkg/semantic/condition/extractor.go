@@ -7,29 +7,31 @@
 package condition
 
 import (
-	"regexp"
 	"strings"
+
+	"github.com/hatlesswizard/inputtracer/pkg/sources/common"
+	"github.com/hatlesswizard/inputtracer/pkg/sources/constants"
+	"github.com/hatlesswizard/inputtracer/pkg/sources/patterns"
 )
 
-// ConditionType classifies the type of condition
-type ConditionType string
+// Re-export types from centralized location for backward compatibility
+type ConditionType = constants.ConditionType
+type ConditionEffect = constants.ConditionEffect
 
+// Re-export constants for backward compatibility
 const (
-	CondTypeComparison  ConditionType = "comparison"   // ==, !=, <, >, etc.
-	CondTypeNullCheck   ConditionType = "null_check"   // isset, empty, is_null
-	CondTypeTypeCheck   ConditionType = "type_check"   // is_string, instanceof
-	CondTypeLengthCheck ConditionType = "length_check" // strlen, count
-	CondTypeLogical     ConditionType = "logical"      // &&, ||, !
-	CondTypeUnknown     ConditionType = "unknown"
+	CondTypeComparison  = constants.CondTypeComparison
+	CondTypeNullCheck   = constants.CondTypeNullCheck
+	CondTypeTypeCheck   = constants.CondTypeTypeCheck
+	CondTypeLengthCheck = constants.CondTypeLengthCheck
+	CondTypeLogical     = constants.CondTypeLogical
+	CondTypeUnknown     = constants.CondTypeUnknown
 )
 
-// ConditionEffect describes how a condition affects data flow
-type ConditionEffect string
-
 const (
-	EffectAllows  ConditionEffect = "allows"  // Condition allows flow if true
-	EffectBlocks  ConditionEffect = "blocks"  // Condition blocks flow if true
-	EffectUnknown ConditionEffect = "unknown"
+	EffectAllows  = constants.EffectAllows
+	EffectBlocks  = constants.EffectBlocks
+	EffectUnknown = constants.EffectUnknown
 )
 
 // KeyCondition represents a condition that guards code execution
@@ -146,50 +148,12 @@ func (e *Extractor) detectCondition(line string, lineNum int, filePath string, s
 
 // isConditionLine checks if line contains a condition statement
 func (e *Extractor) isConditionLine(line string) bool {
-	patterns := []string{
-		`^\s*if\s*\(`,           // if (condition)
-		`^\s*if\s+[^(].*:`,      // Python: if condition:
-		`^\s*}\s*else\s*if\s*\(`,
-		`^\s*else\s*if\s*\(`,
-		`^\s*elif\s+`,           // Python elif
-		`^\s*elseif\s*\(`,
-		`^\s*}\s*elseif\s*\(`,
-		`\?\s*.*\s*:`,           // Ternary
-		`^\s*switch\s*\(`,
-		`^\s*case\s+`,
-	}
-
-	for _, p := range patterns {
-		if matched, _ := regexp.MatchString(p, line); matched {
-			return true
-		}
-	}
-	return false
+	return patterns.IsConditionLine(line)
 }
 
 // extractConditionExpression extracts the condition from a line
 func (e *Extractor) extractConditionExpression(line string) string {
-	// Extract content between if/elseif and closing paren/colon
-	patterns := []struct {
-		prefix string
-		re     *regexp.Regexp
-	}{
-		{"if_paren", regexp.MustCompile(`if\s*\((.+)\)\s*[{:]?`)},
-		{"if_python", regexp.MustCompile(`if\s+(.+?)\s*:\s*$`)},        // Python: if condition:
-		{"elif_python", regexp.MustCompile(`elif\s+(.+?)\s*:\s*$`)},    // Python: elif condition:
-		{"elseif", regexp.MustCompile(`(?:else\s*if|elseif)\s*\((.+)\)\s*[{:]?`)},
-		{"switch", regexp.MustCompile(`switch\s*\((.+?)\)\s*{?`)},
-		{"case", regexp.MustCompile(`case\s+(.+?)\s*:`)},
-		{"ternary", regexp.MustCompile(`(.+?)\s*\?\s*.+\s*:`)},
-	}
-
-	for _, p := range patterns {
-		if matches := p.re.FindStringSubmatch(line); len(matches) > 1 {
-			return strings.TrimSpace(matches[1])
-		}
-	}
-
-	return ""
+	return patterns.ExtractConditionExpression(line)
 }
 
 // extractVariables extracts variable names from an expression
@@ -197,46 +161,15 @@ func (e *Extractor) extractVariables(expr string) []string {
 	var vars []string
 	seen := make(map[string]bool)
 
-	var patterns []*regexp.Regexp
-	switch e.language {
-	case "php":
-		patterns = []*regexp.Regexp{
-			regexp.MustCompile(`\$[a-zA-Z_][a-zA-Z0-9_]*`),
-			regexp.MustCompile(`\$_[A-Z]+\s*\[\s*['"]([^'"]+)['"]\s*\]`),
-		}
-	case "javascript", "typescript":
-		patterns = []*regexp.Regexp{
-			regexp.MustCompile(`\b[a-zA-Z_$][a-zA-Z0-9_$]*\b`),
-		}
-	case "python":
-		patterns = []*regexp.Regexp{
-			regexp.MustCompile(`\b[a-zA-Z_][a-zA-Z0-9_]*\b`),
-		}
-	case "go", "java":
-		patterns = []*regexp.Regexp{
-			regexp.MustCompile(`\b[a-zA-Z_][a-zA-Z0-9_]*\b`),
-		}
-	default:
-		patterns = []*regexp.Regexp{
-			regexp.MustCompile(`\b[a-zA-Z_$][a-zA-Z0-9_$]*\b`),
-		}
-	}
+	// Use centralized patterns for the language
+	langPatterns := patterns.GetVariablePatterns(e.language)
 
-	// Filter out keywords
-	keywords := map[string]bool{
-		"if": true, "else": true, "elseif": true, "switch": true, "case": true,
-		"true": true, "false": true, "null": true, "nil": true, "undefined": true,
-		"and": true, "or": true, "not": true, "is": true, "in": true,
-		"function": true, "return": true, "var": true, "let": true, "const": true,
-		"new": true, "this": true, "self": true, "isset": true, "empty": true,
-		"instanceof": true, "typeof": true,
-	}
-
-	for _, p := range patterns {
+	for _, p := range langPatterns {
 		matches := p.FindAllString(expr, -1)
 		for _, m := range matches {
 			m = strings.TrimSpace(m)
-			if !seen[m] && !keywords[strings.ToLower(m)] && len(m) > 1 {
+			// Use centralized keyword check
+			if !seen[m] && !common.IsKeyword(m) && !common.IsKeyword(strings.ToLower(m)) && len(m) > 1 {
 				vars = append(vars, m)
 				seen[m] = true
 			}
@@ -250,36 +183,36 @@ func (e *Extractor) extractVariables(expr string) []string {
 func (e *Extractor) classifyCondition(cond *KeyCondition) {
 	expr := cond.Expression
 
-	// Check for null/empty checks
-	if matched, _ := regexp.MatchString(`(?i)(isset|empty|is_null|null|\bnil\b|undefined)`, expr); matched {
+	// Check for null/empty checks using centralized pattern
+	if patterns.NullCheckPattern.MatchString(expr) {
 		cond.Type = CondTypeNullCheck
 		cond.Effect = EffectUnknown
 		return
 	}
 
-	// Check for type checks
-	if matched, _ := regexp.MatchString(`(?i)(is_string|is_int|is_array|instanceof|typeof)`, expr); matched {
+	// Check for type checks using centralized pattern
+	if patterns.TypeCheckPattern.MatchString(expr) {
 		cond.Type = CondTypeTypeCheck
 		cond.Effect = EffectUnknown
 		return
 	}
 
-	// Check for length/count checks
-	if matched, _ := regexp.MatchString(`(?i)(strlen|length|count|size)\s*\(`, expr); matched {
+	// Check for length/count checks using centralized pattern
+	if patterns.LengthCheckPattern.MatchString(expr) {
 		cond.Type = CondTypeLengthCheck
 		cond.Effect = EffectUnknown
 		return
 	}
 
-	// Check for comparison operators
-	if matched, _ := regexp.MatchString(`[<>=!]=?`, expr); matched {
+	// Check for comparison operators using centralized pattern
+	if patterns.ComparisonPattern.MatchString(expr) {
 		cond.Type = CondTypeComparison
 		cond.Effect = EffectUnknown
 		return
 	}
 
-	// Check for logical operators
-	if matched, _ := regexp.MatchString(`(&&|\|\||!|and|or|not)`, expr); matched {
+	// Check for logical operators using centralized pattern
+	if patterns.LogicalOperatorPattern.MatchString(expr) {
 		cond.Type = CondTypeLogical
 		cond.Effect = EffectUnknown
 		return

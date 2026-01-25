@@ -25,6 +25,9 @@ type ASTNodeTypes struct {
 
 	// CallTypes are node types for function/method calls
 	CallTypes []string
+
+	// IdentifierTypes are node types for variable/identifier names
+	IdentifierTypes []string
 }
 
 // UniversalASTNodeTypes contains AST patterns that work across languages
@@ -66,6 +69,14 @@ var UniversalASTNodeTypes = ASTNodeTypes{
 		"member_call_expression",
 		"method_invocation",
 	},
+	IdentifierTypes: []string{
+		"identifier",
+		"variable_name",
+		"name",
+		"property_identifier",
+		"attribute",
+		"constant",
+	},
 }
 
 // LanguageASTNodeTypes provides language-specific AST node types
@@ -91,6 +102,10 @@ var LanguageASTNodeTypes = map[string]ASTNodeTypes{
 			"member_call_expression",
 			"scoped_call_expression",
 		},
+		IdentifierTypes: []string{
+			"variable_name",
+			"name",
+		},
 	},
 	"javascript": {
 		FunctionTypes: []string{
@@ -114,6 +129,69 @@ var LanguageASTNodeTypes = map[string]ASTNodeTypes{
 		},
 		CallTypes: []string{
 			"call_expression",
+			"new_expression",
+		},
+		IdentifierTypes: []string{
+			"identifier",
+			"property_identifier",
+		},
+	},
+	"typescript": {
+		FunctionTypes: []string{
+			"function_declaration",
+			"function_expression",
+			"arrow_function",
+			"method_definition",
+		},
+		ScopeTypes: []string{
+			"function_declaration",
+			"function_expression",
+			"arrow_function",
+			"method_definition",
+			"class_declaration",
+			"program",
+		},
+		AssignmentTypes: []string{
+			"assignment_expression",
+			"augmented_assignment_expression",
+			"variable_declarator",
+		},
+		CallTypes: []string{
+			"call_expression",
+			"new_expression",
+		},
+		IdentifierTypes: []string{
+			"identifier",
+			"property_identifier",
+		},
+	},
+	"tsx": {
+		FunctionTypes: []string{
+			"function_declaration",
+			"function_expression",
+			"arrow_function",
+			"method_definition",
+		},
+		ScopeTypes: []string{
+			"function_declaration",
+			"function_expression",
+			"arrow_function",
+			"method_definition",
+			"class_declaration",
+			"program",
+		},
+		AssignmentTypes: []string{
+			"assignment_expression",
+			"augmented_assignment_expression",
+			"variable_declarator",
+		},
+		CallTypes: []string{
+			"call_expression",
+			"new_expression",
+		},
+		IdentifierTypes: []string{
+			"identifier",
+			"property_identifier",
 		},
 	},
 	"python": {
@@ -129,9 +207,14 @@ var LanguageASTNodeTypes = map[string]ASTNodeTypes{
 		AssignmentTypes: []string{
 			"assignment",
 			"augmented_assignment",
+			"named_expression",
 		},
 		CallTypes: []string{
 			"call",
+		},
+		IdentifierTypes: []string{
+			"identifier",
+			"attribute",
 		},
 	},
 	"go": {
@@ -151,6 +234,150 @@ var LanguageASTNodeTypes = map[string]ASTNodeTypes{
 		},
 		CallTypes: []string{
 			"call_expression",
+		},
+		IdentifierTypes: []string{
+			"identifier",
+			"selector_expression",
+		},
+	},
+	"java": {
+		FunctionTypes: []string{
+			"method_declaration",
+			"constructor_declaration",
+			"lambda_expression",
+		},
+		ScopeTypes: []string{
+			"method_declaration",
+			"constructor_declaration",
+			"class_declaration",
+			"interface_declaration",
+			"program",
+		},
+		AssignmentTypes: []string{
+			"assignment_expression",
+			"variable_declarator",
+		},
+		CallTypes: []string{
+			"method_invocation",
+			"object_creation_expression",
+		},
+		IdentifierTypes: []string{
+			"identifier",
+		},
+	},
+	"c": {
+		FunctionTypes: []string{
+			"function_definition",
+		},
+		ScopeTypes: []string{
+			"function_definition",
+			"translation_unit",
+		},
+		AssignmentTypes: []string{
+			"assignment_expression",
+			"init_declarator",
+		},
+		CallTypes: []string{
+			"call_expression",
+		},
+		IdentifierTypes: []string{
+			"identifier",
+		},
+	},
+	"cpp": {
+		FunctionTypes: []string{
+			"function_definition",
+			"lambda_expression",
+		},
+		ScopeTypes: []string{
+			"function_definition",
+			"class_specifier",
+			"translation_unit",
+		},
+		AssignmentTypes: []string{
+			"assignment_expression",
+			"init_declarator",
+		},
+		CallTypes: []string{
+			"call_expression",
+		},
+		IdentifierTypes: []string{
+			"identifier",
+		},
+	},
+	"c_sharp": {
+		FunctionTypes: []string{
+			"method_declaration",
+			"constructor_declaration",
+			"lambda_expression",
+		},
+		ScopeTypes: []string{
+			"method_declaration",
+			"constructor_declaration",
+			"class_declaration",
+			"interface_declaration",
+			"compilation_unit",
+		},
+		AssignmentTypes: []string{
+			"assignment_expression",
+			"variable_declarator",
+		},
+		CallTypes: []string{
+			"invocation_expression",
+			"object_creation_expression",
+		},
+		IdentifierTypes: []string{
+			"identifier",
+		},
+	},
+	"ruby": {
+		FunctionTypes: []string{
+			"method",
+			"singleton_method",
+			"lambda",
+			"block",
+		},
+		ScopeTypes: []string{
+			"method",
+			"singleton_method",
+			"class",
+			"module",
+			"program",
+		},
+		AssignmentTypes: []string{
+			"assignment",
+			"operator_assignment",
+		},
+		CallTypes: []string{
+			"call",
+			"method_call",
+		},
+		IdentifierTypes: []string{
+			"identifier",
+			"constant",
+		},
+	},
+	"rust": {
+		FunctionTypes: []string{
+			"function_item",
+			"closure_expression",
+		},
+		ScopeTypes: []string{
+			"function_item",
+			"impl_item",
+			"mod_item",
+			"source_file",
+		},
+		AssignmentTypes: []string{
+			"assignment_expression",
+			"let_declaration",
+		},
+		CallTypes: []string{
+			"call_expression",
+			"method_call_expression",
+		},
+		IdentifierTypes: []string{
+			"identifier",
 		},
 	},
 }
@@ -241,4 +468,87 @@ func GetAssignmentTypes() []string {
 // GetCallTypes returns the list of call node types
 func GetCallTypes() []string {
 	return UniversalASTNodeTypes.CallTypes
+}
+
+// GetIdentifierTypes returns the list of identifier node types
+func GetIdentifierTypes() []string {
+	return UniversalASTNodeTypes.IdentifierTypes
+}
+
+// GetAssignmentTypesForLanguage returns assignment node types for a specific language
+func GetAssignmentTypesForLanguage(language string) []string {
+	if langTypes, ok := LanguageASTNodeTypes[language]; ok {
+		return langTypes.AssignmentTypes
+	}
+	return UniversalASTNodeTypes.AssignmentTypes
+}
+
+// GetCallTypesForLanguage returns call node types for a specific language
+func GetCallTypesForLanguage(language string) []string {
+	if langTypes, ok := LanguageASTNodeTypes[language]; ok {
+		return langTypes.CallTypes
+	}
+	return UniversalASTNodeTypes.CallTypes
+}
+
+// GetIdentifierTypesForLanguage returns identifier node types for a specific language
+func GetIdentifierTypesForLanguage(language string) []string {
+	if langTypes, ok := LanguageASTNodeTypes[language]; ok {
+		return langTypes.IdentifierTypes
+	}
+	return UniversalASTNodeTypes.IdentifierTypes
+}
+
+// GetASTNodeTypesForLanguage returns the complete ASTNodeTypes for a language
+func GetASTNodeTypesForLanguage(language string) ASTNodeTypes {
+	if langTypes, ok := LanguageASTNodeTypes[language]; ok {
+		return langTypes
+	}
+	return UniversalASTNodeTypes
+}
+
+// IsIdentifierNode checks if a node type is an identifier
+func IsIdentifierNode(nodeType string) bool {
+	for _, it := range UniversalASTNodeTypes.IdentifierTypes {
+		if nodeType == it {
+			return true
+		}
+	}
+	return false
+}
+
+// IsIdentifierNodeForLanguage checks if a node type is an identifier for a specific language
+func IsIdentifierNodeForLanguage(nodeType, language string) bool {
+	if langTypes, ok := LanguageASTNodeTypes[language]; ok {
+		for _, it := range langTypes.IdentifierTypes {
+			if nodeType == it {
+				return true
+			}
+		}
+	}
+	return IsIdentifierNode(nodeType)
+}
+
+// IsAssignmentNodeForLanguage checks if a node type is an assignment for a specific language
+func IsAssignmentNodeForLanguage(nodeType, language string) bool {
+	if langTypes, ok := LanguageASTNodeTypes[language]; ok {
+		for _, at := range langTypes.AssignmentTypes {
+			if nodeType == at {
+				return true
+			}
+		}
+	}
+	return IsAssignmentNode(nodeType)
+}
+
+// IsCallNodeForLanguage checks if a node type is a call for a specific language
+func IsCallNodeForLanguage(nodeType, language string) bool {
+	if langTypes, ok := LanguageASTNodeTypes[language]; ok {
+		for _, ct := range langTypes.CallTypes {
+			if nodeType == ct {
+				return true
+			}
+		}
+	}
+	return IsCallNode(nodeType)
 }

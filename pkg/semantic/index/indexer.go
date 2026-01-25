@@ -15,20 +15,24 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/hatlesswizard/inputtracer/pkg/sources/constants"
 )
 
 // SymbolType represents the type of a code symbol
-type SymbolType string
+// Re-exported from pkg/sources/constants for backward compatibility
+type SymbolType = constants.SymbolType
 
+// Re-export SymbolType constants for backward compatibility
 const (
-	SymbolFunction   SymbolType = "function"
-	SymbolMethod     SymbolType = "method"
-	SymbolClass      SymbolType = "class"
-	SymbolInterface  SymbolType = "interface"
-	SymbolVariable   SymbolType = "variable"
-	SymbolConstant   SymbolType = "constant"
-	SymbolProperty   SymbolType = "property"
-	SymbolParameter  SymbolType = "parameter"
+	SymbolFunction  = constants.SymbolFunction
+	SymbolMethod    = constants.SymbolMethod
+	SymbolClass     = constants.SymbolClass
+	SymbolInterface = constants.SymbolInterface
+	SymbolVariable  = constants.SymbolVariable
+	SymbolConstant  = constants.SymbolConstant
+	SymbolProperty  = constants.SymbolProperty
+	SymbolParameter = constants.SymbolParameter
 )
 
 // Symbol represents an indexed code symbol

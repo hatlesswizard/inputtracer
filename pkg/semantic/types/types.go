@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hatlesswizard/inputtracer/pkg/sources/common"
+	"github.com/hatlesswizard/inputtracer/pkg/sources/constants"
 )
 
 // ============================================================================
@@ -16,37 +17,41 @@ import (
 // ============================================================================
 
 // FlowNodeType represents the type of a node in the data flow graph
-type FlowNodeType string
+// Re-exported from pkg/sources/constants for backward compatibility
+type FlowNodeType = constants.FlowNodeType
 
+// Re-export FlowNodeType constants for backward compatibility
 const (
-	NodeSource   FlowNodeType = "source"   // Original input source (e.g., $_GET, req.body)
-	NodeCarrier  FlowNodeType = "carrier"  // Object/variable that holds user data
-	NodeVariable FlowNodeType = "variable" // Regular variable in the flow
-	NodeFunction FlowNodeType = "function" // Function/method call
-	NodeProperty FlowNodeType = "property" // Object property access
-	NodeParam    FlowNodeType = "param"    // Function parameter
-	NodeReturn   FlowNodeType = "return"   // Return value
+	NodeSource   = constants.NodeSource
+	NodeCarrier  = constants.NodeCarrier
+	NodeVariable = constants.NodeVariable
+	NodeFunction = constants.NodeFunction
+	NodeProperty = constants.NodeProperty
+	NodeParam    = constants.NodeParam
+	NodeReturn   = constants.NodeReturn
 )
 
 // FlowEdgeType represents how data flows between nodes
-type FlowEdgeType string
+// Re-exported from pkg/sources/constants for backward compatibility
+type FlowEdgeType = constants.FlowEdgeType
 
+// Re-export FlowEdgeType constants for backward compatibility
 const (
-	EdgeAssignment   FlowEdgeType = "assignment"    // $x = $y
-	EdgeParameter    FlowEdgeType = "parameter"     // func($x)
-	EdgeReturn       FlowEdgeType = "return"        // return $x
-	EdgeProperty     FlowEdgeType = "property"      // $obj->prop = $x
-	EdgeArraySet     FlowEdgeType = "array_set"     // $arr['key'] = $x
-	EdgeArrayGet     FlowEdgeType = "array_get"     // $x = $arr['key']
-	EdgeMethodCall   FlowEdgeType = "method_call"   // $obj->method($x)
-	EdgeConstructor  FlowEdgeType = "constructor"   // new Class($x)
-	EdgeFramework    FlowEdgeType = "framework"     // Framework-specific flow
-	EdgeConcatenate  FlowEdgeType = "concatenate"   // $x . $y
-	EdgeDestructure  FlowEdgeType = "destructure"   // const {a, b} = obj
-	EdgeIteration    FlowEdgeType = "iteration"     // foreach/for loop
-	EdgeConditional  FlowEdgeType = "conditional"   // if/else branch
-	EdgeCall         FlowEdgeType = "call"          // Function call
-	EdgeDataFlow     FlowEdgeType = "data_flow"     // Generic data flow
+	EdgeAssignment  = constants.EdgeAssignment
+	EdgeParameter   = constants.EdgeParameter
+	EdgeReturn      = constants.EdgeReturn
+	EdgeProperty    = constants.EdgeProperty
+	EdgeArraySet    = constants.EdgeArraySet
+	EdgeArrayGet    = constants.EdgeArrayGet
+	EdgeMethodCall  = constants.EdgeMethodCall
+	EdgeConstructor = constants.EdgeConstructor
+	EdgeFramework   = constants.EdgeFramework
+	EdgeConcatenate = constants.EdgeConcatenate
+	EdgeDestructure = constants.EdgeDestructure
+	EdgeIteration   = constants.EdgeIteration
+	EdgeConditional = constants.EdgeConditional
+	EdgeCall        = constants.EdgeCall
+	EdgeDataFlow    = constants.EdgeDataFlow
 )
 
 // SourceType represents the type of input source

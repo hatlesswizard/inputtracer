@@ -3,23 +3,27 @@ package tracer
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/hatlesswizard/inputtracer/pkg/sources/constants"
 )
 
 // InputLabel categorizes the type of user input
-type InputLabel string
+// Re-exported from pkg/sources/constants for backward compatibility
+type InputLabel = constants.InputLabel
 
+// Re-export InputLabel constants for backward compatibility
 const (
-	LabelHTTPGet     InputLabel = "http_get"
-	LabelHTTPPost    InputLabel = "http_post"
-	LabelHTTPCookie  InputLabel = "http_cookie"
-	LabelHTTPHeader  InputLabel = "http_header"
-	LabelHTTPBody    InputLabel = "http_body"
-	LabelCLI         InputLabel = "cli"
-	LabelEnvironment InputLabel = "environment"
-	LabelFile        InputLabel = "file"
-	LabelDatabase    InputLabel = "database"
-	LabelNetwork     InputLabel = "network"
-	LabelUserInput   InputLabel = "user_input"
+	LabelHTTPGet     = constants.LabelHTTPGet
+	LabelHTTPPost    = constants.LabelHTTPPost
+	LabelHTTPCookie  = constants.LabelHTTPCookie
+	LabelHTTPHeader  = constants.LabelHTTPHeader
+	LabelHTTPBody    = constants.LabelHTTPBody
+	LabelCLI         = constants.LabelCLI
+	LabelEnvironment = constants.LabelEnvironment
+	LabelFile        = constants.LabelFile
+	LabelDatabase    = constants.LabelDatabase
+	LabelNetwork     = constants.LabelNetwork
+	LabelUserInput   = constants.LabelUserInput
 )
 
 // Location represents a precise location in source code
@@ -73,16 +77,18 @@ type TaintedFunction struct {
 }
 
 // PropagationStepType defines the type of propagation step
-type PropagationStepType string
+// Re-exported from pkg/sources/constants for backward compatibility
+type PropagationStepType = constants.PropagationStepType
 
+// Re-export PropagationStepType constants for backward compatibility
 const (
-	StepAssignment    PropagationStepType = "assignment"
-	StepParameterPass PropagationStepType = "parameter_pass"
-	StepReturn        PropagationStepType = "return"
-	StepConcatenation PropagationStepType = "concatenation"
-	StepArrayAccess   PropagationStepType = "array_access"
-	StepObjectAccess  PropagationStepType = "object_access"
-	StepDestructure   PropagationStepType = "destructure"
+	StepAssignment    = constants.StepAssignment
+	StepParameterPass = constants.StepParameterPass
+	StepReturn        = constants.StepReturn
+	StepConcatenation = constants.StepConcatenation
+	StepArrayAccess   = constants.StepArrayAccess
+	StepObjectAccess  = constants.StepObjectAccess
+	StepDestructure   = constants.StepDestructure
 )
 
 // PropagationStep is one step in the propagation chain
