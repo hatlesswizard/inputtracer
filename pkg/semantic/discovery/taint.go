@@ -11,6 +11,9 @@ import (
 
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/smacker/go-tree-sitter/php"
+
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
+	phppatterns "github.com/hatlesswizard/inputtracer/pkg/sources/php"
 )
 
 // Regex cache for avoiding repeated compilation of the same patterns
@@ -141,10 +144,10 @@ func (m *MethodInfo) analyzeMethodPatterns() {
 	}
 	m.analyzedPatterns = true
 
-	// Pre-compile common patterns (cached)
-	thisArrayPattern := getOrCompileTaintRegex(`\$this->(\w+)\[\$\w+\]\s*=`)
-	dynamicPropPattern := getOrCompileTaintRegex(`\$this->\$(\w+)\s*=`)
-	returnThisPattern := getOrCompileTaintRegex(`return\s+\$this->(\w+)`)
+	// Use centralized patterns from pkg/sources/php
+	thisArrayPattern := phppatterns.TaintPatterns.ThisArrayPattern
+	dynamicPropPattern := phppatterns.TaintPatterns.DynamicPropPattern
+	returnThisPattern := phppatterns.TaintPatterns.ReturnThisPattern
 
 	m.hasThisArrayAssign = thisArrayPattern.MatchString(m.BodySource)
 	m.hasDynamicPropAssign = dynamicPropPattern.MatchString(m.BodySource)
@@ -221,10 +224,8 @@ func (p *TaintPropagator) parseAllClasses(codebasePath string) error {
 			return nil
 		}
 
-		// Skip vendor, cache directories
-		if strings.Contains(path, "/vendor/") ||
-			strings.Contains(path, "/cache/") ||
-			strings.Contains(path, "/.git/") {
+		// Skip vendor, cache directories - use centralized skip list
+		if sources.ShouldSkipPHPPath(path) {
 			return nil
 		}
 
@@ -453,8 +454,8 @@ func (p *TaintPropagator) traceUsage(usage SuperglobalUsage) {
 
 // traceAssignment traces an assignment of a superglobal
 func (p *TaintPropagator) traceAssignment(usage SuperglobalUsage, source TaintSource) {
-	// Check if assigned to $this->property
-	thisPattern := getOrCompileTaintRegex(`\$this->(\w+)(?:\[[^\]]*\])?`)
+	// Check if assigned to $this->property - use centralized pattern
+	thisPattern := phppatterns.TaintPatterns.ThisPropertyOptionalArrayPattern
 	if matches := thisPattern.FindStringSubmatch(usage.AssignedTo); len(matches) >= 2 {
 		propName := matches[1]
 
@@ -766,8 +767,8 @@ func (p *TaintPropagator) discoverMethodCarriersFromProperties() {
 
 			// Check if method returns a tainted property
 			for _, propName := range props {
-				// Look for return $this->property patterns
-				returnPattern := getOrCompileTaintRegex(`return\s+\$this->` + regexp.QuoteMeta(propName))
+				// Build pattern for return $this->propName
+				returnPattern := regexp.MustCompile(`return\s+\$this->` + regexp.QuoteMeta(propName))
 				if returnPattern.MatchString(methodInfo.BodySource) {
 					// Find source types for this property
 					var sourceTypes []string
@@ -802,8 +803,8 @@ func (p *TaintPropagator) discoverMethodCarriersFromProperties() {
 					}
 				}
 
-				// Look for return $this->property[$param] patterns
-				paramReturnPattern := getOrCompileTaintRegex(`return\s+\$this->` + regexp.QuoteMeta(propName) + `\[`)
+				// Build pattern for return $this->propName[
+				paramReturnPattern := regexp.MustCompile(`return\s+\$this->` + regexp.QuoteMeta(propName) + `\[`)
 				if paramReturnPattern.MatchString(methodInfo.BodySource) {
 					var sourceTypes []string
 					for _, carrier := range p.carriers {
