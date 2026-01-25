@@ -402,8 +402,9 @@ func registerRubyMappings() {
 			"readlines": SourceStdin, "STDIN": SourceStdin,
 			"ARGF": SourceStdin, "ARGV": SourceCLIArg,
 			"ENV": SourceEnvVar, "params": SourceHTTPGet,
-			"request": SourceUserInput, "cookies": SourceHTTPCookie,
-			"session": SourceUserInput, "File.read": SourceFile,
+			"cookies": SourceHTTPCookie,
+			"session": SourceSession, // Session is server-side storage, NOT user input
+			"File.read": SourceFile,
 			"IO.read": SourceFile,
 		},
 	}
