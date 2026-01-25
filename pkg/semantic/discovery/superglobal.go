@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/hatlesswizard/inputtracer/pkg/sources"
+	phppatterns "github.com/hatlesswizard/inputtracer/pkg/sources/php"
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/smacker/go-tree-sitter/php"
 )
@@ -78,10 +79,7 @@ func (f *SuperglobalFinder) FindAll(codebasePath string) ([]SuperglobalUsage, er
 		}
 
 		// Skip vendor, cache, test directories
-		if strings.Contains(path, "/vendor/") ||
-			strings.Contains(path, "/cache/") ||
-			strings.Contains(path, "/tests/") ||
-			strings.Contains(path, "/.git/") {
+		if sources.ShouldSkipPHPPath(path) {
 			return nil
 		}
 
@@ -461,8 +459,9 @@ func (f *SuperglobalFinder) checkForeachSuperglobal(node *sitter.Node, content [
 // extractForeachVars extracts key and value variable names from a foreach line
 func (f *SuperglobalFinder) extractForeachVars(line string) (keyVar, valVar string) {
 	// Pattern: foreach($x as $key => $value) or foreach($x as $value)
-	asPattern := regexp.MustCompile(`as\s+\$(\w+)\s*=>\s*\$(\w+)`)
-	simplePattern := regexp.MustCompile(`as\s+\$(\w+)\s*\)`)
+	// Use centralized patterns from pkg/sources/php
+	asPattern := phppatterns.TaintPatterns.LoopVariablePattern
+	simplePattern := phppatterns.TaintPatterns.ForeachValueOnlyPattern
 
 	if matches := asPattern.FindStringSubmatch(line); len(matches) >= 3 {
 		keyVar = "$" + matches[1]
