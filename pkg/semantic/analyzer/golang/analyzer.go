@@ -10,6 +10,7 @@ import (
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	"github.com/hatlesswizard/inputtracer/pkg/sources"
+	goPatterns "github.com/hatlesswizard/inputtracer/pkg/sources/golang"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -34,41 +35,27 @@ func NewGoAnalyzer() *GoAnalyzer {
 }
 
 func (a *GoAnalyzer) registerFrameworkPatterns() {
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:            "gin_query",
-		Framework:     "gin",
-		Language:      "go",
-		Name:          "Gin c.Query",
-		Description:   "Gin query parameter",
-		MethodPattern: "^Query$",
-		SourceType:    types.SourceHTTPGet,
-		PopulatedFrom: []string{"query string"},
-		Confidence:    0.95,
-	})
-
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:            "gin_param",
-		Framework:     "gin",
-		Language:      "go",
-		Name:          "Gin c.Param",
-		Description:   "Gin path parameter",
-		MethodPattern: "^Param$",
-		SourceType:    types.SourceHTTPPath,
-		PopulatedFrom: []string{"URL path"},
-		Confidence:    0.95,
-	})
-
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:            "echo_param",
-		Framework:     "echo",
-		Language:      "go",
-		Name:          "Echo c.Param",
-		Description:   "Echo path parameter",
-		MethodPattern: "^Param$",
-		SourceType:    types.SourceHTTPPath,
-		PopulatedFrom: []string{"URL path"},
-		Confidence:    0.95,
-	})
+	for _, p := range goPatterns.GetAllPatterns() {
+		fp := &types.FrameworkPattern{
+			ID:              p.ID,
+			Framework:       p.Framework,
+			Language:        p.Language,
+			Name:            p.Name,
+			Description:     p.Description,
+			ClassPattern:    p.ClassPattern,
+			MethodPattern:   p.MethodPattern,
+			PropertyPattern: p.PropertyPattern,
+			AccessPattern:   p.AccessPattern,
+			SourceType:      types.SourceType(p.SourceType),
+			SourceKey:       p.SourceKey,
+			CarrierClass:    p.CarrierClass,
+			CarrierProperty: p.CarrierProperty,
+			PopulatedBy:     p.PopulatedBy,
+			PopulatedFrom:   p.PopulatedFrom,
+			Confidence:      p.Confidence,
+		}
+		a.AddFrameworkPattern(fp)
+	}
 }
 
 func (a *GoAnalyzer) BuildSymbolTable(filePath string, source []byte, root *sitter.Node) (*types.SymbolTable, error) {

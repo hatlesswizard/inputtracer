@@ -11,6 +11,7 @@ import (
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	"github.com/hatlesswizard/inputtracer/pkg/sources"
+	phpPatterns "github.com/hatlesswizard/inputtracer/pkg/sources/php"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -86,161 +87,32 @@ func (a *PHPAnalyzer) isContextDependentInputMethod(methodName string) bool {
 	return contextDependent.MatchString(methodName)
 }
 
-// registerFrameworkPatterns registers known PHP framework patterns
+// registerFrameworkPatterns loads PHP framework patterns from pkg/sources/php
+// This centralizes all framework patterns in one place
 func (a *PHPAnalyzer) registerFrameworkPatterns() {
-	// MyBB pattern
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "mybb_input",
-		Framework:       "mybb",
-		Language:        "php",
-		Name:            "MyBB $mybb->input",
-		Description:     "MyBB input array populated from $_GET and $_POST via parse_incoming()",
-		ClassPattern:    "^MyBB$",
-		PropertyPattern: "^input$",
-		AccessPattern:   "array",
-		SourceType:      types.SourceHTTPGet, // Actually GET+POST
-		CarrierClass:    "MyBB",
-		CarrierProperty: "input",
-		PopulatedBy:     "__construct",
-		PopulatedFrom:   []string{"$_GET", "$_POST"},
-		Confidence:      1.0,
-	})
-
-	// MyBB cookies pattern
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "mybb_cookies",
-		Framework:       "mybb",
-		Language:        "php",
-		Name:            "MyBB $mybb->cookies",
-		Description:     "MyBB cookies array populated from $_COOKIE via parse_cookies()",
-		ClassPattern:    "^MyBB$",
-		PropertyPattern: "^cookies$",
-		AccessPattern:   "array",
-		SourceType:      types.SourceHTTPCookie,
-		CarrierClass:    "MyBB",
-		CarrierProperty: "cookies",
-		PopulatedBy:     "parse_cookies",
-		PopulatedFrom:   []string{"$_COOKIE"},
-		Confidence:      1.0,
-	})
-
-	// WordPress $_REQUEST
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "wordpress_request",
-		Framework:       "wordpress",
-		Language:        "php",
-		Name:            "WordPress $_REQUEST",
-		Description:     "WordPress uses $_REQUEST which combines $_GET, $_POST, and $_COOKIE",
-		AccessPattern:   "superglobal",
-		SourceType:      types.SourceHTTPGet,
-		PopulatedFrom:   []string{"$_GET", "$_POST", "$_COOKIE"},
-		Confidence:      1.0,
-	})
-
-	// Laravel Request
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "laravel_request_input",
-		Framework:       "laravel",
-		Language:        "php",
-		Name:            "Laravel $request->input()",
-		Description:     "Laravel request input method returns GET and POST data",
-		ClassPattern:    "^(Illuminate\\\\Http\\\\)?Request$",
-		MethodPattern:   "^input$",
-		SourceType:      types.SourceHTTPGet,
-		CarrierClass:    "Illuminate\\Http\\Request",
-		PopulatedFrom:   []string{"$_GET", "$_POST"},
-		Confidence:      0.95,
-	})
-
-	// Laravel Request all()
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "laravel_request_all",
-		Framework:       "laravel",
-		Language:        "php",
-		Name:            "Laravel $request->all()",
-		Description:     "Laravel request all() returns all input data",
-		ClassPattern:    "^(Illuminate\\\\Http\\\\)?Request$",
-		MethodPattern:   "^all$",
-		SourceType:      types.SourceHTTPGet,
-		CarrierClass:    "Illuminate\\Http\\Request",
-		PopulatedFrom:   []string{"$_GET", "$_POST"},
-		Confidence:      0.95,
-	})
-
-	// Symfony Request
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "symfony_request_query",
-		Framework:       "symfony",
-		Language:        "php",
-		Name:            "Symfony $request->query",
-		Description:     "Symfony request query bag contains GET parameters",
-		ClassPattern:    "^(Symfony\\\\Component\\\\HttpFoundation\\\\)?Request$",
-		PropertyPattern: "^query$",
-		SourceType:      types.SourceHTTPGet,
-		CarrierClass:    "Symfony\\Component\\HttpFoundation\\Request",
-		CarrierProperty: "query",
-		PopulatedFrom:   []string{"$_GET"},
-		Confidence:      0.95,
-	})
-
-	// Symfony Request POST
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "symfony_request_request",
-		Framework:       "symfony",
-		Language:        "php",
-		Name:            "Symfony $request->request",
-		Description:     "Symfony request bag contains POST parameters",
-		ClassPattern:    "^(Symfony\\\\Component\\\\HttpFoundation\\\\)?Request$",
-		PropertyPattern: "^request$",
-		SourceType:      types.SourceHTTPPost,
-		CarrierClass:    "Symfony\\Component\\HttpFoundation\\Request",
-		CarrierProperty: "request",
-		PopulatedFrom:   []string{"$_POST"},
-		Confidence:      0.95,
-	})
-
-	// CodeIgniter Input
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "codeigniter_input_get",
-		Framework:       "codeigniter",
-		Language:        "php",
-		Name:            "CodeIgniter $this->input->get()",
-		Description:     "CodeIgniter input class get() method",
-		ClassPattern:    "^CI_Input$",
-		MethodPattern:   "^get$",
-		SourceType:      types.SourceHTTPGet,
-		CarrierClass:    "CI_Input",
-		PopulatedFrom:   []string{"$_GET"},
-		Confidence:      0.9,
-	})
-
-	// CodeIgniter Input POST
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "codeigniter_input_post",
-		Framework:       "codeigniter",
-		Language:        "php",
-		Name:            "CodeIgniter $this->input->post()",
-		Description:     "CodeIgniter input class post() method",
-		ClassPattern:    "^CI_Input$",
-		MethodPattern:   "^post$",
-		SourceType:      types.SourceHTTPPost,
-		CarrierClass:    "CI_Input",
-		PopulatedFrom:   []string{"$_POST"},
-		Confidence:      0.9,
-	})
-
-	// PDO fetch methods
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "pdo_fetch",
-		Framework:       "pdo",
-		Language:        "php",
-		Name:            "PDOStatement->fetch()",
-		Description:     "PDO fetch returns database data (potentially user-originated)",
-		ClassPattern:    "^PDOStatement$",
-		MethodPattern:   "^fetch(All)?$",
-		SourceType:      types.SourceDatabase,
-		Confidence:      0.7,
-	})
+	// Load all patterns from pkg/sources/php registry
+	for _, p := range phpPatterns.GetAllPatterns() {
+		// Convert common.FrameworkPattern to types.FrameworkPattern
+		fp := &types.FrameworkPattern{
+			ID:              p.ID,
+			Framework:       p.Framework,
+			Language:        p.Language,
+			Name:            p.Name,
+			Description:     p.Description,
+			ClassPattern:    p.ClassPattern,
+			MethodPattern:   p.MethodPattern,
+			PropertyPattern: p.PropertyPattern,
+			AccessPattern:   p.AccessPattern,
+			SourceType:      types.SourceType(p.SourceType),
+			SourceKey:       p.SourceKey,
+			CarrierClass:    p.CarrierClass,
+			CarrierProperty: p.CarrierProperty,
+			PopulatedBy:     p.PopulatedBy,
+			PopulatedFrom:   p.PopulatedFrom,
+			Confidence:      p.Confidence,
+		}
+		a.AddFrameworkPattern(fp)
+	}
 }
 
 // BuildSymbolTable builds the symbol table for a PHP file

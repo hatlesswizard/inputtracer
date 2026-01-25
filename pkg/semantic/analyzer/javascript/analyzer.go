@@ -11,6 +11,7 @@ import (
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	"github.com/hatlesswizard/inputtracer/pkg/sources"
+	jsPatterns "github.com/hatlesswizard/inputtracer/pkg/sources/javascript"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -38,170 +39,32 @@ func NewJSAnalyzer() *JSAnalyzer {
 	return a
 }
 
-// registerFrameworkPatterns registers known JS framework patterns
+// registerFrameworkPatterns loads JavaScript framework patterns from pkg/sources/javascript
+// This centralizes all framework patterns in one place
 func (a *JSAnalyzer) registerFrameworkPatterns() {
-	// Express.js patterns
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "express_req_body",
-		Framework:       "express",
-		Language:        "javascript",
-		Name:            "Express req.body",
-		Description:     "Express request body, populated by body-parser middleware",
-		PropertyPattern: "^body$",
-		SourceType:      types.SourceHTTPBody,
-		CarrierProperty: "body",
-		PopulatedBy:     "body-parser",
-		PopulatedFrom:   []string{"HTTP POST body"},
-		Confidence:      0.95,
-	})
-
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "express_req_query",
-		Framework:       "express",
-		Language:        "javascript",
-		Name:            "Express req.query",
-		Description:     "Express request query parameters",
-		PropertyPattern: "^query$",
-		SourceType:      types.SourceHTTPGet,
-		CarrierProperty: "query",
-		PopulatedBy:     "express",
-		PopulatedFrom:   []string{"HTTP GET query string"},
-		Confidence:      0.95,
-	})
-
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "express_req_params",
-		Framework:       "express",
-		Language:        "javascript",
-		Name:            "Express req.params",
-		Description:     "Express route parameters from URL path",
-		PropertyPattern: "^params$",
-		SourceType:      types.SourceHTTPPath,
-		CarrierProperty: "params",
-		PopulatedBy:     "express-router",
-		PopulatedFrom:   []string{"HTTP URL path"},
-		Confidence:      0.95,
-	})
-
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "express_req_headers",
-		Framework:       "express",
-		Language:        "javascript",
-		Name:            "Express req.headers",
-		Description:     "Express request headers",
-		PropertyPattern: "^headers$",
-		SourceType:      types.SourceHTTPHeader,
-		CarrierProperty: "headers",
-		PopulatedBy:     "http",
-		PopulatedFrom:   []string{"HTTP headers"},
-		Confidence:      0.95,
-	})
-
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "express_req_cookies",
-		Framework:       "express",
-		Language:        "javascript",
-		Name:            "Express req.cookies",
-		Description:     "Express request cookies",
-		PropertyPattern: "^cookies$",
-		SourceType:      types.SourceHTTPCookie,
-		CarrierProperty: "cookies",
-		PopulatedBy:     "cookie-parser",
-		PopulatedFrom:   []string{"HTTP Cookie header"},
-		Confidence:      0.95,
-	})
-
-	// Koa.js patterns
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "koa_request_body",
-		Framework:       "koa",
-		Language:        "javascript",
-		Name:            "Koa ctx.request.body",
-		Description:     "Koa request body",
-		PropertyPattern: "^body$",
-		SourceType:      types.SourceHTTPBody,
-		CarrierProperty: "body",
-		PopulatedBy:     "koa-bodyparser",
-		PopulatedFrom:   []string{"HTTP POST body"},
-		Confidence:      0.9,
-	})
-
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "koa_query",
-		Framework:       "koa",
-		Language:        "javascript",
-		Name:            "Koa ctx.query",
-		Description:     "Koa query parameters",
-		PropertyPattern: "^query$",
-		SourceType:      types.SourceHTTPGet,
-		CarrierProperty: "query",
-		PopulatedFrom:   []string{"HTTP GET query string"},
-		Confidence:      0.9,
-	})
-
-	// Fastify patterns
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "fastify_body",
-		Framework:       "fastify",
-		Language:        "javascript",
-		Name:            "Fastify request.body",
-		Description:     "Fastify request body",
-		PropertyPattern: "^body$",
-		SourceType:      types.SourceHTTPBody,
-		PopulatedFrom:   []string{"HTTP POST body"},
-		Confidence:      0.9,
-	})
-
-	// Fetch API patterns
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "fetch_json",
-		Framework:       "fetch",
-		Language:        "javascript",
-		Name:            "fetch().json()",
-		Description:     "Fetch API JSON response",
-		MethodPattern:   "^json$",
-		SourceType:      types.SourceNetwork,
-		PopulatedFrom:   []string{"HTTP response body"},
-		Confidence:      0.8,
-	})
-
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "fetch_text",
-		Framework:       "fetch",
-		Language:        "javascript",
-		Name:            "fetch().text()",
-		Description:     "Fetch API text response",
-		MethodPattern:   "^text$",
-		SourceType:      types.SourceNetwork,
-		PopulatedFrom:   []string{"HTTP response body"},
-		Confidence:      0.8,
-	})
-
-	// XMLHttpRequest patterns
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "xhr_response",
-		Framework:       "xhr",
-		Language:        "javascript",
-		Name:            "XMLHttpRequest.response",
-		Description:     "XMLHttpRequest response",
-		PropertyPattern: "^response(Text)?$",
-		SourceType:      types.SourceNetwork,
-		PopulatedFrom:   []string{"HTTP response body"},
-		Confidence:      0.8,
-	})
-
-	// URLSearchParams
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "url_search_params",
-		Framework:       "web-api",
-		Language:        "javascript",
-		Name:            "URLSearchParams.get()",
-		Description:     "URLSearchParams query parameter access",
-		MethodPattern:   "^get$",
-		SourceType:      types.SourceHTTPGet,
-		PopulatedFrom:   []string{"URL query string"},
-		Confidence:      0.9,
-	})
+	// Load all patterns from pkg/sources/javascript registry
+	for _, p := range jsPatterns.GetAllPatterns() {
+		// Convert common.FrameworkPattern to types.FrameworkPattern
+		fp := &types.FrameworkPattern{
+			ID:              p.ID,
+			Framework:       p.Framework,
+			Language:        p.Language,
+			Name:            p.Name,
+			Description:     p.Description,
+			ClassPattern:    p.ClassPattern,
+			MethodPattern:   p.MethodPattern,
+			PropertyPattern: p.PropertyPattern,
+			AccessPattern:   p.AccessPattern,
+			SourceType:      types.SourceType(p.SourceType),
+			SourceKey:       p.SourceKey,
+			CarrierClass:    p.CarrierClass,
+			CarrierProperty: p.CarrierProperty,
+			PopulatedBy:     p.PopulatedBy,
+			PopulatedFrom:   p.PopulatedFrom,
+			Confidence:      p.Confidence,
+		}
+		a.AddFrameworkPattern(fp)
+	}
 }
 
 // BuildSymbolTable builds the symbol table for a JavaScript file

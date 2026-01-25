@@ -10,8 +10,13 @@ When writing code for this library:
 - **NEVER** create, add, or use sink patterns to identify security issues
 - **NEVER** create product/framework-specific code inside the core library packages
 - **NEVER** add security vulnerability detection, sink matching, or "dangerous function" lists
-- **ALWAYS** create new source matchers, framework patterns, or product-specific code inside `pkg/sources/` directory - nowhere else
-- If asked to create cases for a specific framework/product (e.g., WordPress, Laravel, Django), create it as a new file in `pkg/sources/` (e.g., `pkg/sources/wordpress.go`, `pkg/sources/laravel.go`)
+- **ALWAYS** create new framework/product patterns inside `pkg/sources/{language}/` directory - nowhere else
+- If asked to create cases for a specific framework/product, create it in the language-specific subdirectory:
+  - WordPress (PHP) → `pkg/sources/php/wordpress.go`
+  - Laravel (PHP) → `pkg/sources/php/laravel.go`
+  - Django (Python) → `pkg/sources/python/django.go`
+  - Express (JS) → `pkg/sources/javascript/express.go`
+  - Spring (Java) → `pkg/sources/java/spring.go`
 
 The library's sole purpose is to trace where user input enters code and how it propagates through variables and function calls. Security analysis (identifying what happens to that input) is intentionally out of scope.
 
@@ -114,3 +119,29 @@ config := &tracer.Config{
 ## Input Labels
 
 The library categorizes input sources by type: `HTTP_GET`, `HTTP_POST`, `HTTP_COOKIE`, `HTTP_HEADER`, `HTTP_BODY`, `CLI_ARG`, `ENV_VAR`, `FILE_READ`, `DATABASE`, `NETWORK`
+
+---
+
+## Proactive Plugin Agent Usage
+
+**Use these agents automatically when the situation applies - don't wait to be asked.**
+
+### Development Workflow Agents
+- `superpowers:brainstorming` → Before any new feature/functionality
+- `superpowers:test-driven-development` → Before writing implementation code
+- `superpowers:systematic-debugging` → When encountering bugs or test failures
+- `superpowers:writing-plans` → For multi-step tasks with requirements
+- `superpowers:verification-before-completion` → Before claiming work is done
+- `feature-dev:code-reviewer` → After implementing features
+- `superpowers:code-reviewer` → After completing major project steps
+
+### Analysis Agents
+- `static-code-analyzer` → When reviewing for hardcoded patterns
+- `performance-analyzer` → For threading/performance analysis
+- `memory-optimizer` → For memory optimization opportunities
+- `dead-code-eliminator` → When cleaning up after refactors
+
+### Exploration Agents
+- `Explore` (Task tool) → When searching/understanding codebase
+- `feature-dev:code-explorer` → For deep feature analysis
+- `feature-dev:code-architect` → When designing architectures

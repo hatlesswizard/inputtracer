@@ -1,36 +1,42 @@
 # InputTracer Complete Codebase Documentation
-Generated: 2026-01-24
+Generated: 2026-01-25
 Project Type: Go Library
-Total Files Analyzed: 54 core library files
+Total Files Analyzed: 95+ core library files
 
 ---
 
 ## Table of Contents
 1. [Project Overview](#1-project-overview)
 2. [Directory Structure](#2-complete-directory-structure)
-3. [Source Files Documentation](#3-source-files---complete-documentation)
-4. [Interfaces](#4-all-interfaces)
-5. [Types/Structs](#5-all-typesstructs)
-6. [Constants](#6-all-constants)
-7. [Data Flow](#7-data-flow-diagrams)
-8. [Function Index](#8-function-index-alphabetical)
-9. [File Index](#9-file-index)
-10. [Dependencies](#10-dependency-graph)
+3. [Core Types](#3-core-types)
+4. [Key Interfaces](#4-key-interfaces)
+5. [Source Files Documentation](#5-source-files-documentation)
+6. [Constants](#6-constants)
+7. [API Usage](#7-api-usage)
+8. [Framework Detection](#8-framework-detection)
+9. [Configuration](#9-configuration)
+10. [Design Patterns](#10-design-patterns)
+11. [Function Index](#11-function-index)
+12. [Dependencies](#12-dependencies)
+13. [Build & Test](#13-build--test)
 
 ---
 
 ## 1. Project Overview
 
 ### 1.1 Purpose
-InputTracer is a multi-language static analysis library for **taint analysis**. It identifies where user input enters an application (sources), tracks how that input propagates through variables and function calls (taint propagation), and reports which functions receive user-controlled data.
+**InputTracer** is a multi-language taint analysis library that tracks how user input flows through code. It uses Tree-Sitter for parsing and supports 12 programming languages.
 
-Key capabilities:
+**CRITICAL CONSTRAINT**: This library traces INPUT SOURCES ONLY. It does NOT identify security vulnerabilities, sinks, or dangerous functions.
+
+### 1.2 Key Capabilities
 - **Source Detection**: Identifies HTTP parameters, CLI args, environment variables, file reads, database results
 - **Taint Propagation**: Tracks data flow through assignments and function calls
 - **Inter-procedural Analysis**: Follows data across function boundaries
-- **Flow Graph Generation**: Outputs DOT/Mermaid/JSON visualizations
+- **Framework Detection**: Auto-detects PHP, JS, Python, Java, Go, Ruby, Rust, C# frameworks
+- **Flow Graph Generation**: Outputs DOT/Mermaid/JSON/HTML visualizations
 
-### 1.2 Technology Stack
+### 1.3 Technology Stack
 - **Primary Language**: Go 1.21
 - **Parser**: Tree-Sitter (via go-tree-sitter bindings)
 - **Dependencies**:
@@ -38,28 +44,40 @@ Key capabilities:
   - `github.com/google/uuid` - Unique ID generation
   - `github.com/mattn/go-sqlite3` - SQLite support (optional)
 
-### 1.3 Supported Languages
-PHP, JavaScript, TypeScript, TSX, Python, Go, Java, C, C++, C#, Ruby, Rust
+### 1.4 Supported Languages
+| Language | Extensions | Parser |
+|----------|------------|--------|
+| PHP | .php | tree-sitter-php |
+| JavaScript | .js, .mjs, .cjs | tree-sitter-javascript |
+| TypeScript | .ts, .tsx | tree-sitter-typescript |
+| Python | .py | tree-sitter-python |
+| Go | .go | tree-sitter-go |
+| Java | .java | tree-sitter-java |
+| C | .c, .h | tree-sitter-c |
+| C++ | .cpp, .cc, .hpp | tree-sitter-cpp |
+| C# | .cs | tree-sitter-c-sharp |
+| Ruby | .rb | tree-sitter-ruby |
+| Rust | .rs | tree-sitter-rust |
 
-### 1.4 Entry Point Flow
+### 1.5 Entry Point Flow
 ```
 tracer.New(config)
-  → RegisterAllLanguages()
-  → sources.RegisterAll()
-  → ast.RegisterAll()
-  → Tracer{}
+  -> RegisterAllLanguages()
+  -> sources.RegisterAll()
+  -> ast.RegisterAll()
+  -> Tracer{}
 
 tracer.TraceDirectory(path)
-  → collectFiles()
-  → parallel workers: analyzeFile()
-    → ParseFile()
-    → FindSources()
-    → ExtractAssignments() / Track propagation
-    → ExtractCalls() / Find tainted function calls
-  → mergeFileResult()
-  → runInterproceduralAnalysis()
-  → buildFlowGraph()
-  → TraceResult{}
+  -> collectFiles()
+  -> parallel workers: analyzeFile()
+    -> ParseFile()
+    -> FindSources()
+    -> ExtractAssignments() / Track propagation
+    -> ExtractCalls() / Find tainted function calls
+  -> mergeFileResult()
+  -> runInterproceduralAnalysis()
+  -> buildFlowGraph()
+  -> TraceResult{}
 ```
 
 ---
@@ -67,493 +85,230 @@ tracer.TraceDirectory(path)
 ## 2. Complete Directory Structure
 
 ```
-/inputtracer/
-├── go.mod                           # Go module definition
+inputtracer/
+├── go.mod                           # Module: github.com/hatlesswizard/inputtracer
 ├── go.sum                           # Dependency checksums
 ├── CLAUDE.md                        # Claude Code guidance
 ├── CODEBASE_CONTEXT.md              # This file
 │
 ├── pkg/
-│   ├── tracer/                      # Core tracer (entry point)
-│   │   ├── tracer.go               # Main Tracer struct, TraceDirectory()
-│   │   ├── types.go                # Core data structures
-│   │   ├── propagation.go          # Taint propagation logic
-│   │   ├── scope.go                # Variable scope management
-│   │   └── interprocedural.go      # Cross-function analysis
+│   ├── tracer/                      # Main tracer orchestrator
+│   │   ├── tracer.go               # Tracer struct, New(), TraceDirectory(), TraceFile()
+│   │   ├── types.go                # Core types: TraceResult, InputSource, TaintedVariable
+│   │   ├── propagation.go          # TaintPropagator, language-specific assignment extraction
+│   │   ├── interprocedural.go      # InterproceduralAnalyzer, cross-function analysis
+│   │   └── scope.go                # ScopeManager, ScopeType definitions
 │   │
-│   ├── parser/                      # Multi-language parsing
-│   │   ├── service.go              # Parser service with pooling
-│   │   ├── cache.go                # LRU cache with memory limits
+│   ├── parser/                      # Tree-Sitter parsing service
+│   │   ├── service.go              # Service struct with parser pools, ParseFile()
+│   │   ├── cache.go                # LRU cache with memory limits (32MB default)
 │   │   └── languages/
-│   │       └── init.go             # Language registration
+│   │       └── init.go             # Language registration, extension mappings
 │   │
-│   ├── sources/                     # Input source detection
-│   │   ├── registry.go             # Source matcher registry
-│   │   ├── php.go                  # PHP source patterns
-│   │   ├── javascript.go           # JS/TS source patterns
-│   │   ├── python.go               # Python source patterns
-│   │   ├── go.go                   # Go source patterns
-│   │   ├── java.go                 # Java source patterns
-│   │   ├── c.go                    # C source patterns
-│   │   ├── cpp.go                  # C++ source patterns
-│   │   ├── csharp.go               # C# source patterns
-│   │   ├── ruby.go                 # Ruby source patterns
-│   │   └── rust.go                 # Rust source patterns
+│   ├── sources/                     # Input source definitions (CENTRALIZED)
+│   │   ├── registry.go             # Matcher registry, RegisterAll()
+│   │   ├── types.go                # Definition, Match, BaseMatcher, Matcher interface
+│   │   ├── labels.go               # SourceType constants (re-exports from common)
+│   │   ├── input_methods.go        # InputMethod struct, framework patterns
+│   │   ├── superglobals.go         # PHP superglobal definitions
+│   │   ├── mappings.go             # LanguageMappings for input functions
+│   │   ├── ast_patterns.go         # ASTNodeTypes for language constructs
+│   │   ├── graph_styles.go         # NodeStyle, EdgeStyle for visualization
+│   │   ├── defaults.go             # DefaultSkipDirs, DefaultMaxDepth=5
+│   │   ├── special_files.go        # Framework detection by file paths
+│   │   │
+│   │   ├── common/                  # Shared types for all languages
+│   │   │   ├── types.go            # InputLabel, Definition, Match, BaseMatcher
+│   │   │   ├── source_types.go     # SourceType enum (18 types)
+│   │   │   ├── framework_patterns.go # FrameworkPattern, FrameworkPatternRegistry
+│   │   │   └── regex_patterns.go   # Pre-compiled regex patterns (cached)
+│   │   │
+│   │   ├── frameworks/              # Framework detection utilities
+│   │   │   └── detection.go        # DetectFramework(), FrameworkIndicator
+│   │   │
+│   │   ├── php/                     # PHP-specific patterns
+│   │   │   ├── matcher.go          # PHP source matcher (superglobals, PSR-7)
+│   │   │   ├── frameworks.go       # PHP framework patterns
+│   │   │   ├── laravel.go          # Laravel-specific patterns
+│   │   │   ├── symfony.go          # Symfony-specific patterns
+│   │   │   ├── codeigniter.go      # CodeIgniter patterns
+│   │   │   ├── wordpress.go        # WordPress patterns
+│   │   │   └── mybb.go             # MyBB patterns
+│   │   │
+│   │   ├── javascript/              # JavaScript-specific patterns
+│   │   │   ├── matcher.go          # JS source matcher
+│   │   │   ├── frameworks.go       # JS framework patterns
+│   │   │   ├── express.go          # Express.js patterns
+│   │   │   ├── koa.go              # Koa patterns
+│   │   │   ├── fastify.go          # Fastify patterns
+│   │   │   └── nestjs.go           # NestJS patterns
+│   │   │
+│   │   ├── python/                  # Python-specific patterns
+│   │   │   ├── matcher.go          # Python source matcher
+│   │   │   └── frameworks.go       # Django, Flask, FastAPI patterns
+│   │   │
+│   │   ├── golang/                  # Go-specific patterns
+│   │   │   ├── matcher.go          # Go source matcher
+│   │   │   └── frameworks.go       # Gin, Echo, Fiber patterns
+│   │   │
+│   │   ├── java/                    # Java-specific patterns
+│   │   │   ├── matcher.go          # Java source matcher
+│   │   │   ├── frameworks.go       # Spring, Servlet patterns
+│   │   │   └── annotations.go      # Spring annotation patterns
+│   │   │
+│   │   ├── ruby/                    # Ruby-specific patterns
+│   │   │   ├── matcher.go          # Ruby source matcher
+│   │   │   └── frameworks.go       # Rails, Sinatra patterns
+│   │   │
+│   │   ├── rust/                    # Rust-specific patterns
+│   │   │   ├── matcher.go          # Rust source matcher
+│   │   │   └── frameworks.go       # Actix, Rocket, Axum patterns
+│   │   │
+│   │   ├── c/                       # C-specific patterns
+│   │   │   ├── matcher.go          # C source matcher
+│   │   │   └── input_patterns.go   # C input patterns (stdin, argv, getenv)
+│   │   │
+│   │   ├── cpp/                     # C++-specific patterns
+│   │   │   ├── matcher.go          # C++ source matcher
+│   │   │   └── frameworks.go       # Qt, POCO patterns
+│   │   │
+│   │   └── csharp/                  # C#-specific patterns
+│   │       ├── matcher.go          # C# source matcher
+│   │       └── frameworks.go       # ASP.NET patterns
 │   │
-│   ├── ast/                         # AST extraction
-│   │   ├── extractor.go            # Base extractor + Registry
-│   │   └── register.go             # Language-specific registration
+│   ├── ast/                         # Language-agnostic AST extraction
+│   │   ├── extractor.go            # Extractor interface, BaseExtractor
+│   │   └── register.go             # RegisterAll(), language-specific node types
 │   │
-│   ├── output/                      # Result export
-│   │   ├── json.go                 # JSON exporter
-│   │   └── graph.go                # DOT/Mermaid graph export
+│   ├── output/                      # Result serialization
+│   │   ├── json.go                 # JSONExporter, SummaryReport, GenerateSummary()
+│   │   └── graph.go                # GraphExporter for DOT/Mermaid, PathFinder
 │   │
-│   └── semantic/                    # Advanced semantic analysis
-│       ├── tracer.go               # Semantic tracer
-│       ├── output.go               # Output utilities
+│   └── semantic/                    # Deep semantic analysis
+│       ├── tracer.go               # Full semantic Tracer (2498 lines)
+│       ├── output.go               # ToJSON(), ToDOT(), ToMermaid(), ToHTML()
+│       │
 │       ├── types/
-│       │   └── types.go            # FlowNode, FlowEdge, FlowMap, SymbolTable
+│       │   └── types.go            # FlowNode, FlowEdge, FlowMap, SymbolTable (1100 lines)
+│       │
 │       ├── analyzer/
-│       │   ├── interface.go        # Analyzer interface
+│       │   ├── interface.go        # LanguageAnalyzer interface, Registry
 │       │   ├── php/analyzer.go
 │       │   ├── javascript/analyzer.go
 │       │   ├── typescript/analyzer.go
 │       │   ├── python/analyzer.go
 │       │   ├── golang/analyzer.go
 │       │   ├── java/analyzer.go
+│       │   ├── ruby/analyzer.go
+│       │   ├── rust/analyzer.go
 │       │   ├── c/analyzer.go
 │       │   ├── cpp/analyzer.go
-│       │   ├── csharp/analyzer.go
-│       │   ├── ruby/analyzer.go
-│       │   └── rust/analyzer.go
-│       ├── discovery/              # Source discovery
+│       │   └── csharp/analyzer.go
+│       │
+│       ├── discovery/               # Source discovery
 │       │   ├── taint.go
-│       │   ├── carrier_map.go
+│       │   ├── carrier_map.go      # Carrier map for input objects
 │       │   └── superglobal.go
+│       │
 │       ├── classifier/
-│       │   └── classifier.go
+│       │   └── classifier.go       # Input source classifier
+│       │
 │       ├── extractor/
-│       │   └── extractor.go
+│       │   └── extractor.go        # Expression extractor
+│       │
 │       ├── condition/
-│       │   ├── extractor.go
-│       │   └── extractor_test.go
+│       │   └── extractor.go        # Condition extractor
+│       │
 │       ├── batch/
-│       │   └── analyzer.go
+│       │   └── analyzer.go         # Batch analyzer
+│       │
 │       ├── pathanalysis/
-│       │   ├── expander.go
-│       │   └── expander_test.go
+│       │   └── expander.go         # Path expansion
+│       │
 │       ├── index/
-│       │   ├── indexer.go
+│       │   ├── indexer.go          # Code indexer
 │       │   └── indexer_test.go
+│       │
 │       ├── symbolic/
-│       │   ├── executor.go
-│       │   └── filecache.go
+│       │   ├── executor.go         # Symbolic execution
+│       │   └── filecache.go        # File cache for symbolic
+│       │
 │       ├── callgraph/
-│       │   ├── manager.go
-│       │   └── manager_test.go
+│       │   └── manager.go          # Call graph manager
+│       │
 │       └── tracer/
-│           └── vartracer.go
+│           └── vartracer.go        # Variable tracer
 │
-├── testapps/                        # Test applications (real projects)
-│   ├── php/                        # PHP test apps (DVWA, phpMyAdmin, etc.)
-│   ├── javascript/                 # JS test apps (Express, Fastify, etc.)
-│   ├── typescript/                 # TS test apps
-│   ├── python/                     # Python test apps (Django, Flask, etc.)
-│   ├── go/                         # Go test apps (Gin, Echo, Fiber, etc.)
-│   ├── java/                       # Java test apps
-│   ├── c/                          # C test apps (Redis, OpenSSL, etc.)
-│   ├── cpp/                        # C++ test apps
-│   ├── csharp/                     # C# test apps
-│   ├── ruby/                       # Ruby test apps
-│   ├── rust/                       # Rust test apps
-│   └── mybb/                       # MyBB forum software
-│
-└── testdata/                        # Test fixtures
+└── testapps/                        # Test applications (various languages)
+    ├── php/                        # PHP test apps (DVWA, phpMyAdmin, etc.)
+    ├── javascript/                 # JS test apps (Express, Fastify, etc.)
+    ├── typescript/                 # TS test apps
+    ├── python/                     # Python test apps (Django, Flask, etc.)
+    ├── go/                         # Go test apps (Gin, Echo, Fiber, etc.)
+    ├── java/                       # Java test apps
+    ├── c/                          # C test apps (Redis, OpenSSL, etc.)
+    ├── cpp/                        # C++ test apps
+    ├── csharp/                     # C# test apps
+    ├── ruby/                       # Ruby test apps
+    ├── rust/                       # Rust test apps
+    └── mybb/                       # MyBB forum software
 ```
 
-### 2.1 Directory Purposes
-| Directory | Purpose | Key Files |
-|-----------|---------|-----------|
-| `pkg/tracer/` | Main entry point, orchestration | `tracer.go`, `types.go` |
-| `pkg/parser/` | Tree-Sitter parsing service | `service.go`, `cache.go` |
-| `pkg/sources/` | Input source pattern matching | `registry.go`, `php.go`, `javascript.go` |
-| `pkg/ast/` | Language-agnostic AST extraction | `extractor.go`, `register.go` |
-| `pkg/output/` | Export to JSON/DOT/Mermaid | `json.go`, `graph.go` |
-| `pkg/semantic/` | Advanced semantic analysis | `tracer.go`, `types/types.go` |
-| `testapps/` | Real-world test applications | Various framework examples |
-
 ---
 
-## 3. Source Files - Complete Documentation
+## 3. Core Types
 
-### 3.1 pkg/tracer/tracer.go
-**Location:** `pkg/tracer/tracer.go`
-**Purpose:** Main tracer entry point and orchestration
-**Lines:** 625
-
-#### Imports
-```go
-import (
-    "fmt", "os", "path/filepath", "runtime", "sync", "time"
-    "github.com/google/uuid"
-    "github.com/hatlesswizard/inputtracer/pkg/ast"
-    "github.com/hatlesswizard/inputtracer/pkg/parser"
-    "github.com/hatlesswizard/inputtracer/pkg/parser/languages"
-    "github.com/hatlesswizard/inputtracer/pkg/sources"
-)
-```
-
-#### Functions
-| Function | Signature | Lines | Description |
-|----------|-----------|-------|-------------|
-| DefaultConfig | `func DefaultConfig() *Config` | 40-48 | Returns sensible default config |
-| New | `func New(config *Config) *Tracer` | 59-90 | Creates new Tracer with config |
-| TraceDirectory | `func (t *Tracer) TraceDirectory(dirPath string) (*TraceResult, error)` | 92-164 | Analyzes entire directory |
-| TraceFile | `func (t *Tracer) TraceFile(filePath string) (*TraceResult, error)` | 166-198 | Analyzes single file |
-| analyzeFile | `func (t *Tracer) analyzeFile(filePath string) *fileResult` | 211-403 | Per-file analysis |
-| mergeFileResult | `func (t *Tracer) mergeFileResult(result *TraceResult, fr *fileResult)` | 405-423 | Merges file results |
-| runInterproceduralAnalysis | `func (t *Tracer) runInterproceduralAnalysis(result *TraceResult)` | 425-444 | Cross-function analysis |
-| buildFlowGraph | `func (t *Tracer) buildFlowGraph(result *TraceResult)` | 446-519 | Builds flow graph |
-| collectFiles | `func (t *Tracer) collectFiles(dirPath string) ([]string, error)` | 521-549 | Collects files to analyze |
-| GetTaintedFunctions | `func (t *Tracer) GetTaintedFunctions(result *TraceResult) []*TaintedFunction` | 551-554 | Returns tainted functions |
-| GetFlowPaths | `func (t *Tracer) GetFlowPaths(result *TraceResult, source *InputSource) []*PropagationPath` | 556-603 | Returns propagation paths |
-| DoesReceiveInput | `func (t *Tracer) DoesReceiveInput(result *TraceResult, funcName string) bool` | 605-614 | Checks if function receives input |
-| GetInputSources | `func (t *Tracer) GetInputSources(result *TraceResult) []*InputSource` | 616-619 | Returns all input sources |
-| GetTaintedVariables | `func (t *Tracer) GetTaintedVariables(result *TraceResult) []*TaintedVariable` | 621-624 | Returns tainted variables |
-
-#### Types
-| Name | Type | Purpose |
-|------|------|---------|
-| Config | struct | Tracer configuration |
-| Tracer | struct | Main tracer instance |
-| fileResult | struct | Per-file analysis result |
-
----
-
-### 3.2 pkg/tracer/types.go
-**Location:** `pkg/tracer/types.go`
-**Purpose:** Core data structures for trace results
-**Lines:** 482
-
-#### Types
-| Name | Type | Fields | Purpose |
-|------|------|--------|---------|
-| InputLabel | string | - | Input category enum |
-| Location | struct | FilePath, Line, Column, EndLine, EndColumn, Snippet | Code location |
-| InputSource | struct | ID, Type, Key, Location, Labels, Language | User input entry point |
-| TaintedVariable | struct | ID, Name, Scope, Source, Location, Depth, Language | Variable holding user input |
-| TaintedParam | struct | Index, Name, Source, Path | Function parameter with taint |
-| TaintedFunction | struct | ID, Name, FilePath, Line, Language, TaintedParams, ReceivesThrough | Function receiving user input |
-| PropagationStepType | string | - | Step type enum |
-| PropagationStep | struct | Type, Variable, Function, Location | One step in propagation |
-| PropagationPath | struct | Source, Steps, Destination | Complete flow path |
-| FlowNode | struct | ID, Type, Name, Location | Graph node |
-| FlowEdge | struct | From, To, Type, Location | Graph edge |
-| FlowGraph | struct | Nodes, Edges | Complete flow graph |
-| TraceStats | struct | FilesAnalyzed, SourcesFound, etc. | Analysis statistics |
-| TraceResult | struct | Sources, TaintedVariables, TaintedFunctions, FlowGraph, Stats, Errors | Complete analysis result |
-| Scope | struct | ID, Type, Name, Parent, Children, Variables, StartLine, EndLine | Variable scope |
-| AnalysisState | struct | CurrentScope, ScopeStack, TaintedValues, FunctionSummaries, VisitedFunctions | Analysis state |
-| FullAnalysisState | struct | embedded AnalysisState + dedup maps | Optimized analysis state |
-| ParameterInfo | struct | Index, Name, Type | Function parameter info |
-| FunctionSummary | struct | Name, FilePath, Language, Parameters, ParamsToReturn, etc. | Function taint summary |
-
----
-
-### 3.3 pkg/tracer/propagation.go
-**Location:** `pkg/tracer/propagation.go`
-**Purpose:** Taint propagation through code
-**Lines:** 524
-
-#### Functions
-| Function | Signature | Lines | Description |
-|----------|-----------|-------|-------------|
-| getOrCompileRegex | `func getOrCompileRegex(pattern string) *regexp.Regexp` | 15-22 | Cached regex compilation |
-| NewTaintPropagator | `func NewTaintPropagator(state *FullAnalysisState, language string) *TaintPropagator` | 30-36 | Creates new propagator |
-| PropagateFromAssignment | `func (tp *TaintPropagator) PropagateFromAssignment(...)` | 38-68 | Propagates taint from assignment |
-| PropagateFromFunctionCall | `func (tp *TaintPropagator) PropagateFromFunctionCall(...)` | 70-109 | Propagates through function calls |
-| PropagateFromReturn | `func (tp *TaintPropagator) PropagateFromReturn(...)` | 111-141 | Propagates from return statements |
-| checkTainted | `func (tp *TaintPropagator) checkTainted(...) *TaintInfo` | 149-168 | Checks if value is tainted |
-| matchesVariable | `func (tp *TaintPropagator) matchesVariable(value, varName string) bool` | 170-187 | Variable reference matching |
-| extractAssignmentParts | `func (tp *TaintPropagator) extractAssignmentParts(...) (target, value string)` | 196-231 | Extracts assignment LHS/RHS |
-| extractPHPAssignment | `func (tp *TaintPropagator) extractPHPAssignment(...) (string, string)` | 233-251 | PHP-specific extraction |
-| extractJSAssignment | `func (tp *TaintPropagator) extractJSAssignment(...) (string, string)` | 253-274 | JS-specific extraction |
-| extractPythonAssignment | `func (tp *TaintPropagator) extractPythonAssignment(...) (string, string)` | 276-295 | Python-specific extraction |
-| extractGoAssignment | `func (tp *TaintPropagator) extractGoAssignment(...) (string, string)` | 297-316 | Go-specific extraction |
-| extractFunctionName | `func (tp *TaintPropagator) extractFunctionName(...) string` | 375-393 | Extracts function name from call |
-| extractArguments | `func (tp *TaintPropagator) extractArguments(...) []Argument` | 395-424 | Extracts function arguments |
-| nodeToLocation | `func nodeToLocation(node *sitter.Node, src []byte, filePath string) Location` | 504-523 | Converts node to Location |
-
----
-
-### 3.4 pkg/tracer/scope.go
-**Location:** `pkg/tracer/scope.go`
-**Purpose:** Variable scope management
-**Lines:** 289
-
-#### Types
-| Name | Type | Purpose |
-|------|------|---------|
-| ScopeType | string | Scope type enum (global, file, module, class, function, block) |
-| ScopeManager | struct | Manages variable scopes during analysis |
-| ScopedVariable | struct | Variable within a specific scope |
-
-#### Functions
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| NewScopeManager | `func NewScopeManager() *ScopeManager` | Creates new scope manager |
-| EnterScope | `func (sm *ScopeManager) EnterScope(...) *Scope` | Creates and enters new scope |
-| ExitScope | `func (sm *ScopeManager) ExitScope() *Scope` | Exits current scope |
-| CurrentScope | `func (sm *ScopeManager) CurrentScope() *Scope` | Returns current scope |
-| DeclareVariable | `func (sm *ScopeManager) DeclareVariable(...) *ScopedVariable` | Declares variable in current scope |
-| LookupVariable | `func (sm *ScopeManager) LookupVariable(name string) *ScopedVariable` | Looks up variable respecting scope |
-| IsTainted | `func (sm *ScopeManager) IsTainted(name string) bool` | Checks if variable is tainted |
-| MarkTainted | `func (sm *ScopeManager) MarkTainted(...)` | Marks variable as tainted |
-| GetAllTaintedInScope | `func (sm *ScopeManager) GetAllTaintedInScope() []*ScopedVariable` | Gets all tainted vars in scope |
-| Clone | `func (sm *ScopeManager) Clone() *ScopeManager` | Clones scope manager for parallel analysis |
-
----
-
-### 3.5 pkg/tracer/interprocedural.go
-**Location:** `pkg/tracer/interprocedural.go`
-**Purpose:** Cross-function taint analysis
-**Lines:** 479
-
-#### Types
-| Name | Type | Purpose |
-|------|------|---------|
-| InterproceduralAnalyzer | struct | Handles cross-function taint analysis |
-
-#### Functions
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| NewInterproceduralAnalyzer | `func NewInterproceduralAnalyzer(...) *InterproceduralAnalyzer` | Creates new analyzer |
-| BuildFunctionSummary | `func (ipa *InterproceduralAnalyzer) BuildFunctionSummary(...) *FunctionSummary` | Builds function taint summary |
-| extractFunctionName | `func (ipa *InterproceduralAnalyzer) extractFunctionName(...) string` | Extracts function name |
-| extractParameters | `func (ipa *InterproceduralAnalyzer) extractParameters(...) []ParameterInfo` | Extracts function parameters |
-| analyzeFlowWithinFunction | `func (ipa *InterproceduralAnalyzer) analyzeFlowWithinFunction(...)` | Analyzes data flow in function |
-| PropagateInterproceduralTaint | `func (ipa *InterproceduralAnalyzer) PropagateInterproceduralTaint(...)` | Propagates taint across calls |
-| GetCallGraph | `func (ipa *InterproceduralAnalyzer) GetCallGraph() map[string][]string` | Returns call graph |
-| GetFunctionSummary | `func (ipa *InterproceduralAnalyzer) GetFunctionSummary(name string) *FunctionSummary` | Gets function summary |
-
----
-
-### 3.6 pkg/parser/service.go
-**Location:** `pkg/parser/service.go`
-**Purpose:** Multi-language parsing service with pooling
-**Lines:** 276
-
-#### Types
-| Name | Type | Purpose |
-|------|------|---------|
-| Service | struct | Parser service with caching |
-| ParseResult | struct | Result of parsing a file |
-
-#### Functions
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| NewService | `func NewService(cacheSize ...int) *Service` | Creates new parser service |
-| RegisterLanguage | `func (s *Service) RegisterLanguage(name string, lang *sitter.Language)` | Registers language parser |
-| getParserFromPool | `func (s *Service) getParserFromPool(language string) *sitter.Parser` | Gets parser from pool |
-| returnParserToPool | `func (s *Service) returnParserToPool(language string, parser *sitter.Parser)` | Returns parser to pool |
-| GetLanguage | `func (s *Service) GetLanguage(name string) *sitter.Language` | Gets registered language |
-| SupportedLanguages | `func (s *Service) SupportedLanguages() []string` | Lists supported languages |
-| ParseFile | `func (s *Service) ParseFile(filePath string) (*ParseResult, error)` | Parses file with caching |
-| ParseWithTree | `func (s *Service) ParseWithTree(source []byte, language string) (*sitter.Tree, *sitter.Node, error)` | Parses and returns tree |
-| Parse | `func (s *Service) Parse(source []byte, language string) (*sitter.Node, error)` | Parses source code |
-| DetectLanguage | `func (s *Service) DetectLanguage(filePath string) string` | Detects language from extension |
-| IsSupported | `func (s *Service) IsSupported(filePath string) bool` | Checks if file type supported |
-| ClearCache | `func (s *Service) ClearCache()` | Clears parser cache |
-
----
-
-### 3.7 pkg/parser/cache.go
-**Location:** `pkg/parser/cache.go`
-**Purpose:** LRU cache with memory limits
-**Lines:** 201
-
-#### Types
-| Name | Type | Purpose |
-|------|------|---------|
-| CachedParse | struct | Cached parse result with tree reference |
-| Cache | struct | LRU cache with O(1) operations |
-| cacheEntry | struct | Internal cache entry |
-
-#### Functions
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| NewCache | `func NewCache(maxEntries int) *Cache` | Creates cache with 32MB default |
-| NewCacheWithMemoryLimit | `func NewCacheWithMemoryLimit(maxEntries int, maxMemory int64) *Cache` | Creates cache with custom limit |
-| Get | `func (c *Cache) Get(key string) *CachedParse` | Gets cached result O(1) |
-| Put | `func (c *Cache) Put(key string, data *CachedParse)` | Adds to cache O(1) |
-| evictOldest | `func (c *Cache) evictOldest()` | Evicts LRU entry |
-| Remove | `func (c *Cache) Remove(key string)` | Removes entry |
-| Clear | `func (c *Cache) Clear()` | Clears all entries |
-| Size | `func (c *Cache) Size() int` | Returns entry count |
-| MemoryUsage | `func (c *Cache) MemoryUsage() int64` | Returns memory estimate |
-| Stats | `func (c *Cache) Stats() (hits, misses int64)` | Returns hit/miss stats |
-
----
-
-### 3.8 pkg/sources/registry.go
-**Location:** `pkg/sources/registry.go`
-**Purpose:** Source matcher registry
-**Lines:** 306
-
-#### Types
-| Name | Type | Purpose |
-|------|------|---------|
-| Definition | struct | Input source definition (pattern, labels, node types) |
-| Match | struct | Matched source in code |
-| Registry | struct | Manages all source matchers |
-| BaseMatcher | struct | Common functionality for source matching |
-
-#### Functions
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| NewRegistry | `func NewRegistry() *Registry` | Creates new registry |
-| RegisterMatcher | `func (r *Registry) RegisterMatcher(matcher Matcher)` | Registers matcher |
-| AddSource | `func (r *Registry) AddSource(def Definition)` | Adds source definition |
-| GetMatcher | `func (r *Registry) GetMatcher(language string) Matcher` | Gets matcher for language |
-| NewBaseMatcher | `func NewBaseMatcher(language string, sources []Definition) *BaseMatcher` | Creates base matcher |
-| FindSources | `func (m *BaseMatcher) FindSources(root *sitter.Node, src []byte) []Match` | Finds sources in AST |
-| RegisterAll | `func RegisterAll(r *Registry)` | Registers all language matchers |
-
----
-
-### 3.9 pkg/ast/extractor.go
-**Location:** `pkg/ast/extractor.go`
-**Purpose:** Base AST extractor and registry
-**Lines:** 312
-
-#### Types
-| Name | Type | Purpose |
-|------|------|---------|
-| Assignment | struct | Assignment operation (LHS, RHS, Scope, Location) |
-| CallArgument | struct | Function call argument |
-| FunctionCall | struct | Function call (Name, Arguments, Location) |
-| Registry | struct | Manages AST extractors |
-| BaseExtractor | struct | Common extraction functionality |
-
-#### Functions
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| NewRegistry | `func NewRegistry() *Registry` | Creates new registry |
-| Register | `func (r *Registry) Register(extractor Extractor)` | Registers extractor |
-| GetExtractor | `func (r *Registry) GetExtractor(language string) Extractor` | Gets extractor |
-| NewBaseExtractor | `func NewBaseExtractor(...) *BaseExtractor` | Creates base extractor |
-| ExtractAssignments | `func (e *BaseExtractor) ExtractAssignments(...) []Assignment` | Extracts all assignments |
-| ExtractCalls | `func (e *BaseExtractor) ExtractCalls(...) []FunctionCall` | Extracts all calls |
-| ExpressionContains | `func (e *BaseExtractor) ExpressionContains(...) bool` | Checks if expr contains var |
-
----
-
-### 3.10 pkg/output/json.go
-**Location:** `pkg/output/json.go`
-**Purpose:** JSON export functionality
-**Lines:** 182
-
-#### Types
-| Name | Type | Purpose |
-|------|------|---------|
-| JSONExporter | struct | JSON exporter with pretty-print |
-| SummaryReport | struct | Summary statistics |
-| FileStatistic | struct | Per-file statistics |
-
-#### Functions
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| NewJSONExporter | `func NewJSONExporter(prettyPrint bool) *JSONExporter` | Creates JSON exporter |
-| Export | `func (e *JSONExporter) Export(result *tracer.TraceResult) (string, error)` | Exports to JSON string |
-| ExportToWriter | `func (e *JSONExporter) ExportToWriter(...) error` | Exports to io.Writer |
-| ExportToFile | `func (e *JSONExporter) ExportToFile(...) error` | Exports to file |
-| GenerateSummary | `func GenerateSummary(result *tracer.TraceResult) *SummaryReport` | Generates summary report |
-| ExportSummary | `func (e *JSONExporter) ExportSummary(...) (string, error)` | Exports just summary |
-
----
-
-### 3.11 pkg/output/graph.go
-**Location:** `pkg/output/graph.go`
-**Purpose:** DOT/Mermaid graph export
-**Lines:** 272
-
-#### Types
-| Name | Type | Purpose |
-|------|------|---------|
-| GraphExporter | struct | Graph exporter |
-| PathFinder | struct | Path finding in flow graph |
-
-#### Functions
-| Function | Signature | Description |
-|----------|-----------|-------------|
-| NewGraphExporter | `func NewGraphExporter() *GraphExporter` | Creates graph exporter |
-| ExportDOT | `func (e *GraphExporter) ExportDOT(graph *tracer.FlowGraph) string` | Exports to Graphviz DOT |
-| ExportMermaid | `func (e *GraphExporter) ExportMermaid(graph *tracer.FlowGraph) string` | Exports to Mermaid |
-| ExportJSON | `func (e *GraphExporter) ExportJSON(...) (string, error)` | Exports graph as JSON |
-| NewPathFinder | `func NewPathFinder(graph *tracer.FlowGraph, maxDepth int) *PathFinder` | Creates path finder |
-| FindAllPaths | `func (pf *PathFinder) FindAllPaths(sourceID string) [][]string` | Finds all paths from source |
-| FindPathsToFunction | `func (pf *PathFinder) FindPathsToFunction(funcID string) [][]string` | Finds paths to function |
-
----
-
-## 4. All Interfaces
-
-### 4.1 Matcher (pkg/sources/registry.go:52)
-```go
-type Matcher interface {
-    Language() string
-    FindSources(root *sitter.Node, src []byte) []Match
-}
-```
-**Implemented By:** PHPMatcher, JavaScriptMatcher, TypeScriptMatcher, PythonMatcher, GoMatcher, JavaMatcher, CMatcher, CPPMatcher, CSharpMatcher, RubyMatcher, RustMatcher
-
-### 4.2 Extractor (pkg/ast/extractor.go:42)
-```go
-type Extractor interface {
-    Language() string
-    ExtractAssignments(root *sitter.Node, src []byte) []Assignment
-    ExtractCalls(root *sitter.Node, src []byte) []FunctionCall
-    ExpressionContains(node *sitter.Node, varName string, src []byte) bool
-}
-```
-**Implemented By:** BaseExtractor (all 11 languages use this)
-
-### 4.3 ParserRegistrar (pkg/parser/languages/init.go:93)
-```go
-type ParserRegistrar interface {
-    RegisterLanguage(name string, lang *sitter.Language)
-}
-```
-**Implemented By:** parser.Service
-
----
-
-## 5. All Types/Structs
-
-### 5.1 Config (pkg/tracer/tracer.go:19)
+### 3.1 tracer.Config (pkg/tracer/tracer.go:19)
 ```go
 type Config struct {
     Languages       []string            // Languages to analyze (empty = all)
-    MaxDepth        int                 // Inter-procedural analysis depth
-    Workers         int                 // Parallel workers
+    MaxDepth        int                 // Inter-procedural analysis depth (default: 5)
+    Workers         int                 // Parallel workers (default: NumCPU)
     CustomSources   []sources.Definition // Custom source definitions
     SkipDirs        []string            // Directories to skip
     IncludePatterns []string            // File patterns to include
 }
 ```
 
-### 5.2 Tracer (pkg/tracer/tracer.go:50)
+### 3.2 tracer.InputSource (pkg/tracer/types.go:36)
 ```go
-type Tracer struct {
-    config   *Config
-    parser   *parser.Service
-    sources  *sources.Registry
-    ast      *ast.Registry
-    mu       sync.Mutex
+type InputSource struct {
+    ID       string       // Unique identifier
+    Type     string       // e.g., "$_GET", "req.body", "argv"
+    Key      string       // e.g., "username" in $_GET['username']
+    Location Location     // Code location
+    Labels   []InputLabel // Categories
+    Language string       // Source language
 }
 ```
 
-### 5.3 TraceResult (pkg/tracer/types.go:137)
+### 3.3 tracer.TaintedVariable (pkg/tracer/types.go:46)
+```go
+type TaintedVariable struct {
+    ID       string       // Unique identifier
+    Name     string       // Variable name
+    Scope    string       // Function/class scope
+    Source   *InputSource // Original input source
+    Location Location     // Code location
+    Depth    int          // How many assignments from original source
+    Language string       // Language
+}
+```
+
+### 3.4 tracer.TaintedFunction (pkg/tracer/types.go:65)
+```go
+type TaintedFunction struct {
+    ID              string            // Unique identifier
+    Name            string            // Function name
+    FilePath        string            // File path
+    Line            int               // Line number
+    Language        string            // Language
+    TaintedParams   []TaintedParam    // Parameters receiving input
+    ReceivesThrough []PropagationPath // Propagation paths
+}
+```
+
+### 3.5 tracer.TraceResult (pkg/tracer/types.go:138)
 ```go
 type TraceResult struct {
     Sources          []*InputSource     // All discovered input sources
@@ -565,39 +320,173 @@ type TraceResult struct {
 }
 ```
 
-### 5.4 InputSource (pkg/tracer/types.go:35)
+### 3.6 common.SourceType (pkg/sources/common/source_types.go)
 ```go
-type InputSource struct {
-    ID       string       // Unique identifier
-    Type     string       // e.g., "$_GET", "req.body"
-    Key      string       // e.g., "username" in $_GET['username']
-    Location Location     // Code location
-    Labels   []InputLabel // Categories
-    Language string       // Source language
+const (
+    SourceHTTPGet     SourceType = "http_get"
+    SourceHTTPPost    SourceType = "http_post"
+    SourceHTTPBody    SourceType = "http_body"
+    SourceHTTPJSON    SourceType = "http_json"
+    SourceHTTPHeader  SourceType = "http_header"
+    SourceHTTPCookie  SourceType = "http_cookie"
+    SourceHTTPPath    SourceType = "http_path"
+    SourceHTTPFile    SourceType = "http_file"
+    SourceHTTPRequest SourceType = "http_request"
+    SourceSession     SourceType = "session"
+    SourceCLIArg      SourceType = "cli_arg"
+    SourceEnvVar      SourceType = "env_var"
+    SourceStdin       SourceType = "stdin"
+    SourceFile        SourceType = "file"
+    SourceDatabase    SourceType = "database"
+    SourceNetwork     SourceType = "network"
+    SourceUserInput   SourceType = "user_input"
+    SourceUnknown     SourceType = "unknown"
+)
+```
+
+### 3.7 common.Definition (pkg/sources/common/types.go:28)
+```go
+type Definition struct {
+    Name         string       // e.g., "$_GET", "req.body"
+    Pattern      string       // Regex pattern to match
+    Language     string       // Target language
+    Labels       []InputLabel // Categories
+    Description  string       // Human-readable description
+    NodeTypes    []string     // Tree-sitter node types to match
+    KeyExtractor string       // Regex to extract key
 }
 ```
 
-### 5.5 FlowMap (pkg/semantic/types/types.go:142)
+### 3.8 common.Match (pkg/sources/common/types.go:39)
 ```go
-type FlowMap struct {
-    Target       FlowTarget           // Target expression
-    Sources      []FlowNode           // Ultimate sources
-    Paths        []FlowPath           // Complete paths
-    Carriers     []FlowNode           // Intermediate carriers
-    AllNodes     []FlowNode           // All nodes
-    AllEdges     []FlowEdge           // All edges
-    Usages       []FlowNode           // Usage locations
-    CarrierChain *CarrierChain        // Carrier chain
-    CallGraph    map[string][]string  // Relevant call graph
-    Metadata     FlowMapMetadata      // Analysis metadata
-    nodeIndex    map[string]bool      // Deduplication
-    edgeIndex    map[string]bool      // Deduplication
+type Match struct {
+    SourceType string       // e.g., "$_GET", "req.body"
+    Key        string       // e.g., "username" in $_GET['username']
+    Variable   string       // Variable name if assigned
+    Line       int
+    Column     int
+    EndLine    int
+    EndColumn  int
+    Snippet    string
+    Labels     []InputLabel
 }
 ```
 
 ---
 
-## 6. All Constants
+## 4. Key Interfaces
+
+### 4.1 Matcher (pkg/sources/common/types.go:52)
+```go
+type Matcher interface {
+    Language() string
+    FindSources(root *sitter.Node, src []byte) []Match
+}
+```
+**Implemented By:** PHPMatcher, JSMatcher, PythonMatcher, GoMatcher, JavaMatcher, CMatcher, CPPMatcher, CSharpMatcher, RubyMatcher, RustMatcher
+
+### 4.2 LanguageAnalyzer (pkg/semantic/analyzer/interface.go:12)
+```go
+type LanguageAnalyzer interface {
+    Language() string
+    SupportedExtensions() []string
+    BuildSymbolTable(filePath string, source []byte, root *sitter.Node) (*types.SymbolTable, error)
+    ResolveImports(symbolTable *types.SymbolTable, basePath string) ([]string, error)
+    ExtractClasses(root *sitter.Node, source []byte) ([]*types.ClassDef, error)
+    ExtractFunctions(root *sitter.Node, source []byte) ([]*types.FunctionDef, error)
+    ExtractAssignments(root *sitter.Node, source []byte, scope string) ([]*types.Assignment, error)
+    ExtractCalls(root *sitter.Node, source []byte, scope string) ([]*types.CallSite, error)
+    FindInputSources(root *sitter.Node, source []byte) ([]*types.FlowNode, error)
+    AnalyzeMethodBody(method *types.MethodDef, source []byte, state *types.AnalysisState) (*MethodFlowAnalysis, error)
+    DetectFrameworks(symbolTable *types.SymbolTable, source []byte) ([]string, error)
+    GetFrameworkPatterns() []*types.FrameworkPattern
+    TraceExpression(target types.FlowTarget, state *types.AnalysisState) (*types.FlowMap, error)
+}
+```
+
+### 4.3 Extractor (pkg/ast/extractor.go)
+```go
+type Extractor interface {
+    Language() string
+    ExtractAssignments(root *sitter.Node, src []byte) []Assignment
+    ExtractCalls(root *sitter.Node, src []byte) []FunctionCall
+    ExpressionContains(node *sitter.Node, varName string, src []byte) bool
+}
+```
+
+---
+
+## 5. Source Files Documentation
+
+### 5.1 pkg/tracer/tracer.go (625 lines)
+**Purpose:** Main tracer entry point and orchestration
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| DefaultConfig | `func DefaultConfig() *Config` | Returns sensible default config |
+| New | `func New(config *Config) *Tracer` | Creates new Tracer with config |
+| TraceDirectory | `func (t *Tracer) TraceDirectory(dirPath string) (*TraceResult, error)` | Analyzes entire directory |
+| TraceFile | `func (t *Tracer) TraceFile(filePath string) (*TraceResult, error)` | Analyzes single file |
+| analyzeFile | `func (t *Tracer) analyzeFile(filePath string) *fileResult` | Per-file analysis |
+| mergeFileResult | `func (t *Tracer) mergeFileResult(result *TraceResult, fr *fileResult)` | Merges file results |
+| buildFlowGraph | `func (t *Tracer) buildFlowGraph(result *TraceResult)` | Builds flow graph |
+| collectFiles | `func (t *Tracer) collectFiles(dirPath string) ([]string, error)` | Collects files to analyze |
+| GetTaintedFunctions | `func (t *Tracer) GetTaintedFunctions(result *TraceResult) []*TaintedFunction` | Returns tainted functions |
+| GetFlowPaths | `func (t *Tracer) GetFlowPaths(result *TraceResult, source *InputSource) []*PropagationPath` | Returns propagation paths |
+| DoesReceiveInput | `func (t *Tracer) DoesReceiveInput(result *TraceResult, funcName string) bool` | Checks if function receives input |
+
+### 5.2 pkg/parser/service.go (276 lines)
+**Purpose:** Multi-language parsing service with pooling
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| NewService | `func NewService(cacheSize ...int) *Service` | Creates new parser service |
+| RegisterLanguage | `func (s *Service) RegisterLanguage(name string, lang *sitter.Language)` | Registers language parser |
+| ParseFile | `func (s *Service) ParseFile(filePath string) (*ParseResult, error)` | Parses file with caching |
+| Parse | `func (s *Service) Parse(source []byte, language string) (*sitter.Node, error)` | Parses source code |
+| DetectLanguage | `func (s *Service) DetectLanguage(filePath string) string` | Detects language from extension |
+
+### 5.3 pkg/parser/cache.go (201 lines)
+**Purpose:** LRU cache with memory limits (32MB default)
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| NewCache | `func NewCache(maxEntries int) *Cache` | Creates cache with 32MB default |
+| Get | `func (c *Cache) Get(key string) *CachedParse` | Gets cached result O(1) |
+| Put | `func (c *Cache) Put(key string, data *CachedParse)` | Adds to cache O(1) |
+| Clear | `func (c *Cache) Clear()` | Clears all entries (calls tree.Close()) |
+| MemoryUsage | `func (c *Cache) MemoryUsage() int64` | Returns memory estimate |
+
+### 5.4 pkg/sources/input_methods.go (190 lines)
+**Purpose:** Framework input method definitions
+
+| Type | Description |
+|------|-------------|
+| InputMethodCategory | Classifies input methods (http, file, command, generic) |
+| InputMethod | Describes a method that returns user input |
+| InputMethods | Canonical list of input-returning methods |
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| IsInputMethod | `func IsInputMethod(varName, methodName string) bool` | Checks if var.method is known input |
+| GetInputMethodInfo | `func GetInputMethodInfo(varName, methodName string) *InputMethod` | Returns full info for input method |
+| IsInterestingMethod | `func IsInterestingMethod(methodName string) bool` | Checks if method is security-relevant |
+| GetMethodsByCategory | `func GetMethodsByCategory(category InputMethodCategory) []InputMethod` | Returns methods by category |
+| GetMethodsByFramework | `func GetMethodsByFramework(framework string) []InputMethod` | Returns methods by framework |
+
+### 5.5 pkg/sources/frameworks/detection.go (385 lines)
+**Purpose:** Framework detection utilities
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| DetectFramework | `func DetectFramework(codebasePath string) string` | Detects framework by file indicators |
+| DetectFrameworkByLanguage | `func DetectFrameworkByLanguage(codebasePath string, language string) string` | Detects framework for specific language |
+| GetFrameworkIndicators | `func GetFrameworkIndicators(framework string) []string` | Returns indicators for framework |
+| GetFrameworksForLanguage | `func GetFrameworksForLanguage(language string) []string` | Returns known frameworks for language |
+
+---
+
+## 6. Constants
 
 ### 6.1 Input Labels (pkg/tracer/types.go:11-23)
 ```go
@@ -641,282 +530,283 @@ const (
 )
 ```
 
-### 6.4 Flow Node/Edge Types (pkg/semantic/types/types.go:17-49)
+### 6.4 Defaults (pkg/sources/defaults.go)
 ```go
-const (
-    NodeSource, NodeCarrier, NodeVariable, NodeFunction,
-    NodeProperty, NodeParam, NodeReturn, NodeSink FlowNodeType
+var DefaultSkipDirs = []string{
+    ".git", ".svn", ".hg",
+    "node_modules", "vendor", "bower_components",
+    ".idea", ".vscode",
+    "__pycache__", ".pytest_cache",
+    "build", "dist", "target",
+}
 
-    EdgeAssignment, EdgeParameter, EdgeReturn, EdgeProperty,
-    EdgeArraySet, EdgeArrayGet, EdgeMethodCall, EdgeConstructor,
-    EdgeFramework, EdgeConcatenate, EdgeDestructure, EdgeIteration,
-    EdgeConditional, EdgeCall, EdgeDataFlow FlowEdgeType
+const (
+    DefaultMaxDepth      = 5
+    DefaultCacheSize     = 1000
+    DefaultSnippetLength = 100
 )
 ```
 
 ---
 
-## 7. Data Flow Diagrams
+## 7. API Usage
 
-### 7.1 Main Data Flow
-```
-[User Code]
-    │
-    ▼
-┌────────────────────────────────────────────┐
-│  TraceDirectory(path)                      │
-│  ├── collectFiles()                        │
-│  │   └── Walk directory, filter by ext     │
-│  └── Parallel Workers:                     │
-│      └── analyzeFile()                     │
-└────────────────────────────────────────────┘
-    │
-    ▼
-┌────────────────────────────────────────────┐
-│  analyzeFile(filePath)                     │
-│  ├── DetectLanguage()                      │
-│  ├── ParseFile() → AST                     │
-│  │   └── Tree-Sitter parsing              │
-│  ├── FindSources() → []Match              │
-│  │   └── Pattern matching on AST          │
-│  ├── ExtractAssignments()                  │
-│  │   └── Track taint propagation          │
-│  └── ExtractCalls()                        │
-│      └── Find tainted function args       │
-└────────────────────────────────────────────┘
-    │
-    ▼
-┌────────────────────────────────────────────┐
-│  mergeFileResult()                         │
-│  └── Aggregate all file results           │
-└────────────────────────────────────────────┘
-    │
-    ▼
-┌────────────────────────────────────────────┐
-│  runInterproceduralAnalysis()              │
-│  └── Cross-function taint propagation     │
-└────────────────────────────────────────────┘
-    │
-    ▼
-┌────────────────────────────────────────────┐
-│  buildFlowGraph()                          │
-│  └── Create nodes/edges for visualization │
-└────────────────────────────────────────────┘
-    │
-    ▼
-[TraceResult]
-  ├── Sources
-  ├── TaintedVariables
-  ├── TaintedFunctions
-  └── FlowGraph
+### 7.1 Basic Usage
+```go
+import "github.com/hatlesswizard/inputtracer/pkg/tracer"
+
+// Create tracer with defaults
+t := tracer.New(nil)
+
+// Or with custom config
+config := &tracer.Config{
+    Languages: []string{"php", "javascript"},
+    MaxDepth:  5,
+    Workers:   4,
+    SkipDirs:  []string{".git", "vendor", "node_modules"},
+}
+t := tracer.New(config)
+
+// Trace a directory
+result, err := t.TraceDirectory("/path/to/project")
+if err != nil {
+    log.Fatal(err)
+}
+
+// Access results
+for _, source := range result.Sources {
+    fmt.Printf("Input: %s at %s:%d\n", source.Type, source.Location.FilePath, source.Location.Line)
+}
+
+for _, tv := range result.TaintedVariables {
+    fmt.Printf("Tainted: %s (from %s)\n", tv.Name, tv.Source.Type)
+}
+
+for _, tf := range result.TaintedFunctions {
+    fmt.Printf("Function %s receives input\n", tf.Name)
+}
+
+// Export to JSON
+json, _ := result.ToJSON()
 ```
 
-### 7.2 Source Detection Flow
-```
-Source Pattern (e.g., "$_GET\[")
-    │
-    ▼
-┌────────────────────────┐
-│  BaseMatcher.traverse  │
-│  └── Walk AST          │
-└────────────────────────┘
-    │
-    ▼
-┌────────────────────────┐
-│  Pattern Match?        │
-│  ├── Check NodeType    │
-│  └── Check Regex       │
-└────────────────────────┘
-    │ Yes
-    ▼
-┌────────────────────────┐
-│  Extract Key           │
-│  └── KeyExtractor      │
-└────────────────────────┘
-    │
-    ▼
-┌────────────────────────┐
-│  Find Assignment       │
-│  └── Walk up to parent │
-└────────────────────────┘
-    │
-    ▼
-[Match{SourceType, Key, Variable, Labels}]
+### 7.2 Semantic Analysis
+```go
+import "github.com/hatlesswizard/inputtracer/pkg/semantic"
+
+// Create semantic tracer
+st := semantic.New(&semantic.Config{
+    Languages:     []string{"php"},
+    MaxDepth:      10,
+    Workers:       runtime.NumCPU(),
+    CacheSize:     1000,
+    SnippetLength: 100,
+})
+
+// Trace backward from an expression
+result, err := st.TraceBackward("/path/to/file.php", 42, 10, "$data")
+
+// Output formats
+dot := result.ToDOT()
+mermaid := result.ToMermaid()
+html := result.ToHTML()
 ```
 
 ---
 
-## 8. Function Index (Alphabetical)
+## 8. Framework Detection
 
-| Function | Package | File:Line | Signature |
-|----------|---------|-----------|-----------|
-| AddNode | semantic/types | types.go:199 | `func (fm *FlowMap) AddNode(node FlowNode) bool` |
-| AddPropagationStep | tracer | types.go:370 | `func (s *FullAnalysisState) AddPropagationStep(...)` |
-| AddSource | sources | registry.go:80 | `func (r *Registry) AddSource(def Definition)` |
-| AddSource | tracer | types.go:321 | `func (s *FullAnalysisState) AddSource(source *InputSource)` |
-| AddTaintedFunction | tracer | types.go:345 | `func (s *FullAnalysisState) AddTaintedFunction(tf *TaintedFunction)` |
-| AddTaintedVariable | tracer | types.go:329 | `func (s *FullAnalysisState) AddTaintedVariable(tv *TaintedVariable)` |
-| BuildFlowGraph | tracer | types.go:399 | `func (s *FullAnalysisState) BuildFlowGraph() *FlowGraph` |
-| BuildFunctionSummary | tracer | interprocedural.go:32 | `func (ipa *InterproceduralAnalyzer) BuildFunctionSummary(...) *FunctionSummary` |
-| Clear | parser | cache.go:156 | `func (c *Cache) Clear()` |
-| ClearCache | parser | service.go:267 | `func (s *Service) ClearCache()` |
-| Clone | tracer | scope.go:271 | `func (sm *ScopeManager) Clone() *ScopeManager` |
-| collectFiles | tracer | tracer.go:521 | `func (t *Tracer) collectFiles(dirPath string) ([]string, error)` |
-| DeclareVariable | tracer | scope.go:95 | `func (sm *ScopeManager) DeclareVariable(...) *ScopedVariable` |
-| DefaultConfig | tracer | tracer.go:39 | `func DefaultConfig() *Config` |
-| DetectLanguage | parser | service.go:212 | `func (s *Service) DetectLanguage(filePath string) string` |
-| DoesReceiveInput | tracer | tracer.go:606 | `func (t *Tracer) DoesReceiveInput(result *TraceResult, funcName string) bool` |
-| EnterScope | tracer | scope.go:56 | `func (sm *ScopeManager) EnterScope(...) *Scope` |
-| EnterScope | tracer | types.go:230 | `func (s *AnalysisState) EnterScope(...) *Scope` |
-| ExitScope | tracer | scope.go:77 | `func (sm *ScopeManager) ExitScope() *Scope` |
-| Export | output | json.go:25 | `func (e *JSONExporter) Export(result *tracer.TraceResult) (string, error)` |
-| ExportDOT | output | graph.go:19 | `func (e *GraphExporter) ExportDOT(graph *tracer.FlowGraph) string` |
-| ExportMermaid | output | graph.go:103 | `func (e *GraphExporter) ExportMermaid(graph *tracer.FlowGraph) string` |
-| ExtractAssignments | ast | extractor.go:100 | `func (e *BaseExtractor) ExtractAssignments(...) []Assignment` |
-| ExtractCalls | ast | extractor.go:117 | `func (e *BaseExtractor) ExtractCalls(...) []FunctionCall` |
-| ExpressionContains | ast | extractor.go:134 | `func (e *BaseExtractor) ExpressionContains(...) bool` |
-| FindAllPaths | output | graph.go:207 | `func (pf *PathFinder) FindAllPaths(sourceID string) [][]string` |
-| FindSources | sources | registry.go:120 | `func (m *BaseMatcher) FindSources(root *sitter.Node, src []byte) []Match` |
-| GenerateSummary | output | json.go:83 | `func GenerateSummary(result *tracer.TraceResult) *SummaryReport` |
-| Get | parser | cache.go:68 | `func (c *Cache) Get(key string) *CachedParse` |
-| GetAllSummaries | tracer | interprocedural.go:422 | `func (ipa *InterproceduralAnalyzer) GetAllSummaries() map[string]*FunctionSummary` |
-| GetAllTaintedInScope | tracer | scope.go:177 | `func (sm *ScopeManager) GetAllTaintedInScope() []*ScopedVariable` |
-| GetCallGraph | tracer | interprocedural.go:402 | `func (ipa *InterproceduralAnalyzer) GetCallGraph() map[string][]string` |
-| GetExtractor | ast | extractor.go:70 | `func (r *Registry) GetExtractor(language string) Extractor` |
-| GetFlowPaths | tracer | tracer.go:556 | `func (t *Tracer) GetFlowPaths(...) []*PropagationPath` |
-| GetFunctionSummary | tracer | interprocedural.go:415 | `func (ipa *InterproceduralAnalyzer) GetFunctionSummary(name string) *FunctionSummary` |
-| GetInputSources | tracer | tracer.go:616 | `func (t *Tracer) GetInputSources(result *TraceResult) []*InputSource` |
-| GetLanguage | parser | service.go:93 | `func (s *Service) GetLanguage(name string) *sitter.Language` |
-| GetMatcher | sources | registry.go:87 | `func (r *Registry) GetMatcher(language string) Matcher` |
-| GetTaintedFunctions | tracer | tracer.go:551 | `func (t *Tracer) GetTaintedFunctions(result *TraceResult) []*TaintedFunction` |
-| GetTaintedVariables | tracer | tracer.go:621 | `func (t *Tracer) GetTaintedVariables(result *TraceResult) []*TaintedVariable` |
-| IsTainted | tracer | scope.go:149 | `func (sm *ScopeManager) IsTainted(name string) bool` |
-| LookupVariable | tracer | scope.go:120 | `func (sm *ScopeManager) LookupVariable(name string) *ScopedVariable` |
-| LookupVariable | tracer | types.go:259 | `func (s *AnalysisState) LookupVariable(name string) (*TaintedVariable, bool)` |
-| MarkTainted | tracer | scope.go:164 | `func (sm *ScopeManager) MarkTainted(...)` |
-| MemoryUsage | parser | cache.go:182 | `func (c *Cache) MemoryUsage() int64` |
-| New | tracer | tracer.go:59 | `func New(config *Config) *Tracer` |
-| NewAnalysisState | tracer | types.go:213 | `func NewAnalysisState() *AnalysisState` |
-| NewBaseExtractor | ast | extractor.go:85 | `func NewBaseExtractor(...) *BaseExtractor` |
-| NewBaseMatcher | sources | registry.go:107 | `func NewBaseMatcher(language string, sources []Definition) *BaseMatcher` |
-| NewCache | parser | cache.go:46 | `func NewCache(maxEntries int) *Cache` |
-| NewFlowMap | semantic/types | types.go:180 | `func NewFlowMap() *FlowMap` |
-| NewFullAnalysisState | tracer | types.go:305 | `func NewFullAnalysisState() *FullAnalysisState` |
-| NewGraphExporter | output | graph.go:14 | `func NewGraphExporter() *GraphExporter` |
-| NewInterproceduralAnalyzer | tracer | interprocedural.go:21 | `func NewInterproceduralAnalyzer(...) *InterproceduralAnalyzer` |
-| NewJavaScriptMatcher | sources | javascript.go:8 | `func NewJavaScriptMatcher() *JavaScriptMatcher` |
-| NewJSONExporter | output | json.go:17 | `func NewJSONExporter(prettyPrint bool) *JSONExporter` |
-| NewPathFinder | output | graph.go:191 | `func NewPathFinder(graph *tracer.FlowGraph, maxDepth int) *PathFinder` |
-| NewPHPMatcher | sources | php.go:8 | `func NewPHPMatcher() *PHPMatcher` |
-| NewRegistry | ast | extractor.go:56 | `func NewRegistry() *Registry` |
-| NewRegistry | sources | registry.go:65 | `func NewRegistry() *Registry` |
-| NewScopeManager | tracer | scope.go:39 | `func NewScopeManager() *ScopeManager` |
-| NewService | parser | service.go:29 | `func NewService(cacheSize ...int) *Service` |
-| NewTaintPropagator | tracer | propagation.go:30 | `func NewTaintPropagator(...) *TaintPropagator` |
-| Parse | parser | service.go:195 | `func (s *Service) Parse(source []byte, language string) (*sitter.Node, error)` |
-| ParseFile | parser | service.go:112 | `func (s *Service) ParseFile(filePath string) (*ParseResult, error)` |
-| ParseWithTree | parser | service.go:161 | `func (s *Service) ParseWithTree(...) (*sitter.Tree, *sitter.Node, error)` |
-| PropagateFromAssignment | tracer | propagation.go:38 | `func (tp *TaintPropagator) PropagateFromAssignment(...)` |
-| PropagateFromFunctionCall | tracer | propagation.go:70 | `func (tp *TaintPropagator) PropagateFromFunctionCall(...)` |
-| PropagateFromReturn | tracer | propagation.go:111 | `func (tp *TaintPropagator) PropagateFromReturn(...)` |
-| PropagateInterproceduralTaint | tracer | interprocedural.go:276 | `func (ipa *InterproceduralAnalyzer) PropagateInterproceduralTaint(...)` |
-| Put | parser | cache.go:84 | `func (c *Cache) Put(key string, data *CachedParse)` |
-| Register | ast | extractor.go:63 | `func (r *Registry) Register(extractor Extractor)` |
-| RegisterAll | ast | register.go:4 | `func RegisterAll(r *Registry)` |
-| RegisterAll | sources | registry.go:271 | `func RegisterAll(r *Registry)` |
-| RegisterAllLanguages | parser/languages | init.go:97 | `func RegisterAllLanguages(registrar ParserRegistrar)` |
-| RegisterLanguage | parser | service.go:43 | `func (s *Service) RegisterLanguage(name string, lang *sitter.Language)` |
-| RegisterMatcher | sources | registry.go:73 | `func (r *Registry) RegisterMatcher(matcher Matcher)` |
-| Reset | tracer | scope.go:253 | `func (sm *ScopeManager) Reset()` |
-| SetTainted | tracer | types.go:276 | `func (s *AnalysisState) SetTainted(name string, tainted *TaintedVariable)` |
-| Size | parser | cache.go:175 | `func (c *Cache) Size() int` |
-| Stats | parser | cache.go:189 | `func (c *Cache) Stats() (hits, misses int64)` |
-| SupportedLanguages | parser | service.go:100 | `func (s *Service) SupportedLanguages() []string` |
-| ToJSON | tracer | types.go:158 | `func (r *TraceResult) ToJSON() (string, error)` |
-| TraceDirectory | tracer | tracer.go:92 | `func (t *Tracer) TraceDirectory(dirPath string) (*TraceResult, error)` |
-| TraceFile | tracer | tracer.go:166 | `func (t *Tracer) TraceFile(filePath string) (*TraceResult, error)` |
+### 8.1 PHP Frameworks
+| Framework | Indicators |
+|-----------|------------|
+| MyBB | `inc/class_core.php`, `inc/init.php` |
+| WordPress | `wp-config.php`, `wp-includes/version.php` |
+| Laravel | `artisan`, `bootstrap/app.php` |
+| Symfony | `symfony.lock`, `config/bundles.php` |
+| CodeIgniter | `system/core/CodeIgniter.php` |
+| Drupal | `core/includes/bootstrap.inc` |
+| phpBB | `phpbb/request/request.php` |
+
+### 8.2 JavaScript Frameworks
+| Framework | Indicators |
+|-----------|------------|
+| Express | `node_modules/express` |
+| Next.js | `next.config.js`, `next.config.mjs` |
+| NestJS | `nest-cli.json`, `src/main.ts` |
+| Koa | `node_modules/koa` |
+| Fastify | `node_modules/fastify` |
+
+### 8.3 Python Frameworks
+| Framework | Indicators |
+|-----------|------------|
+| Django | `manage.py`, `settings.py`, `urls.py` |
+| Flask | `app.py`, `wsgi.py` |
+| FastAPI | `main.py` |
+
+### 8.4 Other Frameworks
+| Language | Frameworks |
+|----------|------------|
+| Java | Spring, Spring Boot |
+| Go | Gin, Echo |
+| C# | ASP.NET Core, ASP.NET MVC |
+| Ruby | Rails, Sinatra, Hanami, Padrino |
+| Rust | Actix-web, Rocket, Axum |
+| C++ | Qt, POCO |
 
 ---
 
-## 9. File Index
+## 9. Configuration
 
-| File Path | Lines | Functions | Types | Purpose |
-|-----------|-------|-----------|-------|---------|
-| pkg/tracer/tracer.go | 625 | 14 | 3 | Main tracer entry point |
-| pkg/tracer/types.go | 482 | 15 | 18 | Core data structures |
-| pkg/tracer/propagation.go | 524 | 20 | 2 | Taint propagation |
-| pkg/tracer/scope.go | 289 | 14 | 3 | Scope management |
-| pkg/tracer/interprocedural.go | 479 | 15 | 1 | Cross-function analysis |
-| pkg/parser/service.go | 276 | 15 | 2 | Parser service |
-| pkg/parser/cache.go | 201 | 12 | 3 | LRU cache |
-| pkg/parser/languages/init.go | 103 | 2 | 1 | Language registration |
-| pkg/sources/registry.go | 306 | 12 | 4 | Source matcher registry |
-| pkg/sources/php.go | 605 | 1 | 1 | PHP source patterns |
-| pkg/sources/javascript.go | 252 | 2 | 2 | JS/TS source patterns |
-| pkg/sources/python.go | ~200 | 1 | 1 | Python source patterns |
-| pkg/sources/go.go | ~150 | 1 | 1 | Go source patterns |
-| pkg/sources/java.go | ~180 | 1 | 1 | Java source patterns |
-| pkg/sources/c.go | ~120 | 1 | 1 | C source patterns |
-| pkg/sources/cpp.go | ~150 | 1 | 1 | C++ source patterns |
-| pkg/sources/csharp.go | ~150 | 1 | 1 | C# source patterns |
-| pkg/sources/ruby.go | ~120 | 1 | 1 | Ruby source patterns |
-| pkg/sources/rust.go | ~120 | 1 | 1 | Rust source patterns |
-| pkg/ast/extractor.go | 312 | 12 | 5 | AST extraction |
-| pkg/ast/register.go | 89 | 1 | 0 | Language registration |
-| pkg/output/json.go | 182 | 7 | 3 | JSON export |
-| pkg/output/graph.go | 272 | 10 | 3 | Graph export |
-| pkg/semantic/types/types.go | 1026 | 25+ | 20+ | Semantic types |
-| pkg/semantic/tracer.go | ~800 | 20+ | 5 | Semantic tracer |
+### 9.1 Tracer Config
+```go
+config := &tracer.Config{
+    Languages:       []string{},        // Empty = all supported
+    MaxDepth:        5,                  // Inter-procedural analysis depth
+    Workers:         runtime.NumCPU(),  // Parallel workers
+    CustomSources:   []sources.Definition{},
+    SkipDirs:        []string{".git", "node_modules", "vendor"},
+    IncludePatterns: []string{},
+}
+```
+
+### 9.2 Semantic Config
+```go
+config := &semantic.Config{
+    Languages:     []string{},
+    MaxDepth:      10,
+    Workers:       runtime.NumCPU(),
+    CacheSize:     1000,
+    SnippetLength: 100,
+}
+```
 
 ---
 
-## 10. Dependency Graph
+## 10. Design Patterns
 
-### 10.1 Internal Import Graph
-```
-pkg/tracer/
-├── imports pkg/parser/
-├── imports pkg/parser/languages/
-├── imports pkg/sources/
-└── imports pkg/ast/
+### 10.1 Registry Pattern
+Language-specific implementations are registered at `init()`:
+- `sources.RegisterAll(registry)`
+- `ast.RegisterAll(registry)`
+- `languages.RegisterAllLanguages(service)`
 
-pkg/output/
-└── imports pkg/tracer/
-
-pkg/semantic/
-├── imports pkg/parser/
-├── imports pkg/semantic/analyzer/
-├── imports pkg/semantic/types/
-└── imports tree-sitter language bindings
-
-pkg/sources/
-└── imports tree-sitter (sitter.Node)
-
-pkg/ast/
-└── imports tree-sitter (sitter.Node)
+### 10.2 Worker Pool
+Parallel file analysis via goroutines:
+```go
+for i := 0; i < t.config.Workers; i++ {
+    go func() {
+        for filePath := range fileChan {
+            resultChan <- t.analyzeFile(filePath)
+        }
+    }()
+}
 ```
 
-### 10.2 External Dependencies
-| Package | Version | Purpose |
-|---------|---------|---------|
-| github.com/smacker/go-tree-sitter | v0.0.0-20240827 | Multi-language AST parsing |
-| github.com/google/uuid | v1.6.0 | Unique ID generation |
-| github.com/mattn/go-sqlite3 | v1.14.32 | SQLite support (optional) |
+### 10.3 Parser Pooling
+`sync.Pool` reuses expensive Tree-Sitter parser instances per language.
+
+### 10.4 LRU Cache
+Parser service uses an LRU cache (32MB default) with proper `tree.Close()` on eviction.
+
+### 10.5 Map Pre-allocation
+Analysis state uses pre-sized maps (128-256 capacity) for O(1) deduplication.
 
 ---
 
-## Verification
+## 11. Function Index
+
+### Main Entry Points
+| Function | Package | Description |
+|----------|---------|-------------|
+| `New` | tracer | Creates new Tracer with config |
+| `TraceDirectory` | tracer | Analyzes entire directory |
+| `TraceFile` | tracer | Analyzes single file |
+| `NewService` | parser | Creates parser service |
+| `ParseFile` | parser | Parses file with caching |
+| `DetectLanguage` | parser | Detects language from extension |
+| `NewRegistry` | sources | Creates source registry |
+| `RegisterAll` | sources | Registers all language matchers |
+| `FindSources` | sources | Finds sources in AST |
+| `DetectFramework` | frameworks | Detects framework by indicators |
+
+### Analysis Functions
+| Function | Package | Description |
+|----------|---------|-------------|
+| `ExtractAssignments` | ast | Extracts all assignments from AST |
+| `ExtractCalls` | ast | Extracts all function calls from AST |
+| `ExpressionContains` | ast | Checks if expression contains variable |
+| `BuildSymbolTable` | semantic/analyzer | Builds symbol table for file |
+| `TraceExpression` | semantic/analyzer | Traces expression to sources |
+
+### Output Functions
+| Function | Package | Description |
+|----------|---------|-------------|
+| `ToJSON` | tracer | Exports TraceResult to JSON |
+| `ExportDOT` | output | Exports flow graph to Graphviz DOT |
+| `ExportMermaid` | output | Exports flow graph to Mermaid |
+| `GenerateSummary` | output | Generates summary report |
+
+---
+
+## 12. Dependencies
 
 ```
-Files Read:
-- [x] All tracer files: 5 files
-- [x] All parser files: 3 files
-- [x] All sources files: 11 files
-- [x] All ast files: 2 files
-- [x] All output files: 2 files
-- [x] Semantic types: 1 file
-- [x] Semantic tracer: 1 file
-- [x] go.mod: 1 file
-
-TOTAL CORE FILES READ: 26+ files
+github.com/google/uuid v1.6.0
+github.com/smacker/go-tree-sitter v0.0.0-20240827094217-dd81d9e9be82
+github.com/mattn/go-sqlite3 v1.14.24
 ```
+
+---
+
+## 13. Build & Test
+
+```bash
+go build ./...           # Build all packages
+go test ./...            # Run all tests
+go test ./pkg/tracer     # Test specific package
+go test -v ./...         # Verbose test output
+go test -race ./...      # Run with race detector
+```
+
+---
+
+## Adding New Framework Support
+
+Create framework patterns in the language-specific subdirectory:
+- `pkg/sources/php/wordpress.go`
+- `pkg/sources/php/laravel.go`
+- `pkg/sources/javascript/express.go`
+- `pkg/sources/python/django.go`
+- etc.
+
+**NEVER** add framework-specific code to core library packages.
+
+---
+
+## File Count Verification
+
+| Directory | Files |
+|-----------|-------|
+| pkg/tracer/ | 5 |
+| pkg/parser/ | 3 |
+| pkg/sources/ (root) | 10 |
+| pkg/sources/common/ | 4 |
+| pkg/sources/frameworks/ | 1 |
+| pkg/sources/php/ | 7 |
+| pkg/sources/javascript/ | 6 |
+| pkg/sources/python/ | 2 |
+| pkg/sources/golang/ | 2 |
+| pkg/sources/java/ | 3 |
+| pkg/sources/ruby/ | 2 |
+| pkg/sources/rust/ | 2 |
+| pkg/sources/c/ | 2 |
+| pkg/sources/cpp/ | 2 |
+| pkg/sources/csharp/ | 2 |
+| pkg/ast/ | 2 |
+| pkg/output/ | 2 |
+| pkg/semantic/ | 25+ |
+| **Total** | ~95 |
+
+---
+
+*Last updated: 2026-01-25*

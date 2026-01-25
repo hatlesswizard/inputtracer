@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/hatlesswizard/inputtracer/pkg/sources/frameworks"
 )
 
 // CarrierMap stores discovered input carriers for a codebase
@@ -87,31 +89,9 @@ func calculateStats(propagator *TaintPropagator) CarrierStats {
 }
 
 // detectFramework attempts to detect the PHP framework being used
+// Uses centralized framework detection from pkg/sources/frameworks
 func detectFramework(codebasePath string) string {
-	// Check for common framework indicators
-	frameworkIndicators := map[string][]string{
-		"mybb":       {"inc/class_core.php", "inc/init.php"},
-		"wordpress":  {"wp-config.php", "wp-includes/version.php"},
-		"laravel":    {"artisan", "bootstrap/app.php"},
-		"symfony":    {"symfony.lock", "config/bundles.php"},
-		"codeigniter": {"system/core/CodeIgniter.php"},
-		"drupal":     {"core/includes/bootstrap.inc"},
-		"yii2":       {"yii"},
-		"cakephp":    {"config/app.php", "src/Application.php"},
-		"phpbb":      {"phpbb/request/request.php"},
-		"prestashop": {"config/defines.inc.php"},
-	}
-
-	for framework, indicators := range frameworkIndicators {
-		for _, indicator := range indicators {
-			checkPath := filepath.Join(codebasePath, indicator)
-			if _, err := os.Stat(checkPath); err == nil {
-				return framework
-			}
-		}
-	}
-
-	return "unknown"
+	return frameworks.DetectFrameworkByLanguage(codebasePath, "php")
 }
 
 // SaveToFile saves the carrier map to a JSON file

@@ -9,6 +9,7 @@ import (
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	"github.com/hatlesswizard/inputtracer/pkg/sources"
+	javaPatterns "github.com/hatlesswizard/inputtracer/pkg/sources/java"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -31,42 +32,27 @@ func NewJavaAnalyzer() *JavaAnalyzer {
 }
 
 func (a *JavaAnalyzer) registerFrameworkPatterns() {
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:            "servlet_request",
-		Framework:     "servlet",
-		Language:      "java",
-		Name:          "HttpServletRequest",
-		Description:   "Servlet request parameters",
-		MethodPattern: "^getParameter",
-		SourceType:    types.SourceHTTPGet,
-		CarrierClass:  "HttpServletRequest",
-		PopulatedFrom: []string{"query string", "form data"},
-		Confidence:    0.95,
-	})
-
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:            "spring_requestparam",
-		Framework:     "spring",
-		Language:      "java",
-		Name:          "Spring @RequestParam",
-		Description:   "Spring request parameter annotation",
-		MethodPattern: "^RequestParam$",
-		SourceType:    types.SourceHTTPGet,
-		PopulatedFrom: []string{"query string"},
-		Confidence:    0.95,
-	})
-
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:            "spring_requestbody",
-		Framework:     "spring",
-		Language:      "java",
-		Name:          "Spring @RequestBody",
-		Description:   "Spring request body annotation",
-		MethodPattern: "^RequestBody$",
-		SourceType:    types.SourceHTTPBody,
-		PopulatedFrom: []string{"HTTP body"},
-		Confidence:    0.95,
-	})
+	for _, p := range javaPatterns.GetAllPatterns() {
+		fp := &types.FrameworkPattern{
+			ID:              p.ID,
+			Framework:       p.Framework,
+			Language:        p.Language,
+			Name:            p.Name,
+			Description:     p.Description,
+			ClassPattern:    p.ClassPattern,
+			MethodPattern:   p.MethodPattern,
+			PropertyPattern: p.PropertyPattern,
+			AccessPattern:   p.AccessPattern,
+			SourceType:      types.SourceType(p.SourceType),
+			SourceKey:       p.SourceKey,
+			CarrierClass:    p.CarrierClass,
+			CarrierProperty: p.CarrierProperty,
+			PopulatedBy:     p.PopulatedBy,
+			PopulatedFrom:   p.PopulatedFrom,
+			Confidence:      p.Confidence,
+		}
+		a.AddFrameworkPattern(fp)
+	}
 }
 
 func (a *JavaAnalyzer) BuildSymbolTable(filePath string, source []byte, root *sitter.Node) (*types.SymbolTable, error) {

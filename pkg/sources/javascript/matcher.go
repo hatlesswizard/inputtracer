@@ -1,19 +1,21 @@
-package sources
+package javascript
 
-// JavaScriptMatcher matches JavaScript user input sources
-type JavaScriptMatcher struct {
-	*BaseMatcher
+import "github.com/hatlesswizard/inputtracer/pkg/sources/common"
+
+// Matcher matches JavaScript user input sources
+type Matcher struct {
+	*common.BaseMatcher
 }
 
-// NewJavaScriptMatcher creates a new JavaScript source matcher
-func NewJavaScriptMatcher() *JavaScriptMatcher {
-	sources := []Definition{
+// getDefinitions returns the source definitions for JavaScript/TypeScript
+func getDefinitions(language string) []common.Definition {
+	return []common.Definition{
 		// Express.js / Node.js HTTP
 		{
 			Name:         "req.body",
 			Pattern:      `req\.body(?:\.\w+|\[)`,
-			Language:     "javascript",
-			Labels:       []InputLabel{LabelHTTPBody, LabelHTTPPost, LabelUserInput},
+			Language:     language,
+			Labels:       []common.InputLabel{common.LabelHTTPBody, common.LabelHTTPPost, common.LabelUserInput},
 			Description:  "Express POST body",
 			NodeTypes:    []string{"member_expression", "subscript_expression"},
 			KeyExtractor: `req\.body\.(\w+)|req\.body\[['"](\w+)['"]\]`,
@@ -21,8 +23,8 @@ func NewJavaScriptMatcher() *JavaScriptMatcher {
 		{
 			Name:         "req.query",
 			Pattern:      `req\.query(?:\.\w+|\[)`,
-			Language:     "javascript",
-			Labels:       []InputLabel{LabelHTTPGet, LabelUserInput},
+			Language:     language,
+			Labels:       []common.InputLabel{common.LabelHTTPGet, common.LabelUserInput},
 			Description:  "Express query parameters",
 			NodeTypes:    []string{"member_expression", "subscript_expression"},
 			KeyExtractor: `req\.query\.(\w+)|req\.query\[['"](\w+)['"]\]`,
@@ -30,8 +32,8 @@ func NewJavaScriptMatcher() *JavaScriptMatcher {
 		{
 			Name:         "req.params",
 			Pattern:      `req\.params(?:\.\w+|\[)`,
-			Language:     "javascript",
-			Labels:       []InputLabel{LabelHTTPGet, LabelUserInput},
+			Language:     language,
+			Labels:       []common.InputLabel{common.LabelHTTPGet, common.LabelUserInput},
 			Description:  "Express URL parameters",
 			NodeTypes:    []string{"member_expression", "subscript_expression"},
 			KeyExtractor: `req\.params\.(\w+)|req\.params\[['"](\w+)['"]\]`,
@@ -39,8 +41,8 @@ func NewJavaScriptMatcher() *JavaScriptMatcher {
 		{
 			Name:         "req.headers",
 			Pattern:      `req\.headers(?:\.\w+|\[)`,
-			Language:     "javascript",
-			Labels:       []InputLabel{LabelHTTPHeader, LabelUserInput},
+			Language:     language,
+			Labels:       []common.InputLabel{common.LabelHTTPHeader, common.LabelUserInput},
 			Description:  "HTTP request headers",
 			NodeTypes:    []string{"member_expression", "subscript_expression"},
 			KeyExtractor: `req\.headers\.(\w+)|req\.headers\[['"]([^'"]+)['"]\]`,
@@ -48,8 +50,8 @@ func NewJavaScriptMatcher() *JavaScriptMatcher {
 		{
 			Name:         "req.cookies",
 			Pattern:      `req\.cookies(?:\.\w+|\[)`,
-			Language:     "javascript",
-			Labels:       []InputLabel{LabelHTTPCookie, LabelUserInput},
+			Language:     language,
+			Labels:       []common.InputLabel{common.LabelHTTPCookie, common.LabelUserInput},
 			Description:  "HTTP cookies",
 			NodeTypes:    []string{"member_expression", "subscript_expression"},
 			KeyExtractor: `req\.cookies\.(\w+)|req\.cookies\[['"](\w+)['"]\]`,
@@ -59,64 +61,64 @@ func NewJavaScriptMatcher() *JavaScriptMatcher {
 		{
 			Name:        "document.location",
 			Pattern:     `document\.location`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelUserInput},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelUserInput},
 			Description: "Current page URL",
 			NodeTypes:   []string{"member_expression"},
 		},
 		{
 			Name:        "window.location",
 			Pattern:     `window\.location`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelUserInput},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelUserInput},
 			Description: "Window URL",
 			NodeTypes:   []string{"member_expression"},
 		},
 		{
 			Name:        "location.href",
 			Pattern:     `location\.href`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelUserInput},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelUserInput},
 			Description: "Full URL",
 			NodeTypes:   []string{"member_expression"},
 		},
 		{
 			Name:        "location.search",
 			Pattern:     `location\.search`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelHTTPGet, LabelUserInput},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelHTTPGet, common.LabelUserInput},
 			Description: "URL query string",
 			NodeTypes:   []string{"member_expression"},
 		},
 		{
 			Name:        "location.hash",
 			Pattern:     `location\.hash`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelUserInput},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelUserInput},
 			Description: "URL fragment",
 			NodeTypes:   []string{"member_expression"},
 		},
 		{
 			Name:        "document.URL",
 			Pattern:     `document\.URL`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelUserInput},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelUserInput},
 			Description: "Document URL",
 			NodeTypes:   []string{"member_expression"},
 		},
 		{
 			Name:        "document.referrer",
 			Pattern:     `document\.referrer`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelUserInput},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelUserInput},
 			Description: "Referring URL",
 			NodeTypes:   []string{"member_expression"},
 		},
 		{
 			Name:        "document.cookie",
 			Pattern:     `document\.cookie`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelHTTPCookie, LabelUserInput},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelHTTPCookie, common.LabelUserInput},
 			Description: "Document cookies",
 			NodeTypes:   []string{"member_expression"},
 		},
@@ -125,8 +127,8 @@ func NewJavaScriptMatcher() *JavaScriptMatcher {
 		{
 			Name:        "element.value",
 			Pattern:     `\.value\b`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelUserInput},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelUserInput},
 			Description: "Form input value",
 			NodeTypes:   []string{"member_expression"},
 		},
@@ -135,24 +137,24 @@ func NewJavaScriptMatcher() *JavaScriptMatcher {
 		{
 			Name:        "XMLHttpRequest.response",
 			Pattern:     `\.response(?:Text|XML)?`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelNetwork},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelNetwork},
 			Description: "XHR response",
 			NodeTypes:   []string{"member_expression"},
 		},
 		{
 			Name:        "fetch().json()",
 			Pattern:     `\.json\s*\(\s*\)`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelNetwork},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelNetwork},
 			Description: "Fetch JSON response",
 			NodeTypes:   []string{"call_expression"},
 		},
 		{
 			Name:        "fetch().text()",
 			Pattern:     `\.text\s*\(\s*\)`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelNetwork},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelNetwork},
 			Description: "Fetch text response",
 			NodeTypes:   []string{"call_expression"},
 		},
@@ -161,18 +163,18 @@ func NewJavaScriptMatcher() *JavaScriptMatcher {
 		{
 			Name:        "process.argv",
 			Pattern:     `process\.argv`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelCLI},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelCLI},
 			Description: "Command line arguments",
 			NodeTypes:   []string{"member_expression"},
 		},
 		{
-			Name:        "process.env",
-			Pattern:     `process\.env(?:\.\w+|\[)`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelEnvironment},
-			Description: "Environment variables",
-			NodeTypes:   []string{"member_expression", "subscript_expression"},
+			Name:         "process.env",
+			Pattern:      `process\.env(?:\.\w+|\[)`,
+			Language:     language,
+			Labels:       []common.InputLabel{common.LabelEnvironment},
+			Description:  "Environment variables",
+			NodeTypes:    []string{"member_expression", "subscript_expression"},
 			KeyExtractor: `process\.env\.(\w+)|process\.env\[['"](\w+)['"]\]`,
 		},
 
@@ -180,16 +182,16 @@ func NewJavaScriptMatcher() *JavaScriptMatcher {
 		{
 			Name:        "fs.readFile",
 			Pattern:     `fs\.readFile(?:Sync)?\s*\(`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelFile},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelFile},
 			Description: "File read",
 			NodeTypes:   []string{"call_expression"},
 		},
 		{
 			Name:        "fs.read",
 			Pattern:     `fs\.read(?:Sync)?\s*\(`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelFile},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelFile},
 			Description: "File read",
 			NodeTypes:   []string{"call_expression"},
 		},
@@ -198,8 +200,8 @@ func NewJavaScriptMatcher() *JavaScriptMatcher {
 		{
 			Name:        "readline",
 			Pattern:     `readline\.question|rl\.question`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelUserInput},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelUserInput},
 			Description: "Readline input",
 			NodeTypes:   []string{"call_expression"},
 		},
@@ -208,8 +210,8 @@ func NewJavaScriptMatcher() *JavaScriptMatcher {
 		{
 			Name:        "URLSearchParams.get",
 			Pattern:     `\.get\s*\(`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelHTTPGet, LabelUserInput},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelHTTPGet, common.LabelUserInput},
 			Description: "URL search params",
 			NodeTypes:   []string{"call_expression"},
 		},
@@ -218,34 +220,29 @@ func NewJavaScriptMatcher() *JavaScriptMatcher {
 		{
 			Name:        "FormData.get",
 			Pattern:     `formData\.get\s*\(|FormData.*\.get\s*\(`,
-			Language:    "javascript",
-			Labels:      []InputLabel{LabelUserInput},
+			Language:    language,
+			Labels:      []common.InputLabel{common.LabelUserInput},
 			Description: "FormData value",
 			NodeTypes:   []string{"call_expression"},
 		},
 	}
+}
 
-	return &JavaScriptMatcher{
-		BaseMatcher: NewBaseMatcher("javascript", sources),
+// NewMatcher creates a new JavaScript source matcher
+func NewMatcher() *Matcher {
+	return &Matcher{
+		BaseMatcher: common.NewBaseMatcher("javascript", getDefinitions("javascript")),
 	}
 }
 
 // TypeScriptMatcher matches TypeScript user input sources (same as JavaScript)
 type TypeScriptMatcher struct {
-	*BaseMatcher
+	*common.BaseMatcher
 }
 
 // NewTypeScriptMatcher creates a new TypeScript source matcher
 func NewTypeScriptMatcher() *TypeScriptMatcher {
-	// Use same sources as JavaScript but with typescript language
-	jsMatcher := NewJavaScriptMatcher()
-	sources := make([]Definition, len(jsMatcher.sources))
-	for i, src := range jsMatcher.sources {
-		src.Language = "typescript"
-		sources[i] = src
-	}
-
 	return &TypeScriptMatcher{
-		BaseMatcher: NewBaseMatcher("typescript", sources),
+		BaseMatcher: common.NewBaseMatcher("typescript", getDefinitions("typescript")),
 	}
 }

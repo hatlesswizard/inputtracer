@@ -165,7 +165,6 @@ func ToDOT(r *TraceResult) string {
 		types.NodeSource:    "[shape=ellipse, style=filled, fillcolor=\"#ff6b6b\", fontcolor=white]",
 		types.NodeVariable:  "[shape=box, style=filled, fillcolor=\"#4ecdc4\"]",
 		types.NodeFunction:  "[shape=box, style=filled, fillcolor=\"#45b7d1\"]",
-		types.NodeSink:      "[shape=box, style=filled, fillcolor=\"#f7dc6f\"]",
 		types.NodeCarrier:   "[shape=box, style=filled, fillcolor=\"#9b59b6\", fontcolor=white]",
 		types.NodeParam: "[shape=box, style=filled, fillcolor=\"#2ecc71\"]",
 	}
@@ -207,7 +206,6 @@ func ToDOT(r *TraceResult) string {
 	sb.WriteString("    legend_source [label=\"Input Source\", shape=ellipse, style=filled, fillcolor=\"#ff6b6b\", fontcolor=white];\n")
 	sb.WriteString("    legend_variable [label=\"Variable\", shape=box, style=filled, fillcolor=\"#4ecdc4\"];\n")
 	sb.WriteString("    legend_function [label=\"Function\", shape=box, style=filled, fillcolor=\"#45b7d1\"];\n")
-	sb.WriteString("    legend_sink [label=\"Sink\", shape=box, style=filled, fillcolor=\"#f7dc6f\"];\n")
 	sb.WriteString("  }\n")
 
 	sb.WriteString("}\n")
@@ -226,7 +224,6 @@ func ToMermaid(r *TraceResult) string {
 	sb.WriteString("    classDef source fill:#ff6b6b,stroke:#c0392b,color:white\n")
 	sb.WriteString("    classDef variable fill:#4ecdc4,stroke:#16a085\n")
 	sb.WriteString("    classDef function fill:#45b7d1,stroke:#2980b9\n")
-	sb.WriteString("    classDef sink fill:#f7dc6f,stroke:#f39c12\n")
 	sb.WriteString("    classDef carrier fill:#9b59b6,stroke:#8e44ad,color:white\n\n")
 
 	// Create nodes
@@ -244,9 +241,6 @@ func ToMermaid(r *TraceResult) string {
 		case types.NodeFunction:
 			shape = "{{%s}}"
 			class = "function"
-		case types.NodeSink:
-			shape = "[[%s]]"
-			class = "sink"
 		case types.NodeCarrier:
 			shape = "[/%s/]"
 			class = "carrier"

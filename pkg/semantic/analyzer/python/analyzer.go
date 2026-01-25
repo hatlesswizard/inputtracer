@@ -10,6 +10,7 @@ import (
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	"github.com/hatlesswizard/inputtracer/pkg/sources"
+	pythonPatterns "github.com/hatlesswizard/inputtracer/pkg/sources/python"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -35,84 +36,29 @@ func NewPythonAnalyzer() *PythonAnalyzer {
 	return a
 }
 
-// registerFrameworkPatterns registers known Python framework patterns
+// registerFrameworkPatterns loads Python framework patterns from pkg/sources/python
 func (a *PythonAnalyzer) registerFrameworkPatterns() {
-	// Flask request
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "flask_request",
-		Framework:       "flask",
-		Language:        "python",
-		Name:            "Flask request",
-		Description:     "Flask request object containing user input",
-		ClassPattern:    "^Request$",
-		PropertyPattern: "^(args|form|data|json|files|cookies|headers)$",
-		AccessPattern:   "dict",
-		SourceType:      types.SourceHTTPGet,
-		CarrierClass:    "Request",
-		PopulatedFrom:   []string{"HTTP request"},
-		Confidence:      0.95,
-	})
-
-	// Django request
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "django_request_get",
-		Framework:       "django",
-		Language:        "python",
-		Name:            "Django request.GET",
-		Description:     "Django GET parameters",
-		ClassPattern:    "^(Http)?Request$",
-		PropertyPattern: "^GET$",
-		AccessPattern:   "dict",
-		SourceType:      types.SourceHTTPGet,
-		CarrierClass:    "HttpRequest",
-		CarrierProperty: "GET",
-		PopulatedFrom:   []string{"query string"},
-		Confidence:      0.95,
-	})
-
-	// Django POST
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "django_request_post",
-		Framework:       "django",
-		Language:        "python",
-		Name:            "Django request.POST",
-		Description:     "Django POST parameters",
-		ClassPattern:    "^(Http)?Request$",
-		PropertyPattern: "^POST$",
-		AccessPattern:   "dict",
-		SourceType:      types.SourceHTTPPost,
-		CarrierClass:    "HttpRequest",
-		CarrierProperty: "POST",
-		PopulatedFrom:   []string{"form data"},
-		Confidence:      0.95,
-	})
-
-	// FastAPI
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "fastapi_request",
-		Framework:       "fastapi",
-		Language:        "python",
-		Name:            "FastAPI Request",
-		Description:     "FastAPI request object",
-		ClassPattern:    "^Request$",
-		SourceType:      types.SourceHTTPBody,
-		CarrierClass:    "Request",
-		PopulatedFrom:   []string{"HTTP request"},
-		Confidence:      0.9,
-	})
-
-	// argparse
-	a.AddFrameworkPattern(&types.FrameworkPattern{
-		ID:              "argparse",
-		Framework:       "argparse",
-		Language:        "python",
-		Name:            "argparse arguments",
-		Description:     "Command line arguments parsed by argparse",
-		MethodPattern:   "^parse_args$",
-		SourceType:      types.SourceCLIArg,
-		PopulatedFrom:   []string{"sys.argv"},
-		Confidence:      0.95,
-	})
+	for _, p := range pythonPatterns.GetAllPatterns() {
+		fp := &types.FrameworkPattern{
+			ID:              p.ID,
+			Framework:       p.Framework,
+			Language:        p.Language,
+			Name:            p.Name,
+			Description:     p.Description,
+			ClassPattern:    p.ClassPattern,
+			MethodPattern:   p.MethodPattern,
+			PropertyPattern: p.PropertyPattern,
+			AccessPattern:   p.AccessPattern,
+			SourceType:      types.SourceType(p.SourceType),
+			SourceKey:       p.SourceKey,
+			CarrierClass:    p.CarrierClass,
+			CarrierProperty: p.CarrierProperty,
+			PopulatedBy:     p.PopulatedBy,
+			PopulatedFrom:   p.PopulatedFrom,
+			Confidence:      p.Confidence,
+		}
+		a.AddFrameworkPattern(fp)
+	}
 }
 
 // BuildSymbolTable builds the symbol table for a Python file

@@ -1,46 +1,35 @@
 // Package condition provides key condition extraction for branch analysis.
-// Inspired by ATLANTIS's approach to understanding what conditions must be
-// true for tainted data to reach a sink, enabling exploitability assessment.
 //
 // Key conditions help determine:
-// - What guards exist on the path to a sink
-// - Whether security checks (validation, sanitization) are present
+// - What guards exist on the path to data usage
 // - What constraints exist on user input
-// - If a vulnerability is actually exploitable
+// - Control flow conditions affecting data flow
 package condition
 
 import (
 	"regexp"
 	"strings"
-
-	"github.com/hatlesswizard/inputtracer/pkg/sources"
 )
 
 // ConditionType classifies the type of condition
 type ConditionType string
 
 const (
-	CondTypeComparison    ConditionType = "comparison"    // ==, !=, <, >, etc.
-	CondTypeNullCheck     ConditionType = "null_check"    // isset, empty, is_null
-	CondTypeTypeCheck     ConditionType = "type_check"    // is_string, instanceof
-	CondTypeValidation    ConditionType = "validation"    // preg_match, filter_var
-	CondTypeSanitization  ConditionType = "sanitization"  // htmlspecialchars, addslashes
-	CondTypeAuthentication ConditionType = "authentication" // logged_in, is_admin
-	CondTypeAuthorization ConditionType = "authorization"  // has_permission, can_access
-	CondTypeLengthCheck   ConditionType = "length_check"   // strlen, count
-	CondTypeLogical       ConditionType = "logical"        // &&, ||, !
-	CondTypeUnknown       ConditionType = "unknown"
+	CondTypeComparison  ConditionType = "comparison"   // ==, !=, <, >, etc.
+	CondTypeNullCheck   ConditionType = "null_check"   // isset, empty, is_null
+	CondTypeTypeCheck   ConditionType = "type_check"   // is_string, instanceof
+	CondTypeLengthCheck ConditionType = "length_check" // strlen, count
+	CondTypeLogical     ConditionType = "logical"      // &&, ||, !
+	CondTypeUnknown     ConditionType = "unknown"
 )
 
 // ConditionEffect describes how a condition affects data flow
 type ConditionEffect string
 
 const (
-	EffectAllows   ConditionEffect = "allows"   // Condition allows flow if true
-	EffectBlocks   ConditionEffect = "blocks"   // Condition blocks flow if true
-	EffectSanitizes ConditionEffect = "sanitizes" // Condition implies sanitization
-	EffectValidates ConditionEffect = "validates" // Condition implies validation
-	EffectUnknown  ConditionEffect = "unknown"
+	EffectAllows  ConditionEffect = "allows"  // Condition allows flow if true
+	EffectBlocks  ConditionEffect = "blocks"  // Condition blocks flow if true
+	EffectUnknown ConditionEffect = "unknown"
 )
 
 // KeyCondition represents a condition that guards code execution
@@ -51,24 +40,19 @@ type KeyCondition struct {
 	Column     int    `json:"column"`
 
 	// Condition details
-	Expression    string        `json:"expression"`     // The condition expression
-	Type          ConditionType `json:"type"`
+	Expression    string          `json:"expression"` // The condition expression
+	Type          ConditionType   `json:"type"`
 	Effect        ConditionEffect `json:"effect"`
-	IsNegated     bool          `json:"is_negated"`     // If inside else or has !
+	IsNegated     bool            `json:"is_negated"` // If inside else or has !
 
 	// Variables involved
-	Variables     []string      `json:"variables"`      // Variables referenced
-	TaintedVars   []string      `json:"tainted_vars"`   // Which are tainted
+	Variables   []string `json:"variables"`    // Variables referenced
+	TaintedVars []string `json:"tainted_vars"` // Which are tainted
 
 	// Scope
-	GuardsLines   []int         `json:"guards_lines"`   // Lines guarded by this condition
-	NestingDepth  int           `json:"nesting_depth"`  // How nested this condition is
+	GuardsLines     []int         `json:"guards_lines"`              // Lines guarded by this condition
+	NestingDepth    int           `json:"nesting_depth"`             // How nested this condition is
 	ParentCondition *KeyCondition `json:"parent_condition,omitempty"`
-
-	// Security relevance
-	IsSecurity    bool          `json:"is_security"`    // Is this a security check?
-	SecurityType  string        `json:"security_type,omitempty"` // Type of security check
-	Confidence    float64       `json:"confidence"`     // Confidence in classification
 }
 
 // ConditionPath represents a path through conditions to reach a point
@@ -82,98 +66,14 @@ type ConditionPath struct {
 
 // Extractor extracts key conditions from code
 type Extractor struct {
-	// Pattern databases
-	securityPatterns  map[string]*securityPattern
-	sanitizationFuncs map[string]bool
-	authPatterns      map[string]*regexp.Regexp
-
 	// Language-specific settings
 	language string
 }
 
-type securityPattern struct {
-	pattern  *regexp.Regexp
-	secType  string
-	effect   ConditionEffect
-	condType ConditionType
-}
-
 // NewExtractor creates a new condition extractor for a language
 func NewExtractor(language string) *Extractor {
-	e := &Extractor{
-		language:          language,
-		securityPatterns:  make(map[string]*securityPattern),
-		sanitizationFuncs: make(map[string]bool),
-		authPatterns:      make(map[string]*regexp.Regexp),
-	}
-	e.registerDefaults()
-	return e
-}
-
-// registerDefaults registers default patterns for the language using centralized sources
-func (e *Extractor) registerDefaults() {
-	// Get patterns from centralized sources
-	patterns := sources.GetSecurityPatterns(e.language)
-	if patterns == nil {
-		return
-	}
-
-	// Register validation patterns
-	for _, vp := range patterns.ValidationFuncs {
-		re, err := regexp.Compile(vp.PatternStr)
-		if err != nil {
-			continue
-		}
-		e.securityPatterns[vp.Name] = &securityPattern{
-			pattern:  re,
-			secType:  vp.SecType,
-			effect:   mapSecurityEffect(vp.Effect),
-			condType: mapSecurityPatternType(vp.Type),
-		}
-	}
-
-	// Register sanitization functions
-	for funcName := range patterns.SanitizationFuncs {
-		e.sanitizationFuncs[funcName] = true
-	}
-
-	// Register auth patterns
-	e.authPatterns = sources.GetAuthPatterns(e.language)
-}
-
-// mapSecurityEffect converts sources.SecurityPatternEffect to ConditionEffect
-func mapSecurityEffect(effect sources.SecurityPatternEffect) ConditionEffect {
-	switch effect {
-	case sources.EffectAllows:
-		return EffectAllows
-	case sources.EffectBlocks:
-		return EffectBlocks
-	case sources.EffectSanitizes:
-		return EffectSanitizes
-	case sources.EffectValidates:
-		return EffectValidates
-	default:
-		return EffectUnknown
-	}
-}
-
-// mapSecurityPatternType converts sources.SecurityPatternType to ConditionType
-func mapSecurityPatternType(patternType sources.SecurityPatternType) ConditionType {
-	switch patternType {
-	case sources.PatternValidation:
-		return CondTypeValidation
-	case sources.PatternSanitization:
-		return CondTypeSanitization
-	case sources.PatternAuthentication:
-		return CondTypeAuthentication
-	case sources.PatternAuthorization:
-		return CondTypeAuthorization
-	case sources.PatternNullCheck:
-		return CondTypeNullCheck
-	case sources.PatternTypeCheck:
-		return CondTypeTypeCheck
-	default:
-		return CondTypeUnknown
+	return &Extractor{
+		language: language,
 	}
 }
 
@@ -346,67 +246,48 @@ func (e *Extractor) extractVariables(expr string) []string {
 	return vars
 }
 
-// classifyCondition classifies a condition and determines its security relevance
+// classifyCondition classifies a condition type
 func (e *Extractor) classifyCondition(cond *KeyCondition) {
 	expr := cond.Expression
 
-	// Check security patterns
-	for name, sp := range e.securityPatterns {
-		if sp.pattern.MatchString(expr) {
-			cond.Type = sp.condType
-			cond.Effect = sp.effect
-			cond.IsSecurity = true
-			cond.SecurityType = sp.secType
-			cond.Confidence = 0.9
-			return
-		}
-		_ = name
-	}
-
-	// Check auth patterns
-	for authType, pattern := range e.authPatterns {
-		if pattern.MatchString(expr) {
-			cond.Type = CondTypeAuthentication
-			cond.Effect = EffectAllows
-			cond.IsSecurity = true
-			cond.SecurityType = authType + "_check"
-			cond.Confidence = 0.85
-			return
-		}
-	}
-
-	// Check for sanitization in condition context
-	for funcName := range e.sanitizationFuncs {
-		if strings.Contains(expr, funcName) {
-			cond.Type = CondTypeSanitization
-			cond.Effect = EffectSanitizes
-			cond.IsSecurity = true
-			cond.SecurityType = "sanitization"
-			cond.Confidence = 0.8
-			return
-		}
-	}
-
-	// Check for comparison operators
-	if matched, _ := regexp.MatchString(`[<>=!]=?`, expr); matched {
-		cond.Type = CondTypeComparison
+	// Check for null/empty checks
+	if matched, _ := regexp.MatchString(`(?i)(isset|empty|is_null|null|\bnil\b|undefined)`, expr); matched {
+		cond.Type = CondTypeNullCheck
 		cond.Effect = EffectUnknown
-		cond.Confidence = 0.5
+		return
+	}
+
+	// Check for type checks
+	if matched, _ := regexp.MatchString(`(?i)(is_string|is_int|is_array|instanceof|typeof)`, expr); matched {
+		cond.Type = CondTypeTypeCheck
+		cond.Effect = EffectUnknown
 		return
 	}
 
 	// Check for length/count checks
 	if matched, _ := regexp.MatchString(`(?i)(strlen|length|count|size)\s*\(`, expr); matched {
 		cond.Type = CondTypeLengthCheck
-		cond.Effect = EffectValidates
-		cond.Confidence = 0.6
+		cond.Effect = EffectUnknown
+		return
+	}
+
+	// Check for comparison operators
+	if matched, _ := regexp.MatchString(`[<>=!]=?`, expr); matched {
+		cond.Type = CondTypeComparison
+		cond.Effect = EffectUnknown
+		return
+	}
+
+	// Check for logical operators
+	if matched, _ := regexp.MatchString(`(&&|\|\||!|and|or|not)`, expr); matched {
+		cond.Type = CondTypeLogical
+		cond.Effect = EffectUnknown
 		return
 	}
 
 	// Default
 	cond.Type = CondTypeUnknown
 	cond.Effect = EffectUnknown
-	cond.Confidence = 0.3
 }
 
 // estimateGuardedLines estimates which lines are guarded by a condition
@@ -496,60 +377,12 @@ func (e *Extractor) checkPathFeasibility(path *ConditionPath) {
 	}
 }
 
-// HasSecurityGuard checks if any condition provides security protection
-func (e *Extractor) HasSecurityGuard(conditions []*KeyCondition) (bool, []*KeyCondition) {
-	var guards []*KeyCondition
-	for _, cond := range conditions {
-		if cond.IsSecurity {
-			guards = append(guards, cond)
-		}
-	}
-	return len(guards) > 0, guards
-}
-
-// FindSanitizationConditions finds conditions that imply sanitization
-func (e *Extractor) FindSanitizationConditions(conditions []*KeyCondition) []*KeyCondition {
-	var result []*KeyCondition
-	for _, cond := range conditions {
-		if cond.Type == CondTypeSanitization || cond.Effect == EffectSanitizes {
-			result = append(result, cond)
-		}
-	}
-	return result
-}
-
-// FindValidationConditions finds conditions that validate input
-func (e *Extractor) FindValidationConditions(conditions []*KeyCondition) []*KeyCondition {
-	var result []*KeyCondition
-	for _, cond := range conditions {
-		if cond.Type == CondTypeValidation || cond.Effect == EffectValidates {
-			result = append(result, cond)
-		}
-	}
-	return result
-}
-
-// FindAuthConditions finds authentication/authorization conditions
-func (e *Extractor) FindAuthConditions(conditions []*KeyCondition) []*KeyCondition {
-	var result []*KeyCondition
-	for _, cond := range conditions {
-		if cond.Type == CondTypeAuthentication || cond.Type == CondTypeAuthorization {
-			result = append(result, cond)
-		}
-	}
-	return result
-}
-
 // SummarizeConditions creates a summary of conditions
 func (e *Extractor) SummarizeConditions(conditions []*KeyCondition) map[string]interface{} {
 	summary := map[string]interface{}{
-		"total":           len(conditions),
-		"security_guards": 0,
-		"validations":     0,
-		"sanitizations":   0,
-		"auth_checks":     0,
-		"by_type":         make(map[string]int),
-		"by_effect":       make(map[string]int),
+		"total":     len(conditions),
+		"by_type":   make(map[string]int),
+		"by_effect": make(map[string]int),
 	}
 
 	byType := summary["by_type"].(map[string]int)
@@ -558,19 +391,6 @@ func (e *Extractor) SummarizeConditions(conditions []*KeyCondition) map[string]i
 	for _, cond := range conditions {
 		byType[string(cond.Type)]++
 		byEffect[string(cond.Effect)]++
-
-		if cond.IsSecurity {
-			summary["security_guards"] = summary["security_guards"].(int) + 1
-		}
-		if cond.Type == CondTypeValidation {
-			summary["validations"] = summary["validations"].(int) + 1
-		}
-		if cond.Type == CondTypeSanitization {
-			summary["sanitizations"] = summary["sanitizations"].(int) + 1
-		}
-		if cond.Type == CondTypeAuthentication || cond.Type == CondTypeAuthorization {
-			summary["auth_checks"] = summary["auth_checks"].(int) + 1
-		}
 	}
 
 	return summary

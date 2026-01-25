@@ -1,0 +1,355 @@
+// Package csharp - frameworks.go provides C# web framework patterns
+// Includes patterns for ASP.NET Core, ASP.NET MVC, Nancy, and ServiceStack
+package csharp
+
+import (
+	"github.com/hatlesswizard/inputtracer/pkg/sources/common"
+)
+
+// Registry is the global C# framework pattern registry
+var Registry = common.NewFrameworkPatternRegistry("c_sharp")
+
+// ASP.NET Core patterns (modern Microsoft web framework)
+var aspNetCorePatterns = []*common.FrameworkPattern{
+	{
+		ID:              "aspnet_core_request_query",
+		Framework:       "aspnetcore",
+		Language:        "c_sharp",
+		Name:            "HttpContext.Request.Query",
+		Description:     "ASP.NET Core query string collection",
+		ClassPattern:    "^HttpRequest$",
+		PropertyPattern: "^Query$",
+		SourceType:      common.SourceHTTPGet,
+		Confidence:      1.0,
+		Tags:            []string{"web", "microsoft", "modern"},
+	},
+	{
+		ID:              "aspnet_core_request_form",
+		Framework:       "aspnetcore",
+		Language:        "c_sharp",
+		Name:            "HttpContext.Request.Form",
+		Description:     "ASP.NET Core form data collection",
+		ClassPattern:    "^HttpRequest$",
+		PropertyPattern: "^Form$",
+		SourceType:      common.SourceHTTPPost,
+		Confidence:      1.0,
+		Tags:            []string{"web", "microsoft", "modern"},
+	},
+	{
+		ID:              "aspnet_core_request_body",
+		Framework:       "aspnetcore",
+		Language:        "c_sharp",
+		Name:            "HttpContext.Request.Body",
+		Description:     "ASP.NET Core request body stream",
+		ClassPattern:    "^HttpRequest$",
+		PropertyPattern: "^Body$",
+		SourceType:      common.SourceHTTPBody,
+		Confidence:      1.0,
+		Tags:            []string{"web", "microsoft", "modern"},
+	},
+	{
+		ID:              "aspnet_core_request_headers",
+		Framework:       "aspnetcore",
+		Language:        "c_sharp",
+		Name:            "HttpContext.Request.Headers",
+		Description:     "ASP.NET Core request headers",
+		ClassPattern:    "^HttpRequest$",
+		PropertyPattern: "^Headers$",
+		SourceType:      common.SourceHTTPHeader,
+		Confidence:      1.0,
+		Tags:            []string{"web", "microsoft", "modern"},
+	},
+	{
+		ID:              "aspnet_core_request_cookies",
+		Framework:       "aspnetcore",
+		Language:        "c_sharp",
+		Name:            "HttpContext.Request.Cookies",
+		Description:     "ASP.NET Core request cookies",
+		ClassPattern:    "^HttpRequest$",
+		PropertyPattern: "^Cookies$",
+		SourceType:      common.SourceHTTPCookie,
+		Confidence:      1.0,
+		Tags:            []string{"web", "microsoft", "modern"},
+	},
+	{
+		ID:              "aspnet_core_request_route",
+		Framework:       "aspnetcore",
+		Language:        "c_sharp",
+		Name:            "HttpContext.Request.RouteValues",
+		Description:     "ASP.NET Core route values",
+		ClassPattern:    "^HttpRequest$",
+		PropertyPattern: "^RouteValues$",
+		SourceType:      common.SourceHTTPPath,
+		Confidence:      1.0,
+		Tags:            []string{"web", "microsoft", "modern"},
+	},
+	// Model binding attributes
+	{
+		ID:            "aspnet_core_from_query",
+		Framework:     "aspnetcore",
+		Language:      "c_sharp",
+		Name:          "[FromQuery]",
+		Description:   "ASP.NET Core query parameter binding",
+		MethodPattern: "^FromQuery$",
+		SourceType:    common.SourceHTTPGet,
+		Confidence:    1.0,
+		Tags:          []string{"web", "microsoft", "binding"},
+	},
+	{
+		ID:            "aspnet_core_from_body",
+		Framework:     "aspnetcore",
+		Language:      "c_sharp",
+		Name:          "[FromBody]",
+		Description:   "ASP.NET Core body binding",
+		MethodPattern: "^FromBody$",
+		SourceType:    common.SourceHTTPBody,
+		Confidence:    1.0,
+		Tags:          []string{"web", "microsoft", "binding"},
+	},
+	{
+		ID:            "aspnet_core_from_form",
+		Framework:     "aspnetcore",
+		Language:      "c_sharp",
+		Name:          "[FromForm]",
+		Description:   "ASP.NET Core form binding",
+		MethodPattern: "^FromForm$",
+		SourceType:    common.SourceHTTPPost,
+		Confidence:    1.0,
+		Tags:          []string{"web", "microsoft", "binding"},
+	},
+	{
+		ID:            "aspnet_core_from_header",
+		Framework:     "aspnetcore",
+		Language:      "c_sharp",
+		Name:          "[FromHeader]",
+		Description:   "ASP.NET Core header binding",
+		MethodPattern: "^FromHeader$",
+		SourceType:    common.SourceHTTPHeader,
+		Confidence:    1.0,
+		Tags:          []string{"web", "microsoft", "binding"},
+	},
+	{
+		ID:            "aspnet_core_from_route",
+		Framework:     "aspnetcore",
+		Language:      "c_sharp",
+		Name:          "[FromRoute]",
+		Description:   "ASP.NET Core route binding",
+		MethodPattern: "^FromRoute$",
+		SourceType:    common.SourceHTTPPath,
+		Confidence:    1.0,
+		Tags:          []string{"web", "microsoft", "binding"},
+	},
+}
+
+// ASP.NET MVC (legacy) patterns
+var aspNetMvcPatterns = []*common.FrameworkPattern{
+	{
+		ID:              "aspnet_mvc_request_querystring",
+		Framework:       "aspnetmvc",
+		Language:        "c_sharp",
+		Name:            "Request.QueryString",
+		Description:     "ASP.NET MVC query string",
+		ClassPattern:    "^HttpRequestBase$",
+		PropertyPattern: "^QueryString$",
+		SourceType:      common.SourceHTTPGet,
+		Confidence:      1.0,
+		Tags:            []string{"web", "microsoft", "legacy"},
+	},
+	{
+		ID:              "aspnet_mvc_request_form",
+		Framework:       "aspnetmvc",
+		Language:        "c_sharp",
+		Name:            "Request.Form",
+		Description:     "ASP.NET MVC form collection",
+		ClassPattern:    "^HttpRequestBase$",
+		PropertyPattern: "^Form$",
+		SourceType:      common.SourceHTTPPost,
+		Confidence:      1.0,
+		Tags:            []string{"web", "microsoft", "legacy"},
+	},
+	{
+		ID:              "aspnet_mvc_request_params",
+		Framework:       "aspnetmvc",
+		Language:        "c_sharp",
+		Name:            "Request.Params",
+		Description:     "ASP.NET MVC combined params (query + form + cookies)",
+		ClassPattern:    "^HttpRequestBase$",
+		PropertyPattern: "^Params$",
+		SourceType:      common.SourceHTTPRequest,
+		Confidence:      1.0,
+		PopulatedFrom:   []string{"QueryString", "Form", "Cookies"},
+		Tags:            []string{"web", "microsoft", "legacy"},
+	},
+	{
+		ID:              "aspnet_mvc_request_inputstream",
+		Framework:       "aspnetmvc",
+		Language:        "c_sharp",
+		Name:            "Request.InputStream",
+		Description:     "ASP.NET MVC request input stream",
+		ClassPattern:    "^HttpRequestBase$",
+		PropertyPattern: "^InputStream$",
+		SourceType:      common.SourceHTTPBody,
+		Confidence:      1.0,
+		Tags:            []string{"web", "microsoft", "legacy"},
+	},
+	{
+		ID:              "aspnet_mvc_request_files",
+		Framework:       "aspnetmvc",
+		Language:        "c_sharp",
+		Name:            "Request.Files",
+		Description:     "ASP.NET MVC uploaded files",
+		ClassPattern:    "^HttpRequestBase$",
+		PropertyPattern: "^Files$",
+		SourceType:      common.SourceHTTPFile,
+		Confidence:      1.0,
+		Tags:            []string{"web", "microsoft", "legacy", "upload"},
+	},
+}
+
+// Nancy framework patterns (lightweight .NET web framework)
+var nancyPatterns = []*common.FrameworkPattern{
+	{
+		ID:              "nancy_request_query",
+		Framework:       "nancy",
+		Language:        "c_sharp",
+		Name:            "Request.Query",
+		Description:     "Nancy query parameters",
+		ClassPattern:    "^Request$",
+		PropertyPattern: "^Query$",
+		SourceType:      common.SourceHTTPGet,
+		Confidence:      1.0,
+		Tags:            []string{"web", "lightweight"},
+	},
+	{
+		ID:              "nancy_request_form",
+		Framework:       "nancy",
+		Language:        "c_sharp",
+		Name:            "Request.Form",
+		Description:     "Nancy form data",
+		ClassPattern:    "^Request$",
+		PropertyPattern: "^Form$",
+		SourceType:      common.SourceHTTPPost,
+		Confidence:      1.0,
+		Tags:            []string{"web", "lightweight"},
+	},
+	{
+		ID:              "nancy_request_body",
+		Framework:       "nancy",
+		Language:        "c_sharp",
+		Name:            "Request.Body",
+		Description:     "Nancy request body",
+		ClassPattern:    "^Request$",
+		PropertyPattern: "^Body$",
+		SourceType:      common.SourceHTTPBody,
+		Confidence:      1.0,
+		Tags:            []string{"web", "lightweight"},
+	},
+	{
+		ID:            "nancy_bind",
+		Framework:     "nancy",
+		Language:      "c_sharp",
+		Name:          "this.Bind<T>()",
+		Description:   "Nancy model binding",
+		MethodPattern: "^Bind$",
+		SourceType:    common.SourceHTTPRequest,
+		Confidence:    1.0,
+		Tags:          []string{"web", "lightweight", "binding"},
+	},
+	{
+		ID:            "nancy_bind_to",
+		Framework:     "nancy",
+		Language:      "c_sharp",
+		Name:          "this.BindTo()",
+		Description:   "Nancy model binding to existing object",
+		MethodPattern: "^BindTo$",
+		SourceType:    common.SourceHTTPRequest,
+		Confidence:    1.0,
+		Tags:          []string{"web", "lightweight", "binding"},
+	},
+}
+
+// ServiceStack framework patterns (high-performance .NET web services)
+var serviceStackPatterns = []*common.FrameworkPattern{
+	{
+		ID:            "servicestack_request_dto",
+		Framework:     "servicestack",
+		Language:      "c_sharp",
+		Name:          "IRequest",
+		Description:   "ServiceStack request interface",
+		ClassPattern:  "^IRequest$",
+		SourceType:    common.SourceHTTPRequest,
+		Confidence:    1.0,
+		Tags:          []string{"web", "api", "services"},
+	},
+	{
+		ID:              "servicestack_query_string",
+		Framework:       "servicestack",
+		Language:        "c_sharp",
+		Name:            "Request.QueryString",
+		Description:     "ServiceStack query string",
+		ClassPattern:    "^IRequest$",
+		PropertyPattern: "^QueryString$",
+		SourceType:      common.SourceHTTPGet,
+		Confidence:      1.0,
+		Tags:            []string{"web", "api", "services"},
+	},
+	{
+		ID:              "servicestack_form_data",
+		Framework:       "servicestack",
+		Language:        "c_sharp",
+		Name:            "Request.FormData",
+		Description:     "ServiceStack form data",
+		ClassPattern:    "^IRequest$",
+		PropertyPattern: "^FormData$",
+		SourceType:      common.SourceHTTPPost,
+		Confidence:      1.0,
+		Tags:            []string{"web", "api", "services"},
+	},
+	{
+		ID:              "servicestack_dto",
+		Framework:       "servicestack",
+		Language:        "c_sharp",
+		Name:            "Request DTO",
+		Description:     "ServiceStack request DTO auto-binding",
+		ClassPattern:    "^IReturn",
+		SourceType:      common.SourceHTTPRequest,
+		Confidence:      0.9,
+		Tags:            []string{"web", "api", "services", "dto"},
+	},
+	{
+		ID:            "servicestack_get_raw_body",
+		Framework:     "servicestack",
+		Language:      "c_sharp",
+		Name:          "GetRawBody()",
+		Description:   "ServiceStack get raw request body",
+		MethodPattern: "^GetRawBody(Async)?$",
+		SourceType:    common.SourceHTTPBody,
+		Confidence:    1.0,
+		Tags:          []string{"web", "api", "services"},
+	},
+}
+
+func init() {
+	Registry.RegisterAll(aspNetCorePatterns)
+	Registry.RegisterAll(aspNetMvcPatterns)
+	Registry.RegisterAll(nancyPatterns)
+	Registry.RegisterAll(serviceStackPatterns)
+
+	// Register framework detectors
+	common.RegisterFrameworkDetector(&common.FrameworkDetector{
+		Framework:  "aspnetcore",
+		Indicators: []string{"Microsoft.AspNetCore", "Startup.cs", "Program.cs"},
+	})
+	common.RegisterFrameworkDetector(&common.FrameworkDetector{
+		Framework:  "aspnetmvc",
+		Indicators: []string{"System.Web.Mvc", "Global.asax.cs"},
+	})
+	common.RegisterFrameworkDetector(&common.FrameworkDetector{
+		Framework:  "nancy",
+		Indicators: []string{"Nancy.dll", "NancyModule"},
+	})
+	common.RegisterFrameworkDetector(&common.FrameworkDetector{
+		Framework:  "servicestack",
+		Indicators: []string{"ServiceStack.dll", "AppHost.cs"},
+	})
+}

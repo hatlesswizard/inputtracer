@@ -6,11 +6,10 @@ package sources
 type InputMethodCategory string
 
 const (
-	CategoryHTTP     InputMethodCategory = "http"
-	CategoryDatabase InputMethodCategory = "database"
-	CategoryFile     InputMethodCategory = "file"
-	CategoryCommand  InputMethodCategory = "command"
-	CategoryGeneric  InputMethodCategory = "generic"
+	CategoryHTTP    InputMethodCategory = "http"
+	CategoryFile    InputMethodCategory = "file"
+	CategoryCommand InputMethodCategory = "command"
+	CategoryGeneric InputMethodCategory = "generic"
 )
 
 // InputMethod describes a method that returns user input
@@ -51,19 +50,6 @@ var InputMethods = []InputMethod{
 	{VarPattern: "*", MethodName: "input", Category: CategoryHTTP, SourceType: SourceUserInput, Framework: "generic", Description: "Generic input method"},
 	{VarPattern: "*", MethodName: "request", Category: CategoryHTTP, SourceType: SourceUserInput, Framework: "generic", Description: "Generic request method"},
 	{VarPattern: "*", MethodName: "query", Category: CategoryHTTP, SourceType: SourceHTTPGet, Framework: "generic", Description: "Generic query method"},
-
-	// Database methods
-	{VarPattern: "*", MethodName: "query", Category: CategoryDatabase, SourceType: SourceDatabase, Framework: "generic", Description: "Database query"},
-	{VarPattern: "*", MethodName: "simple_select", Category: CategoryDatabase, SourceType: SourceDatabase, Framework: "mybb", Description: "MyBB simple_select"},
-	{VarPattern: "*", MethodName: "write_query", Category: CategoryDatabase, SourceType: SourceDatabase, Framework: "mybb", Description: "MyBB write_query"},
-	{VarPattern: "*", MethodName: "delete_query", Category: CategoryDatabase, SourceType: SourceDatabase, Framework: "mybb", Description: "MyBB delete_query"},
-	{VarPattern: "*", MethodName: "update_query", Category: CategoryDatabase, SourceType: SourceDatabase, Framework: "mybb", Description: "MyBB update_query"},
-	{VarPattern: "*", MethodName: "escape_string", Category: CategoryDatabase, SourceType: SourceDatabase, Framework: "generic", Description: "Escape string"},
-	{VarPattern: "*", MethodName: "prepare", Category: CategoryDatabase, SourceType: SourceDatabase, Framework: "generic", Description: "Prepared statement"},
-	{VarPattern: "*", MethodName: "execute", Category: CategoryDatabase, SourceType: SourceDatabase, Framework: "generic", Description: "Execute statement"},
-	{VarPattern: "*", MethodName: "fetch", Category: CategoryDatabase, SourceType: SourceDatabase, Framework: "generic", Description: "Database fetch"},
-	{VarPattern: "*", MethodName: "fetch_array", Category: CategoryDatabase, SourceType: SourceDatabase, Framework: "generic", Description: "Fetch array"},
-	{VarPattern: "*", MethodName: "fetch_field", Category: CategoryDatabase, SourceType: SourceDatabase, Framework: "generic", Description: "Fetch field"},
 
 	// File operations
 	{VarPattern: "*", MethodName: "read", Category: CategoryFile, SourceType: SourceFile, Framework: "generic", Description: "File read"},
@@ -132,12 +118,12 @@ func GetInputMethodInfo(varName, methodName string) *InputMethod {
 }
 
 // IsInterestingMethod checks if a method name is security-relevant
-// Replaces isInterestingMethod() in extractor.go
+// Note: This library traces INPUT SOURCES only, not sinks
+// This function is kept for compatibility but only returns true for file/command operations
 func IsInterestingMethod(methodName string) bool {
 	if methods, ok := inputMethodIndex["*"]; ok {
 		if im, found := methods[methodName]; found {
-			return im.Category == CategoryDatabase ||
-				im.Category == CategoryFile ||
+			return im.Category == CategoryFile ||
 				im.Category == CategoryCommand
 		}
 	}
@@ -171,10 +157,6 @@ func GetHTTPInputMethods() []InputMethod {
 	return GetMethodsByCategory(CategoryHTTP)
 }
 
-// GetDatabaseMethods returns all database-related methods
-func GetDatabaseMethods() []InputMethod {
-	return GetMethodsByCategory(CategoryDatabase)
-}
 
 // GetFileMethods returns all file-related methods
 func GetFileMethods() []InputMethod {
@@ -184,4 +166,24 @@ func GetFileMethods() []InputMethod {
 // GetCommandMethods returns all command execution methods
 func GetCommandMethods() []InputMethod {
 	return GetMethodsByCategory(CategoryCommand)
+}
+
+// MethodToSuperglobals maps common method names to their typical superglobal sources
+// Used for PHP input method resolution in tracing
+var MethodToSuperglobals = map[string][]string{
+	"get_input": {"$_GET", "$_POST"},
+	"input":     {"$_GET", "$_POST"},
+	"get":       {"$_GET"},
+	"post":      {"$_POST"},
+	"cookie":    {"$_COOKIE"},
+	"server":    {"$_SERVER"},
+	"file":      {"$_FILES"},
+}
+
+// GetSuperglobalsForMethod returns the superglobals typically accessed by a method name
+func GetSuperglobalsForMethod(methodName string) []string {
+	if sgs, ok := MethodToSuperglobals[methodName]; ok {
+		return sgs
+	}
+	return nil
 }

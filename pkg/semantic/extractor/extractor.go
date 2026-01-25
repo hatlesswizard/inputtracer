@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/hatlesswizard/inputtracer/pkg/sources"
+	"github.com/hatlesswizard/inputtracer/pkg/sources/common"
 )
 
 // ExtractedExpression represents a PHP expression extracted from code
@@ -31,19 +32,14 @@ type ExpressionExtractor struct {
 }
 
 // New creates a new ExpressionExtractor
+// Uses centralized patterns from pkg/sources/common
 func New() *ExpressionExtractor {
 	return &ExpressionExtractor{
-		// Superglobals: $_GET['key'], $_POST['key'], etc.
-		superglobalPattern: regexp.MustCompile(`\$_(GET|POST|COOKIE|REQUEST|SERVER|FILES|SESSION|ENV)\[['"]([\w\-]+)['"]\]`),
-
-		// Method calls: $obj->method(...) - captures variable and method name
-		methodCallPattern: regexp.MustCompile(`\$(\w+)->(\w+)\s*\(`),
-
-		// Property with array access: $obj->property['key']
-		propertyArrayPattern: regexp.MustCompile(`\$(\w+)->(\w+)\[['"]([\w\-]+)['"]\]`),
-
-		// Simple property: $obj->property (not followed by [ or ()
-		propertyPattern: regexp.MustCompile(`\$(\w+)->(\w+)(?:[^\[\(]|$)`),
+		// Use centralized patterns
+		superglobalPattern:   common.SuperglobalPattern,
+		methodCallPattern:    common.MethodCallPattern,
+		propertyArrayPattern: common.PropertyArrayPattern,
+		propertyPattern:      common.SimplePropertyPattern,
 	}
 }
 

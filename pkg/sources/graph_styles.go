@@ -11,7 +11,6 @@ const (
 	GraphNodeFunction  GraphNodeType = "function"
 	GraphNodeParameter GraphNodeType = "parameter"
 	GraphNodeCarrier   GraphNodeType = "carrier"
-	GraphNodeSink      GraphNodeType = "sink"
 	GraphNodeProperty  GraphNodeType = "property"
 	GraphNodeReturn    GraphNodeType = "return"
 )
@@ -58,7 +57,6 @@ var NodeStyles = map[GraphNodeType]NodeStyle{
 	GraphNodeFunction:  {FillColor: "#45b7d1", StrokeColor: "#333", TextColor: "white", Shape: "box"},
 	GraphNodeParameter: {FillColor: "#96ceb4", StrokeColor: "#333", TextColor: "white", Shape: "box"},
 	GraphNodeCarrier:   {FillColor: "#4ecdc4", StrokeColor: "#333", TextColor: "white", Shape: "box"},
-	GraphNodeSink:      {FillColor: "#45b7d1", StrokeColor: "#333", TextColor: "white", Shape: "box"},
 	GraphNodeProperty:  {FillColor: "#f9f9f9", StrokeColor: "#333", TextColor: "black", Shape: "box"},
 	GraphNodeReturn:    {FillColor: "#f9f9f9", StrokeColor: "#333", TextColor: "black", Shape: "box"},
 }

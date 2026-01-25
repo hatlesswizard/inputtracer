@@ -17,6 +17,8 @@ import (
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/analyzer"
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
+	"github.com/hatlesswizard/inputtracer/pkg/sources"
+	phpPatterns "github.com/hatlesswizard/inputtracer/pkg/sources/php"
 	sitter "github.com/smacker/go-tree-sitter"
 
 	// Tree-sitter language bindings
@@ -1114,22 +1116,11 @@ func (t *Tracer) searchFileForVar(ctx *TraceContext, filePath string, varName st
 func (t *Tracer) identifySource(expr string, filePath string, line int) *types.SourceInfo {
 	expr = strings.TrimSpace(expr)
 
-	// Check PHP superglobals
-	superglobals := map[string]types.SourceType{
-		"$_GET":     types.SourceHTTPGet,
-		"$_POST":    types.SourceHTTPPost,
-		"$_REQUEST": types.SourceType("http_request"),
-		"$_COOKIE":  types.SourceHTTPCookie,
-		"$_SERVER":  types.SourceHTTPHeader,
-		"$_FILES":   types.SourceHTTPBody,
-		"$_ENV":     types.SourceEnvVar,
-		"$_SESSION": types.SourceType("session"),
-	}
-
-	for sg, sourceType := range superglobals {
+	// Check PHP superglobals (using centralized definitions from pkg/sources)
+	for sg, sourceType := range sources.SuperglobalToSourceType {
 		if strings.Contains(expr, sg) {
 			return &types.SourceInfo{
-				Type:       sourceType,
+				Type:       types.SourceType(sourceType), // Convert sources.SourceType to types.SourceType
 				Expression: expr,
 				FilePath:   filePath,
 				Line:       line,
@@ -1156,97 +1147,30 @@ func (t *Tracer) identifySource(expr string, filePath string, line int) *types.S
 	}
 
 	// =====================================================
-	// UNIVERSAL PHP FRAMEWORK PATTERNS
+	// UNIVERSAL PHP FRAMEWORK PATTERNS (from pkg/sources/php)
 	// These detect user input across ALL PHP frameworks
 	// =====================================================
 
-	// Object property array access patterns (e.g., $mybb->input['key'], $request->data['key'])
-	// These are universal patterns used by many PHP frameworks
-	inputPropertyPatterns := []string{
-		"->input[",    // MyBB, generic
-		"->data[",     // Generic data array
-		"->request[",  // Symfony, generic
-		"->params[",   // Generic params
-		"->cookies[",  // Cookie arrays
-		"->query[",    // Symfony query bag
-		"->post[",     // POST data arrays
-		"->get[",      // GET data arrays
-		"->files[",    // File uploads
-		"->server[",   // Server vars
-		"->headers[",  // Headers
-		"->attributes[", // PSR-7 attributes
-		"->payload[",  // API payloads
-		"->args[",     // Arguments
-	}
-	for _, pattern := range inputPropertyPatterns {
-		if strings.Contains(expr, pattern) {
-			return &types.SourceInfo{
-				Type:       types.SourceUserInput,
-				Expression: expr,
-				FilePath:   filePath,
-				Line:       line,
-				Confidence: 0.95,
-			}
+	// Check property array access patterns using centralized patterns
+	if phpPatterns.IsInputPropertyAccess(expr) {
+		return &types.SourceInfo{
+			Type:       types.SourceUserInput,
+			Expression: expr,
+			FilePath:   filePath,
+			Line:       line,
+			Confidence: 0.95,
 		}
 	}
 
-	// Method call patterns for input getters (e.g., $mybb->get_input('key'), $request->input('key'))
-	// These are universal method names used across PHP frameworks
-	inputMethodPatterns := []string{
-		"->get_input(",     // MyBB
-		"->getInput(",      // CamelCase variant
-		"->get_var(",       // phpBB, generic
-		"->getVar(",        // CamelCase variant
-		"->variable(",      // phpBB
-		"->input(",         // Laravel
-		"->query(",         // Symfony query
-		"->post(",          // POST getter
-		"->cookie(",        // Cookie getter
-		"->header(",        // Header getter
-		"->file(",          // File getter
-		"->get(",           // Generic getter
-		"->all(",           // Get all input (Laravel)
-		// PSR-7 methods
-		"->getQueryParams(",
-		"->getParsedBody(",
-		"->getCookieParams(",
-		"->getUploadedFiles(",
-		"->getServerParams(",
-		"->getHeaders(",
-		"->getHeader(",
-		"->getHeaderLine(",
-		"->getAttribute(",
-		// Database fetch (can contain user data)
-		"->fetch_array(",
-		"->fetch_assoc(",
-		"->fetch_row(",
-		"->fetch_object(",
-		"->fetch(",
-		"->fetchAll(",
-		"->fetchColumn(",
-	}
-	for _, pattern := range inputMethodPatterns {
-		if strings.Contains(expr, pattern) {
-			sourceType := types.SourceUserInput
-			confidence := 0.9
-			// Higher confidence for explicit input methods
-			if strings.Contains(pattern, "input") || strings.Contains(pattern, "Input") ||
-				strings.Contains(pattern, "Query") || strings.Contains(pattern, "Body") ||
-				strings.Contains(pattern, "Cookie") || strings.Contains(pattern, "Header") {
-				confidence = 0.95
-			}
-			// Database results have lower confidence
-			if strings.Contains(pattern, "fetch") {
-				sourceType = types.SourceDatabase
-				confidence = 0.7
-			}
-			return &types.SourceInfo{
-				Type:       sourceType,
-				Expression: expr,
-				FilePath:   filePath,
-				Line:       line,
-				Confidence: confidence,
-			}
+	// Check method call patterns using centralized patterns
+	if phpPatterns.IsInputMethodCall(expr) {
+		confidence := phpPatterns.GetInputConfidence("", expr)
+		return &types.SourceInfo{
+			Type:       types.SourceUserInput,
+			Expression: expr,
+			FilePath:   filePath,
+			Line:       line,
+			Confidence: confidence,
 		}
 	}
 
@@ -2132,7 +2056,7 @@ func (t *Tracer) traceCallWithChain(source *types.FlowNode, call *types.CallSite
 	// Create node for the function call
 	callNode := types.FlowNode{
 		ID:         fmt.Sprintf("%s:%d:%d:call", source.FilePath, call.Line, call.Column),
-		Type:       types.NodeSink,
+		Type:       types.NodeFunction,
 		Language:   source.Language,
 		FilePath:   source.FilePath,
 		Line:       call.Line,
@@ -2174,7 +2098,7 @@ func (t *Tracer) traceCall(source *types.FlowNode, call *types.CallSite, flowMap
 	// Create node for the function call
 	callNode := types.FlowNode{
 		ID:         fmt.Sprintf("%s:%d:%d:call", source.FilePath, call.Line, call.Column),
-		Type:       types.NodeSink,
+		Type:       types.NodeFunction,
 		Language:   source.Language,
 		FilePath:   source.FilePath,
 		Line:       call.Line,
@@ -2560,7 +2484,7 @@ func (r *TraceResult) GetSourcesByFile(filePath string) []*types.FlowNode {
 // HasInputAtFunction checks if a function receives user input
 func (r *TraceResult) HasInputAtFunction(funcName string) bool {
 	for _, node := range r.FlowMap.AllNodes {
-		if (node.Type == types.NodeFunction || node.Type == types.NodeSink) && strings.Contains(node.Name, funcName) {
+		if node.Type == types.NodeFunction && strings.Contains(node.Name, funcName) {
 			// Check if any edge leads to this function
 			for _, edge := range r.FlowMap.AllEdges {
 				if edge.To == node.ID {

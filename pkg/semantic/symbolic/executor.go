@@ -10,7 +10,7 @@ import (
 	"sync"
 
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
-	"github.com/hatlesswizard/inputtracer/pkg/sources"
+	pkgSources "github.com/hatlesswizard/inputtracer/pkg/sources"
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/smacker/go-tree-sitter/php"
 )
@@ -351,7 +351,7 @@ func (e *ExecutionEngine) traceSuperglobal(parsed *ParsedExpression, flow *Prope
 	flow.PropertyName = parsed.AccessKey
 
 	// Determine the source type using centralized mappings
-	sourceType := sources.GetSuperglobalSourceType(parsed.SuperglobalName)
+	sourceType := pkgSources.GetSuperglobalSourceType(parsed.SuperglobalName)
 
 	// Add step showing direct superglobal access
 	flow.Steps = append(flow.Steps, FlowStep{
@@ -401,10 +401,10 @@ func (e *ExecutionEngine) traceLocalVariable(parsed *ParsedExpression, contextFi
 		})
 
 		// Check if source is a superglobal
-		for _, sg := range superglobals {
-			if strings.Contains(assignment.source, sg.pattern) {
+		for sg, sgType := range pkgSources.SuperglobalToSourceType {
+			if strings.Contains(assignment.source, sg) {
 				flow.Sources = append(flow.Sources, UltimateSource{
-					Type:       sg.sourceType,
+					Type:       string(sgType),
 					Expression: assignment.source,
 					FilePath:   assignment.file,
 					Line:       assignment.line,
@@ -526,11 +526,11 @@ func (e *ExecutionEngine) traceExternalPropertyAssignment(parsed *ParsedExpressi
 		})
 
 		// Check if source contains superglobals
-		for _, sg := range superglobals {
-			if strings.Contains(assign.Source, sg.pattern) {
+		for sg, sgType := range pkgSources.SuperglobalToSourceType {
+			if strings.Contains(assign.Source, sg) {
 				flow.Sources = append(flow.Sources, UltimateSource{
-					Type:       sg.sourceType,
-					Expression: sg.pattern,
+					Type:       string(sgType),
+					Expression: sg,
 					FilePath:   assign.FilePath,
 					Line:       assign.Line,
 				})
@@ -563,10 +563,10 @@ func (e *ExecutionEngine) traceExternalPropertyAssignment(parsed *ParsedExpressi
 		// Check for variable assignments (e.g., $mybb->request_method = $_SERVER['REQUEST_METHOD'])
 		if strings.HasPrefix(assign.Source, "$_") {
 			// Direct superglobal assignment
-			for _, sg := range superglobals {
-				if strings.Contains(assign.Source, sg.pattern) {
+			for sg, sgType := range pkgSources.SuperglobalToSourceType {
+				if strings.Contains(assign.Source, sg) {
 					flow.Sources = append(flow.Sources, UltimateSource{
-						Type:       sg.sourceType,
+						Type:       string(sgType),
 						Expression: assign.Source,
 						FilePath:   assign.FilePath,
 						Line:       assign.Line,
@@ -588,11 +588,11 @@ func (e *ExecutionEngine) traceFunctionForSources(funcName string) []UltimateSou
 		if funcDef, ok := st.Functions[funcName]; ok {
 			// Check function body for superglobal usage
 			if funcDef.BodySource != "" {
-				for _, sg := range superglobals {
-					if strings.Contains(funcDef.BodySource, sg.pattern) {
+				for sg, sgType := range pkgSources.SuperglobalToSourceType {
+					if strings.Contains(funcDef.BodySource, sg) {
 						sources = append(sources, UltimateSource{
-							Type:       sg.sourceType,
-							Expression: sg.pattern,
+							Type:       string(sgType),
+							Expression: sg,
 							FilePath:   filePath,
 							Line:       funcDef.Line,
 						})
@@ -782,11 +782,11 @@ func (e *ExecutionEngine) traceStaticCall(parsed *ParsedExpression, flow *Proper
 	// Analyze what the method returns
 	returnInfo := e.analyzeMethodReturns(classDef, methodDef, classFile)
 	for _, retStmt := range returnInfo.ReturnStatements {
-		for _, sg := range superglobals {
-			if strings.Contains(retStmt, sg.pattern) {
+		for sg, sgType := range pkgSources.SuperglobalToSourceType {
+			if strings.Contains(retStmt, sg) {
 				flow.Sources = append(flow.Sources, UltimateSource{
-					Type:       sg.sourceType,
-					Expression: sg.pattern,
+					Type:       string(sgType),
+					Expression: sg,
 					FilePath:   classFile,
 					Line:       methodDef.Line,
 				})
@@ -1594,11 +1594,11 @@ func (e *ExecutionEngine) traceMethodCall(parsed *ParsedExpression, classDef *ty
 	// Add return statements analysis
 	for _, retStmt := range returnInfo.ReturnStatements {
 		// Check for superglobals in return statements
-		for _, sg := range superglobals {
-			if strings.Contains(retStmt, sg.pattern) {
+		for sg, sgType := range pkgSources.SuperglobalToSourceType {
+			if strings.Contains(retStmt, sg) {
 				flow.Sources = append(flow.Sources, UltimateSource{
-					Type:       sg.sourceType,
-					Expression: sg.pattern,
+					Type:       string(sgType),
+					Expression: sg,
 					FilePath:   classFile,
 					Line:       methodDef.Line,
 				})
@@ -1928,8 +1928,8 @@ func (e *ExecutionEngine) analyzeMethodReturns(classDef *types.ClassDef, method 
 			}
 
 			// Check for superglobals
-			for _, sg := range superglobals {
-				if strings.Contains(returnExpr, sg.pattern) {
+			for sg := range pkgSources.SuperglobalToSourceType {
+				if strings.Contains(returnExpr, sg) {
 					info.ReturnsUserInput = true
 					info.UserInputExpression = returnExpr
 					break
@@ -2249,9 +2249,9 @@ func (e *ExecutionEngine) traceMethod(classDef *types.ClassDef, method *types.Me
 
 		// Check if this superglobal is a known user input source
 		var sourceType string
-		for _, sg := range superglobals {
-			if superglobalName == sg.pattern {
-				sourceType = sg.sourceType
+		for sg, sgType := range pkgSources.SuperglobalToSourceType {
+			if superglobalName == sg {
+				sourceType = string(sgType)
 				break
 			}
 		}
@@ -2378,25 +2378,25 @@ func (e *ExecutionEngine) traceMethod(classDef *types.ClassDef, method *types.Me
 	// NEW: Look for conditional assignments based on superglobals
 	// Pattern: if($_SUPERGLOBAL['key']... { $this->property = value }
 	// This handles cases like: if($_SERVER['REQUEST_METHOD'] == "POST") { $this->request_method = "post"; }
-	for _, sg := range superglobals {
-		if strings.Contains(body, sg.pattern) && strings.Contains(body, "$this->"+targetProperty) {
+	for sg := range pkgSources.SuperglobalToSourceType {
+		if strings.Contains(body, sg) && strings.Contains(body, "$this->"+targetProperty) {
 			// Check if superglobal is used in a condition and property is assigned nearby
 			// Pattern: if($_SUPERGLOBAL[anything])
-			condPattern := getOrCompileRegex(`if\s*\(\s*` + regexp.QuoteMeta(sg.pattern) + `\[['"]?(\w+)['"]?\]`)
+			condPattern := getOrCompileRegex(`if\s*\(\s*` + regexp.QuoteMeta(sg) + `\[['"]?(\w+)['"]?\]`)
 			if condMatches := condPattern.FindStringSubmatch(body); len(condMatches) >= 2 {
 				superglobalKey := condMatches[1]
 				steps = append(steps, FlowStep{
 					StepNumber:  len(steps) + 10,
-					Description: fmt.Sprintf("Conditional on %s['%s']", sg.pattern, superglobalKey),
-					Code:        fmt.Sprintf("if(%s['%s'] == ...) { $this->%s = ...; }", sg.pattern, superglobalKey, targetProperty),
+					Description: fmt.Sprintf("Conditional on %s['%s']", sg, superglobalKey),
+					Code:        fmt.Sprintf("if(%s['%s'] == ...) { $this->%s = ...; }", sg, superglobalKey, targetProperty),
 					FilePath:    classFile,
-					Line:        e.findLineInBody(body, method.BodyStart, sg.pattern),
+					Line:        e.findLineInBody(body, method.BodyStart, sg),
 					Type:        "conditional",
 				})
 				steps = append(steps, FlowStep{
 					StepNumber:  len(steps) + 10,
-					Description: fmt.Sprintf("Property $%s is controlled by %s['%s']", targetProperty, sg.pattern, superglobalKey),
-					Code:        fmt.Sprintf("// $this->%s value depends on %s['%s']", targetProperty, sg.pattern, superglobalKey),
+					Description: fmt.Sprintf("Property $%s is controlled by %s['%s']", targetProperty, sg, superglobalKey),
+					Code:        fmt.Sprintf("// $this->%s value depends on %s['%s']", targetProperty, sg, superglobalKey),
 					FilePath:    classFile,
 					Line:        0,
 					Type:        "taint",
@@ -2419,30 +2419,17 @@ func (e *ExecutionEngine) findLineInBody(body string, startLine int, pattern str
 	return startLine
 }
 
-// Superglobals list for source detection
-var superglobals = []struct {
-	pattern    string
-	sourceType string
-}{
-	{"$_GET", "http_get"},
-	{"$_POST", "http_post"},
-	{"$_COOKIE", "http_cookie"},
-	{"$_REQUEST", "http_request"},
-	{"$_SERVER", "http_header"},
-	{"$_FILES", "http_file"},
-	{"$_ENV", "env_var"},
-}
-
 // extractSources extracts ultimate sources from the flow steps
+// Uses centralized superglobal definitions from pkg/sources
 func (e *ExecutionEngine) extractSources(steps []FlowStep) []UltimateSource {
-	var sources []UltimateSource
+	var result []UltimateSource
 
 	for _, step := range steps {
-		for _, sg := range superglobals {
-			if strings.Contains(step.Code, sg.pattern) || strings.Contains(step.Description, sg.pattern) {
-				sources = append(sources, UltimateSource{
-					Type:       sg.sourceType,
-					Expression: sg.pattern,
+		for sg, sourceType := range pkgSources.SuperglobalToSourceType {
+			if strings.Contains(step.Code, sg) || strings.Contains(step.Description, sg) {
+				result = append(result, UltimateSource{
+					Type:       string(sourceType),
+					Expression: sg,
 					FilePath:   step.FilePath,
 					Line:       step.Line,
 				})
@@ -2450,7 +2437,7 @@ func (e *ExecutionEngine) extractSources(steps []FlowStep) []UltimateSource {
 		}
 	}
 
-	return sources
+	return result
 }
 
 // GenerateFlowReport generates a human-readable flow report

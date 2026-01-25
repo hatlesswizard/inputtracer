@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/hatlesswizard/inputtracer/pkg/sources/common"
 )
 
 // ============================================================================
@@ -24,7 +26,6 @@ const (
 	NodeProperty FlowNodeType = "property" // Object property access
 	NodeParam    FlowNodeType = "param"    // Function parameter
 	NodeReturn   FlowNodeType = "return"   // Return value
-	NodeSink     FlowNodeType = "sink"     // Final usage point
 )
 
 // FlowEdgeType represents how data flows between nodes
@@ -49,23 +50,29 @@ const (
 )
 
 // SourceType represents the type of input source
-type SourceType string
+// Re-exported from pkg/sources/common for backward compatibility
+type SourceType = common.SourceType
 
+// Re-export source type constants for backward compatibility
 const (
-	SourceHTTPGet      SourceType = "http_get"       // Query string parameters
-	SourceHTTPPost     SourceType = "http_post"      // POST form data
-	SourceHTTPBody     SourceType = "http_body"      // Raw request body
-	SourceHTTPJSON     SourceType = "http_json"      // JSON request body
-	SourceHTTPHeader   SourceType = "http_header"    // HTTP headers
-	SourceHTTPCookie   SourceType = "http_cookie"    // Cookies
-	SourceHTTPPath     SourceType = "http_path"      // URL path parameters
-	SourceCLIArg       SourceType = "cli_arg"        // Command line arguments
-	SourceEnvVar       SourceType = "env_var"        // Environment variables
-	SourceStdin        SourceType = "stdin"          // Standard input
-	SourceFile         SourceType = "file"           // File reads
-	SourceDatabase     SourceType = "database"       // Database query results
-	SourceNetwork      SourceType = "network"        // Network/socket reads
-	SourceUserInput    SourceType = "user_input"     // Generic user input
+	SourceHTTPGet     = common.SourceHTTPGet
+	SourceHTTPPost    = common.SourceHTTPPost
+	SourceHTTPBody    = common.SourceHTTPBody
+	SourceHTTPJSON    = common.SourceHTTPJSON
+	SourceHTTPHeader  = common.SourceHTTPHeader
+	SourceHTTPCookie  = common.SourceHTTPCookie
+	SourceHTTPPath    = common.SourceHTTPPath
+	SourceHTTPFile    = common.SourceHTTPFile
+	SourceHTTPRequest = common.SourceHTTPRequest
+	SourceSession     = common.SourceSession
+	SourceCLIArg      = common.SourceCLIArg
+	SourceEnvVar      = common.SourceEnvVar
+	SourceStdin       = common.SourceStdin
+	SourceFile        = common.SourceFile
+	SourceDatabase    = common.SourceDatabase
+	SourceNetwork     = common.SourceNetwork
+	SourceUserInput   = common.SourceUserInput
+	SourceUnknown     = common.SourceUnknown
 )
 
 // FlowNode represents a node in the data flow graph
@@ -823,6 +830,49 @@ type FrameworkPattern struct {
 	Confidence      float64   `json:"confidence"` // 0.0 to 1.0
 }
 
+// FrameworkPatternData is a simple struct for importing patterns from pkg/sources
+// This avoids import cycles by using a plain data structure
+type FrameworkPatternData struct {
+	ID              string
+	Framework       string
+	Language        string
+	Name            string
+	Description     string
+	ClassPattern    string
+	MethodPattern   string
+	PropertyPattern string
+	AccessPattern   string
+	SourceType      string
+	SourceKey       string
+	CarrierClass    string
+	CarrierProperty string
+	PopulatedBy     string
+	PopulatedFrom   []string
+	Confidence      float64
+}
+
+// FromData creates a FrameworkPattern from FrameworkPatternData
+func (d *FrameworkPatternData) ToFrameworkPattern() *FrameworkPattern {
+	return &FrameworkPattern{
+		ID:              d.ID,
+		Framework:       d.Framework,
+		Language:        d.Language,
+		Name:            d.Name,
+		Description:     d.Description,
+		ClassPattern:    d.ClassPattern,
+		MethodPattern:   d.MethodPattern,
+		PropertyPattern: d.PropertyPattern,
+		AccessPattern:   d.AccessPattern,
+		SourceType:      SourceType(d.SourceType),
+		SourceKey:       d.SourceKey,
+		CarrierClass:    d.CarrierClass,
+		CarrierProperty: d.CarrierProperty,
+		PopulatedBy:     d.PopulatedBy,
+		PopulatedFrom:   d.PopulatedFrom,
+		Confidence:      d.Confidence,
+	}
+}
+
 // ============================================================================
 // Analysis State
 // ============================================================================
@@ -942,8 +992,6 @@ func (fm *FlowMap) ToMermaid() string {
 			style = ":::source"
 		case NodeCarrier:
 			style = ":::carrier"
-		case NodeSink:
-			style = ":::sink"
 		}
 
 		sb.WriteString(fmt.Sprintf("    %s[\"%s\"]%s\n", nodeID, label, style))
@@ -962,7 +1010,6 @@ func (fm *FlowMap) ToMermaid() string {
 	// Add styles
 	sb.WriteString("\n    classDef source fill:#ff6b6b,color:white\n")
 	sb.WriteString("    classDef carrier fill:#4ecdc4,color:white\n")
-	sb.WriteString("    classDef sink fill:#45b7d1,color:white\n")
 
 	return sb.String()
 }
@@ -988,8 +1035,6 @@ func (fm *FlowMap) ToDOT() string {
 			color = "#ff6b6b"
 		case NodeCarrier:
 			color = "#4ecdc4"
-		case NodeSink:
-			color = "#45b7d1"
 		}
 
 		sb.WriteString(fmt.Sprintf("    \"%s\" [label=\"%s\" fillcolor=\"%s\" style=filled];\n",

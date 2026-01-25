@@ -12,6 +12,8 @@ import (
 	"github.com/smacker/go-tree-sitter/php"
 
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/discovery"
+	pkgSources "github.com/hatlesswizard/inputtracer/pkg/sources"
+	"github.com/hatlesswizard/inputtracer/pkg/sources/common"
 )
 
 // VariableTracer traces a variable across all definitions in a codebase
@@ -457,7 +459,7 @@ func (t *VariableTracer) findDirectInputSources(node *sitter.Node, content []byt
 		}
 		if objNode != nil {
 			objContent := objNode.Content(content)
-			for _, sg := range []string{"$_GET", "$_POST", "$_COOKIE", "$_REQUEST", "$_SERVER", "$_FILES", "$_ENV"} {
+			for _, sg := range pkgSources.SuperglobalNames() {
 				if objContent == sg {
 					return []string{sg}
 				}
@@ -546,7 +548,7 @@ func (t *VariableTracer) findDirectInputSources(node *sitter.Node, content []byt
 
 	// Case 8: Variable - check if it's a direct superglobal reference
 	if nodeType == "variable_name" {
-		for _, sg := range []string{"$_GET", "$_POST", "$_COOKIE", "$_REQUEST", "$_SERVER", "$_FILES", "$_ENV"} {
+		for _, sg := range pkgSources.SuperglobalNames() {
 			if nodeContent == sg {
 				return []string{sg}
 			}
@@ -589,18 +591,8 @@ func (t *VariableTracer) checkMethodCallForInput(node *sitter.Node, content []by
 	}
 	methodName := nameNode.Content(content)
 
-	// Known input-returning methods
-	inputMethods := map[string][]string{
-		"get_input": {"$_GET", "$_POST"},
-		"input":     {"$_GET", "$_POST"},
-		"get":       {"$_GET"},
-		"post":      {"$_POST"},
-		"cookie":    {"$_COOKIE"},
-		"server":    {"$_SERVER"},
-		"file":      {"$_FILES"},
-	}
-
-	if sources, ok := inputMethods[methodName]; ok {
+	// Known input-returning methods (from centralized mappings)
+	if sources := pkgSources.GetSuperglobalsForMethod(methodName); sources != nil {
 		return sources
 	}
 
@@ -1059,9 +1051,8 @@ func (t *VariableTracer) findInputSources(expr string) []string {
 	var sources []string
 	seen := make(map[string]bool)
 
-	// Check for direct superglobals
-	superglobals := []string{"$_GET", "$_POST", "$_COOKIE", "$_REQUEST", "$_SERVER", "$_FILES", "$_ENV", "$_SESSION"}
-	for _, sg := range superglobals {
+	// Check for direct superglobals (using centralized list from pkg/sources)
+	for _, sg := range pkgSources.SuperglobalNames() {
 		if strings.Contains(expr, sg) {
 			if !seen[sg] {
 				seen[sg] = true
@@ -1104,27 +1095,12 @@ func (t *VariableTracer) findInputSources(expr string) []string {
 		}
 	}
 
-	// Check for common input patterns (without carrier map)
-	inputPatterns := []struct {
-		pattern string
-		name    string
-	}{
-		{`\$mybb->input\[`, "$mybb->input"},
-		{`\$mybb->cookies\[`, "$mybb->cookies"},
-		{`\$mybb->get_input\(`, "$mybb->get_input()"},
-		{`\$request->input\(`, "$request->input()"},
-		{`\$request->get\(`, "$request->get()"},
-		{`\$request->post\(`, "$request->post()"},
-		{`\$request->query\[`, "$request->query"},
-		{`\$_REQUEST\[`, "$_REQUEST"},
-	}
-
-	for _, p := range inputPatterns {
-		re := regexp.MustCompile(p.pattern)
-		if re.MatchString(expr) {
-			if !seen[p.name] {
-				seen[p.name] = true
-				sources = append(sources, p.name)
+	// Check for common input patterns (using centralized patterns)
+	for _, p := range common.PHPInputPatterns {
+		if p.Regex.MatchString(expr) {
+			if !seen[p.Name] {
+				seen[p.Name] = true
+				sources = append(sources, p.Name)
 			}
 		}
 	}
