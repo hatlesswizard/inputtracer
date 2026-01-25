@@ -11,6 +11,8 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	pkgSources "github.com/hatlesswizard/inputtracer/pkg/sources"
+	"github.com/hatlesswizard/inputtracer/pkg/sources/common"
+	phpPatterns "github.com/hatlesswizard/inputtracer/pkg/sources/php"
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/smacker/go-tree-sitter/php"
 )
@@ -2019,9 +2021,8 @@ func (e *ExecutionEngine) findInstantiationInAST(root *sitter.Node, source []byt
 		// Check GLOBALS assignment: $GLOBALS['var'] = new Class()
 		globalsMatch := false
 		if !directMatch {
-			// Pattern: $GLOBALS['varname'] or $GLOBALS["varname"]
-			globalsPattern := getOrCompileRegex(`\$GLOBALS\[['"](\w+)['"]\]`)
-			if matches := globalsPattern.FindStringSubmatch(leftText); len(matches) >= 2 {
+			// Uses centralized pattern from phpPatterns
+			if matches := phpPatterns.GlobalsPattern.FindStringSubmatch(leftText); len(matches) >= 2 {
 				if matches[1] == varNameWithoutDollar {
 					globalsMatch = true
 				}
@@ -2044,9 +2045,9 @@ func (e *ExecutionEngine) findInstantiationInAST(root *sitter.Node, source []byt
 		}
 
 		// Check for DI container pattern: $var = $container->get('service')
+		// Uses centralized pattern from phpPatterns
 		rightText := getNodeText(right, source)
-		diPattern := getOrCompileRegex(`\$\w+->get\(['"]([^'"]+)['"]\)`)
-		if diPattern.MatchString(rightText) {
+		if phpPatterns.DIContainerPattern.MatchString(rightText) {
 			// Found DI container pattern - look for type hint above
 			assignLine := int(assign.StartPoint().Row)
 			typeHintClass := e.findTypeHintAboveLine(source, assignLine, varNameWithoutDollar)
@@ -2054,7 +2055,7 @@ func (e *ExecutionEngine) findInstantiationInAST(root *sitter.Node, source []byt
 				return typeHintClass, assignLine + 1
 			}
 			// If no type hint, return the service name as a hint
-			if matches := diPattern.FindStringSubmatch(rightText); len(matches) >= 2 {
+			if matches := phpPatterns.DIContainerPattern.FindStringSubmatch(rightText); len(matches) >= 2 {
 				serviceName := matches[1]
 				return fmt.Sprintf("[DI:%s]", serviceName), assignLine + 1
 			}
@@ -2080,12 +2081,8 @@ func (e *ExecutionEngine) findTypeHintAboveLine(source []byte, targetLine int, v
 
 	// Pattern 1: /* @var $varname \namespace\classname */
 	// Pattern 2: /** @var \namespace\classname $varname */
-	typeHintPatterns := []*regexp.Regexp{
-		// /* @var $request \phpbb\request\request_interface */
-		getOrCompileRegex(`@var\s+\$` + regexp.QuoteMeta(varName) + `\s+\\?([\w\\]+)`),
-		// /* @var \phpbb\request\request_interface $request */
-		getOrCompileRegex(`@var\s+\\?([\w\\]+)\s+\$` + regexp.QuoteMeta(varName)),
-	}
+	// Uses centralized pattern builder from phpPatterns
+	typeHintPatterns := phpPatterns.GetTypeHintPatterns(varName)
 
 	for i := targetLine - 1; i >= startLine; i-- {
 		line := lines[i]
@@ -2174,9 +2171,8 @@ func (e *ExecutionEngine) traceConstructor(classDef *types.ClassDef, classFile s
 	}
 
 	// Look for method calls that might populate the property
-	// Parse: $this->methodName($arg)
-	methodCallPattern := getOrCompileRegex(`\$this->(\w+)\(([^)]*)\)`)
-	methodCalls := methodCallPattern.FindAllStringSubmatch(constructor.BodySource, -1)
+	// Parse: $this->methodName($arg) - uses centralized pattern
+	methodCalls := phpPatterns.ThisMethodCallPattern.FindAllStringSubmatch(constructor.BodySource, -1)
 
 	for _, call := range methodCalls {
 		methodName := call[1]
@@ -2239,8 +2235,8 @@ func (e *ExecutionEngine) traceMethod(classDef *types.ClassDef, method *types.Me
 	// PHASE 1.1: Look for foreach loops iterating over SUPERGLOBALS directly
 	// Pattern: foreach($_SUPERGLOBAL as $key => $val)
 	// This handles methods like parse_cookies() that don't take parameters
-	superglobalForeachPattern := getOrCompileRegex(`foreach\s*\(\s*(\$_\w+)\s+as\s+\$(\w+)\s*=>\s*\$(\w+)\s*\)`)
-	superglobalMatches := superglobalForeachPattern.FindAllStringSubmatch(body, -1)
+	// Uses centralized pattern from common
+	superglobalMatches := common.SuperglobalForeachPattern.FindAllStringSubmatch(body, -1)
 
 	for _, match := range superglobalMatches {
 		superglobalName := match[1] // e.g., "$_COOKIE"
@@ -2300,9 +2296,8 @@ func (e *ExecutionEngine) traceMethod(classDef *types.ClassDef, method *types.Me
 	}
 
 	// Look for foreach loops iterating over the method parameter
-	// Pattern: foreach($array as $key => $val)
-	foreachPattern := getOrCompileRegex(`foreach\s*\(\s*\$(\w+)\s+as\s+\$(\w+)\s*=>\s*\$(\w+)\s*\)`)
-	foreachMatches := foreachPattern.FindAllStringSubmatch(body, -1)
+	// Pattern: foreach($array as $key => $val) - uses centralized pattern
+	foreachMatches := phpPatterns.ForeachPattern.FindAllStringSubmatch(body, -1)
 
 	for _, match := range foreachMatches {
 		arrayVar := match[1]
@@ -2360,7 +2355,8 @@ func (e *ExecutionEngine) traceMethod(classDef *types.ClassDef, method *types.Me
 
 	// Also look for direct assignments
 	// Pattern: $this->property = $something
-	directAssignPattern := getOrCompileRegex(`\$this->` + regexp.QuoteMeta(targetProperty) + `\s*=\s*([^;]+)`)
+	// Uses centralized pattern builder from phpPatterns
+	directAssignPattern := phpPatterns.BuildDirectAssignPattern(targetProperty)
 	directMatches := directAssignPattern.FindAllStringSubmatch(body, -1)
 
 	for _, match := range directMatches {
@@ -2381,8 +2377,8 @@ func (e *ExecutionEngine) traceMethod(classDef *types.ClassDef, method *types.Me
 	for sg := range pkgSources.SuperglobalToSourceType {
 		if strings.Contains(body, sg) && strings.Contains(body, "$this->"+targetProperty) {
 			// Check if superglobal is used in a condition and property is assigned nearby
-			// Pattern: if($_SUPERGLOBAL[anything])
-			condPattern := getOrCompileRegex(`if\s*\(\s*` + regexp.QuoteMeta(sg) + `\[['"]?(\w+)['"]?\]`)
+			// Pattern: if($_SUPERGLOBAL[anything]) - uses centralized pattern builder
+			condPattern := phpPatterns.BuildConditionalPattern(sg)
 			if condMatches := condPattern.FindStringSubmatch(body); len(condMatches) >= 2 {
 				superglobalKey := condMatches[1]
 				steps = append(steps, FlowStep{

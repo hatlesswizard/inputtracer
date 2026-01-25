@@ -65,27 +65,71 @@ func NewMatcher() *Matcher {
 			NodeTypes:    []string{"subscript_expression", "variable_name"},
 			KeyExtractor: `\$_FILES\s*\[\s*['"]?([^'"\]]+)['"]?\s*\]`,
 		},
+		// $_ENV - NOT user input (server configuration)
 		{
 			Name:         "$_ENV",
 			Pattern:      `\$_ENV\s*\[`,
 			Language:     "php",
-			Labels:       []common.InputLabel{common.LabelEnvironment},
-			Description:  "Environment variables",
+			Labels:       []common.InputLabel{common.LabelEnvironment}, // Note: NO LabelUserInput
+			Description:  "Environment variables (server config, NOT request data)",
 			NodeTypes:    []string{"subscript_expression", "variable_name"},
 			KeyExtractor: `\$_ENV\s*\[\s*['"]?([^'"\]]+)['"]?\s*\]`,
 		},
-
-		// Raw input
+		// $_SESSION - NOT user input (stored server-side)
 		{
-			Name:        "php://input",
+			Name:         "$_SESSION",
+			Pattern:      `\$_SESSION\s*\[`,
+			Language:     "php",
+			Labels:       []common.InputLabel{}, // Note: NO LabelUserInput - session is server-side
+			Description:  "Session data (stored server-side, NOT sent in request)",
+			NodeTypes:    []string{"subscript_expression", "variable_name"},
+			KeyExtractor: `\$_SESSION\s*\[\s*['"]?([^'"\]]+)['"]?\s*\]`,
+		},
+
+		// =====================================================
+		// RAW HTTP REQUEST BODY - TRUE USER INPUT
+		// =====================================================
+		{
+			Name:        "php://input (file_get_contents)",
 			Pattern:     `file_get_contents\s*\(\s*['"]php://input['"]`,
 			Language:    "php",
 			Labels:      []common.InputLabel{common.LabelHTTPBody, common.LabelUserInput},
-			Description: "Raw POST body",
+			Description: "Raw POST body via file_get_contents",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "php://input (fopen)",
+			Pattern:     `fopen\s*\(\s*['"]php://input['"]`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelHTTPBody, common.LabelUserInput},
+			Description: "Raw POST body via fopen stream",
 			NodeTypes:   []string{"function_call_expression"},
 		},
 
-		// File functions
+		// =====================================================
+		// HTTP HEADER FUNCTIONS - TRUE USER INPUT
+		// =====================================================
+		{
+			Name:        "getallheaders()",
+			Pattern:     `\bgetallheaders\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelHTTPHeader, common.LabelUserInput},
+			Description: "Get all HTTP request headers (alias of apache_request_headers)",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "apache_request_headers()",
+			Pattern:     `\bapache_request_headers\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelHTTPHeader, common.LabelUserInput},
+			Description: "Get all HTTP request headers (Apache SAPI)",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+
+		// =====================================================
+		// FILE OPERATIONS - NOT USER INPUT
+		// These read from the filesystem, NOT HTTP requests
+		// =====================================================
 		{
 			Name:        "file_get_contents",
 			Pattern:     `file_get_contents\s*\(`,
@@ -227,7 +271,7 @@ func NewMatcher() *Matcher {
 			Pattern:      `->\s*get_var\s*\(`,
 			Language:     "php",
 			Labels:       []common.InputLabel{common.LabelUserInput},
-			Description:  "Generic variable getter method (phpBB style)",
+			Description:  "Generic variable getter method",
 			NodeTypes:    []string{"member_call_expression"},
 			KeyExtractor: `->\s*get_var\s*\(\s*['"]([^'"]+)`,
 		},
@@ -236,7 +280,7 @@ func NewMatcher() *Matcher {
 			Pattern:      `->\s*variable\s*\(`,
 			Language:     "php",
 			Labels:       []common.InputLabel{common.LabelUserInput},
-			Description:  "Generic variable getter (phpBB style)",
+			Description:  "Generic variable getter",
 			NodeTypes:    []string{"member_call_expression"},
 			KeyExtractor: `->\s*variable\s*\(\s*['"]([^'"]+)`,
 		},
@@ -363,63 +407,37 @@ func NewMatcher() *Matcher {
 			KeyExtractor: `->\s*file\s*\(\s*['"]([^'"]+)`,
 		},
 
-		// Deserialization functions (receives potentially tainted data)
-		{
-			Name:        "unserialize()",
-			Pattern:     `\bunserialize\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelUserInput},
-			Description: "PHP unserialize function - potential object injection",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-		{
-			Name:        "*unserialize() (custom)",
-			Pattern:     `\b\w*unserialize\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelUserInput},
-			Description: "Custom unserialize wrapper (my_unserialize, safe_unserialize, etc.)",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-		{
-			Name:        "json_decode()",
-			Pattern:     `\bjson_decode\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelUserInput},
-			Description: "JSON decode - parses external data",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-		{
-			Name:        "simplexml_load_string()",
-			Pattern:     `\bsimplexml_load_string\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelUserInput},
-			Description: "XML parsing - potential XXE",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-		{
-			Name:        "yaml_parse()",
-			Pattern:     `\byaml_parse\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelUserInput},
-			Description: "YAML parsing - potential code execution",
-			NodeTypes:   []string{"function_call_expression"},
-		},
+		// =====================================================
+		// DATA PARSING FUNCTIONS - NOT INPUT SOURCES
+		// These are DATA PROCESSORS, not input sources.
+		// They parse data that may have come from user input,
+		// but the function itself is not where input enters.
+		// Tracking these helps with taint propagation, but they
+		// should NOT be labeled as LabelUserInput.
+		// =====================================================
+		// NOTE: These are kept for taint propagation tracking
+		// but marked with empty labels to indicate they are NOT
+		// the actual source of user input.
 
-		// cURL - network request responses
+		// =====================================================
+		// NETWORK FUNCTIONS - NOT HTTP REQUEST INPUT
+		// These return data from external network calls,
+		// NOT from the current HTTP request.
+		// =====================================================
 		{
 			Name:        "curl_exec()",
 			Pattern:     `\bcurl_exec\s*\(`,
 			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelNetwork},
-			Description: "cURL execute - returns external data",
+			Labels:      []common.InputLabel{common.LabelNetwork}, // Note: NOT LabelUserInput
+			Description: "cURL execute - returns external network data (NOT HTTP request input)",
 			NodeTypes:   []string{"function_call_expression"},
 		},
 		{
 			Name:        "curl_multi_getcontent()",
 			Pattern:     `\bcurl_multi_getcontent\s*\(`,
 			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelNetwork},
-			Description: "cURL multi get content - returns external data",
+			Labels:      []common.InputLabel{common.LabelNetwork}, // Note: NOT LabelUserInput
+			Description: "cURL multi get content - returns external network data",
 			NodeTypes:   []string{"function_call_expression"},
 		},
 

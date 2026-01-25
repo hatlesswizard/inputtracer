@@ -7,6 +7,7 @@ import (
 
 	"github.com/hatlesswizard/inputtracer/pkg/sources"
 	"github.com/hatlesswizard/inputtracer/pkg/sources/common"
+	phpPatterns "github.com/hatlesswizard/inputtracer/pkg/sources/php"
 )
 
 // ExtractedExpression represents a PHP expression extracted from code
@@ -305,10 +306,8 @@ func (e *ExpressionExtractor) ExtractFromSnippet(snippet string) []ExtractedExpr
 func (e *ExpressionExtractor) extractSuperglobals(line string, lineNum int) []ExtractedExpression {
 	var results []ExtractedExpression
 
-	// Pattern: $_GET['key'], $_POST['key'], etc.
-	pattern := regexp.MustCompile(`\$_(GET|POST|COOKIE|REQUEST|SERVER|FILES|SESSION|ENV)\s*\[\s*['"]?([^'"\]]+)['"]?\s*\]`)
-
-	for _, match := range pattern.FindAllStringSubmatch(line, -1) {
+	// Uses centralized superglobal pattern from common
+	for _, match := range common.SuperglobalPattern.FindAllStringSubmatch(line, -1) {
 		if len(match) >= 3 {
 			sgType := match[1]
 			key := match[2]
@@ -332,10 +331,8 @@ func (e *ExpressionExtractor) extractSuperglobals(line string, lineNum int) []Ex
 func (e *ExpressionExtractor) extractPropertyArrayAccess(line string, lineNum int) []ExtractedExpression {
 	var results []ExtractedExpression
 
-	// Pattern: $var->property['key'] or $var->property["key"]
-	pattern := regexp.MustCompile(`\$(\w+)->(\w+)\s*\[\s*['"]([^'"]+)['"]\s*\]`)
-
-	for _, match := range pattern.FindAllStringSubmatch(line, -1) {
+	// Uses centralized property array pattern from common
+	for _, match := range common.PropertyArrayPattern.FindAllStringSubmatch(line, -1) {
 		if len(match) >= 4 {
 			varName := match[1]
 			propName := match[2]
@@ -361,10 +358,8 @@ func (e *ExpressionExtractor) extractPropertyArrayAccess(line string, lineNum in
 func (e *ExpressionExtractor) extractAllMethodCalls(line string, lineNum int) []ExtractedExpression {
 	var results []ExtractedExpression
 
-	// Pattern: $var->method('arg') or $var->method("arg")
-	pattern := regexp.MustCompile(`\$(\w+)->(\w+)\s*\(\s*['"]([^'"]*)['"]\s*(?:,\s*[^)]+)?\s*\)`)
-
-	for _, match := range pattern.FindAllStringSubmatch(line, -1) {
+	// Uses centralized method call with args pattern from common
+	for _, match := range common.MethodCallWithArgsPattern.FindAllStringSubmatch(line, -1) {
 		if len(match) >= 4 {
 			varName := match[1]
 			methodName := match[2]
@@ -387,13 +382,12 @@ func (e *ExpressionExtractor) extractAllMethodCalls(line string, lineNum int) []
 }
 
 // extractSQLEmbedded extracts expressions embedded in SQL strings
+// Uses centralized patterns from phpPatterns package
 func (e *ExpressionExtractor) extractSQLEmbedded(line string, lineNum int) []ExtractedExpression {
 	var results []ExtractedExpression
 
 	// Pattern 1: '{$var->prop['key']}' - curly brace interpolation in SQL
-	curlyPattern := regexp.MustCompile(`\{\s*\$(\w+)->(\w+)\s*\[\s*['"]([^'"]+)['"]\s*\]\s*\}`)
-
-	for _, match := range curlyPattern.FindAllStringSubmatch(line, -1) {
+	for _, match := range phpPatterns.SQLCurlyBracePattern.FindAllStringSubmatch(line, -1) {
 		if len(match) >= 4 {
 			varName := match[1]
 			propName := match[2]
@@ -413,9 +407,7 @@ func (e *ExpressionExtractor) extractSQLEmbedded(line string, lineNum int) []Ext
 	}
 
 	// Pattern 2: Simple property in curly braces {$var->prop}
-	simpleCurlyPattern := regexp.MustCompile(`\{\s*\$(\w+)->(\w+)\s*\}`)
-
-	for _, match := range simpleCurlyPattern.FindAllStringSubmatch(line, -1) {
+	for _, match := range phpPatterns.SQLSimpleCurlyPattern.FindAllStringSubmatch(line, -1) {
 		if len(match) >= 3 {
 			varName := match[1]
 			propName := match[2]
@@ -433,9 +425,7 @@ func (e *ExpressionExtractor) extractSQLEmbedded(line string, lineNum int) []Ext
 	}
 
 	// Pattern 3: "...$var->prop..." without curly braces
-	noCurlyPattern := regexp.MustCompile(`"\s*[^"]*\$(\w+)->(\w+)\s*\[\s*['"]([^'"]+)['"]\s*\]`)
-
-	for _, match := range noCurlyPattern.FindAllStringSubmatch(line, -1) {
+	for _, match := range phpPatterns.SQLNoCurlyPattern.FindAllStringSubmatch(line, -1) {
 		if len(match) >= 4 {
 			varName := match[1]
 			propName := match[2]
@@ -469,13 +459,12 @@ func (e *ExpressionExtractor) extractSQLEmbedded(line string, lineNum int) []Ext
 }
 
 // extractConcatenated extracts expressions from string concatenation
+// Uses centralized patterns from phpPatterns package
 func (e *ExpressionExtractor) extractConcatenated(line string, lineNum int) []ExtractedExpression {
 	var results []ExtractedExpression
 
 	// Pattern: "' . $var->prop['key'] . '" or similar concatenations
-	concatPattern := regexp.MustCompile(`\.\s*\$(\w+)->(\w+)\s*\[\s*['"]([^'"]+)['"]\s*\]\s*\.`)
-
-	for _, match := range concatPattern.FindAllStringSubmatch(line, -1) {
+	for _, match := range phpPatterns.ConcatPattern.FindAllStringSubmatch(line, -1) {
 		if len(match) >= 4 {
 			varName := match[1]
 			propName := match[2]
@@ -495,9 +484,7 @@ func (e *ExpressionExtractor) extractConcatenated(line string, lineNum int) []Ex
 	}
 
 	// Pattern: Simple property concatenation '. $var->prop .'
-	simpleConcatPattern := regexp.MustCompile(`\.\s*\$(\w+)->(\w+)\s*\.`)
-
-	for _, match := range simpleConcatPattern.FindAllStringSubmatch(line, -1) {
+	for _, match := range phpPatterns.SimpleConcatPattern.FindAllStringSubmatch(line, -1) {
 		if len(match) >= 3 {
 			varName := match[1]
 			propName := match[2]
@@ -518,13 +505,12 @@ func (e *ExpressionExtractor) extractConcatenated(line string, lineNum int) []Ex
 }
 
 // extractEscaped extracts expressions wrapped in escape functions
+// Uses centralized patterns from phpPatterns package
 func (e *ExpressionExtractor) extractEscaped(line string, lineNum int) []ExtractedExpression {
 	var results []ExtractedExpression
 
 	// Pattern: escape_string($var->prop['key']) or $db->escape_string($var->prop['key'])
-	escapePattern := regexp.MustCompile(`(\w*escape\w*)\s*\(\s*\$(\w+)->(\w+)\s*\[\s*['"]([^'"]+)['"]\s*\]\s*\)`)
-
-	for _, match := range escapePattern.FindAllStringSubmatch(line, -1) {
+	for _, match := range phpPatterns.EscapeWithPropArrayPattern.FindAllStringSubmatch(line, -1) {
 		if len(match) >= 5 {
 			escapeFunc := match[1]
 			varName := match[2]
@@ -547,9 +533,7 @@ func (e *ExpressionExtractor) extractEscaped(line string, lineNum int) []Extract
 	}
 
 	// Pattern: escape functions with simple property
-	simpleEscapePattern := regexp.MustCompile(`(\w*escape\w*)\s*\(\s*\$(\w+)->(\w+)\s*\)`)
-
-	for _, match := range simpleEscapePattern.FindAllStringSubmatch(line, -1) {
+	for _, match := range phpPatterns.EscapeSimplePropPattern.FindAllStringSubmatch(line, -1) {
 		if len(match) >= 4 {
 			escapeFunc := match[1]
 			varName := match[2]
@@ -570,9 +554,7 @@ func (e *ExpressionExtractor) extractEscaped(line string, lineNum int) []Extract
 	}
 
 	// Pattern: escape with variable
-	escapeVarPattern := regexp.MustCompile(`(\w*escape\w*)\s*\(\s*\$(\w+)\s*\)`)
-
-	for _, match := range escapeVarPattern.FindAllStringSubmatch(line, -1) {
+	for _, match := range phpPatterns.EscapeVarPattern.FindAllStringSubmatch(line, -1) {
 		if len(match) >= 3 {
 			escapeFunc := match[1]
 			varName := match[2]

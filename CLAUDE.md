@@ -145,3 +145,66 @@ The library categorizes input sources by type: `HTTP_GET`, `HTTP_POST`, `HTTP_CO
 - `Explore` (Task tool) → When searching/understanding codebase
 - `feature-dev:code-explorer` → For deep feature analysis
 - `feature-dev:code-architect` → When designing architectures
+
+---
+
+## ENFORCED WORKFLOW - Hooks Will Block You
+
+**These workflows are ENFORCED by global hooks. Skipping steps will BLOCK your actions.**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. BRAINSTORM → 2. PLAN → 3. EXECUTE → 4. MEMORY_CHECK    │
+│       ↓                                                      │
+│  5. SIMPLIFY → 6. INTERACTIVE_TEST → 7. COMPLETE            │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### What Gets Blocked
+
+| Action | Blocked Until |
+|--------|---------------|
+| Edit/Write code files | BRAINSTORM + PLAN complete |
+| Git commit/push | INTERACTIVE_TEST complete |
+
+### The 7 Steps
+
+1. **BRAINSTORM** - Invoke `superpowers:brainstorming`, explore approaches
+2. **PLAN** - Invoke `superpowers:writing-plans`, create numbered steps
+3. **EXECUTE** - Write the implementation code
+4. **MEMORY_CHECK** - Use `memory-optimizer` agent, fix any issues
+5. **SIMPLIFY** - Use `code-simplifier` agent on changed files
+6. **INTERACTIVE_TEST** - Use Playwright + `perfectionist-loop` agent
+7. **COMPLETE** - Final verification, run full test suite
+
+### Workflow Commands
+
+```bash
+# Check current status (visual display)
+~/.claude/scripts/workflow-state.sh status
+
+# See what step is next
+~/.claude/scripts/workflow-state.sh next
+
+# Reset for new task
+~/.claude/scripts/workflow-state.sh reset
+
+# Set task description
+~/.claude/scripts/workflow-state.sh task "Add feature X"
+
+# Mark steps complete
+~/.claude/scripts/workflow-state.sh mark BRAINSTORM
+~/.claude/scripts/workflow-state.sh mark PLAN
+~/.claude/scripts/workflow-state.sh mark EXECUTE
+~/.claude/scripts/workflow-state.sh mark MEMORY_CHECK
+~/.claude/scripts/workflow-state.sh mark SIMPLIFY
+~/.claude/scripts/workflow-state.sh mark INTERACTIVE_TEST
+~/.claude/scripts/workflow-state.sh mark COMPLETE
+```
+
+### Quick Start
+
+Use `/enforced-implementation` to run the complete workflow:
+```
+/enforced-implementation Add feature X
+```

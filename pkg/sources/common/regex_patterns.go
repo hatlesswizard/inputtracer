@@ -28,6 +28,10 @@ var (
 	// e.g., $obj->method(, $request->input(
 	MethodCallPattern = regexp.MustCompile(`\$(\w+)->(\w+)\s*\(`)
 
+	// MethodCallWithArgsPattern matches method calls with string arguments
+	// e.g., $var->method('arg'), $var->method("arg")
+	MethodCallWithArgsPattern = regexp.MustCompile(`\$(\w+)->(\w+)\s*\(\s*['"]([^'"]*)['"]\s*(?:,\s*[^)]+)?\s*\)`)
+
 	// PropertyArrayPattern matches property with array access
 	// e.g., $obj->data['key'], $request->query["param"]
 	PropertyArrayPattern = regexp.MustCompile(`\$(\w+)->(\w+)\[['"]?([\w\-]+)['"]?\]`)
@@ -38,6 +42,9 @@ var (
 )
 
 // Pre-compiled input method patterns
+// NOTE: These are UNIVERSAL patterns that work across any framework.
+// Framework-specific patterns (MyBB, phpBB, WordPress, etc.) should be
+// defined in pkg/sources/{language}/{framework}.go
 var (
 	// InputMethodPattern matches universal PHP input method patterns
 	// e.g., ->get_input(, ->getInput(, ->input(
@@ -48,8 +55,9 @@ var (
 	InputPropertyPattern = regexp.MustCompile(`(?i)->(?:input|request|params?|query|cookies?|headers?|body|data|args?|post|get|files?|server|attributes?|payload)s?\[`)
 
 	// InputObjectPattern matches objects that typically carry user input
-	// e.g., $request, $input, $mybb, ctx, context
-	InputObjectPattern = regexp.MustCompile(`(?i)(request|input|req|params?|http|ctx|context|mybb|getRequest\(\)|getApplication\(\))`)
+	// NOTE: This is GENERIC - framework-specific objects are detected separately
+	// e.g., $request, $input, $ctx, $context
+	InputObjectPattern = regexp.MustCompile(`(?i)(request|input|req|params?|http|ctx|context|getRequest\(\)|getApplication\(\))`)
 )
 
 // Pre-compiled context-dependent method patterns (may or may not indicate input)
@@ -174,13 +182,25 @@ type InputPattern struct {
 
 // PHPInputPatterns contains pre-compiled patterns for PHP input access
 // Used for detecting input sources in expressions without carrier map
+//
+// NOTE: These are GENERIC patterns. Framework-specific patterns (MyBB, WordPress, etc.)
+// are defined in pkg/sources/php/{framework}.go and registered separately.
 var PHPInputPatterns = []InputPattern{
-	{Regex: regexp.MustCompile(`\$mybb->input\[`), Name: "$mybb->input"},
-	{Regex: regexp.MustCompile(`\$mybb->cookies\[`), Name: "$mybb->cookies"},
-	{Regex: regexp.MustCompile(`\$mybb->get_input\(`), Name: "$mybb->get_input()"},
+	// Superglobals - TRUE user input from HTTP request
+	{Regex: regexp.MustCompile(`\$_GET\[`), Name: "$_GET"},
+	{Regex: regexp.MustCompile(`\$_POST\[`), Name: "$_POST"},
+	{Regex: regexp.MustCompile(`\$_REQUEST\[`), Name: "$_REQUEST"},
+	{Regex: regexp.MustCompile(`\$_COOKIE\[`), Name: "$_COOKIE"},
+	{Regex: regexp.MustCompile(`\$_FILES\[`), Name: "$_FILES"},
+	{Regex: regexp.MustCompile(`\$_SERVER\[`), Name: "$_SERVER"},
+	// Generic request object patterns (work across frameworks)
 	{Regex: regexp.MustCompile(`\$request->input\(`), Name: "$request->input()"},
 	{Regex: regexp.MustCompile(`\$request->get\(`), Name: "$request->get()"},
 	{Regex: regexp.MustCompile(`\$request->post\(`), Name: "$request->post()"},
 	{Regex: regexp.MustCompile(`\$request->query\[`), Name: "$request->query"},
-	{Regex: regexp.MustCompile(`\$_REQUEST\[`), Name: "$_REQUEST"},
+	{Regex: regexp.MustCompile(`\$request->all\(`), Name: "$request->all()"},
+	// PSR-7 patterns (universal standard)
+	{Regex: regexp.MustCompile(`->getQueryParams\(`), Name: "->getQueryParams()"},
+	{Regex: regexp.MustCompile(`->getParsedBody\(`), Name: "->getParsedBody()"},
+	{Regex: regexp.MustCompile(`->getCookieParams\(`), Name: "->getCookieParams()"},
 }

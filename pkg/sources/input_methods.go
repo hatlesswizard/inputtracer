@@ -24,42 +24,44 @@ type InputMethod struct {
 
 // InputMethods is the canonical list of input-returning methods
 // Replaces hardcoded patterns in extractor.go isInputMethod() and isInterestingMethod()
+//
+// NOTE: Framework-specific patterns (MyBB, phpBB, WordPress, etc.) should be
+// defined in their respective files under pkg/sources/php/{framework}.go
+// This file contains ONLY generic/universal patterns.
 var InputMethods = []InputMethod{
-	// MyBB specific patterns
-	{VarPattern: "mybb", MethodName: "get_input", Category: CategoryHTTP, SourceType: SourceUserInput, Framework: "mybb", Description: "MyBB input getter"},
-	{VarPattern: "mybb", MethodName: "get_input_array", Category: CategoryHTTP, SourceType: SourceUserInput, Framework: "mybb", Description: "MyBB array input getter"},
-	{VarPattern: "mybb", MethodName: "input", Category: CategoryHTTP, SourceType: SourceUserInput, Framework: "mybb", Description: "MyBB input property"},
-	{VarPattern: "mybb", MethodName: "cookies", Category: CategoryHTTP, SourceType: SourceHTTPCookie, Framework: "mybb", Description: "MyBB cookies property"},
-
-	// phpBB patterns
-	{VarPattern: "request", MethodName: "variable", Category: CategoryHTTP, SourceType: SourceUserInput, Framework: "phpbb", Description: "phpBB request variable"},
-
-	// Generic request patterns
+	// =====================================================
+	// GENERIC REQUEST PATTERNS - Work across any framework
+	// =====================================================
 	{VarPattern: "request", MethodName: "get", Category: CategoryHTTP, SourceType: SourceHTTPGet, Framework: "generic", Description: "Generic GET getter"},
 	{VarPattern: "request", MethodName: "post", Category: CategoryHTTP, SourceType: SourceHTTPPost, Framework: "generic", Description: "Generic POST getter"},
 	{VarPattern: "request", MethodName: "cookie", Category: CategoryHTTP, SourceType: SourceHTTPCookie, Framework: "generic", Description: "Generic cookie getter"},
 	{VarPattern: "request", MethodName: "server", Category: CategoryHTTP, SourceType: SourceHTTPHeader, Framework: "generic", Description: "Generic server var getter"},
 	{VarPattern: "request", MethodName: "header", Category: CategoryHTTP, SourceType: SourceHTTPHeader, Framework: "generic", Description: "Generic header getter"},
+	{VarPattern: "request", MethodName: "input", Category: CategoryHTTP, SourceType: SourceUserInput, Framework: "generic", Description: "Generic input getter"},
+	{VarPattern: "request", MethodName: "all", Category: CategoryHTTP, SourceType: SourceUserInput, Framework: "generic", Description: "Get all input"},
 
-	// Generic patterns (any object)
+	// =====================================================
+	// WILDCARD PATTERNS - Match any object
+	// =====================================================
 	{VarPattern: "*", MethodName: "get", Category: CategoryHTTP, SourceType: SourceHTTPGet, Framework: "generic", Description: "Generic GET method"},
 	{VarPattern: "*", MethodName: "post", Category: CategoryHTTP, SourceType: SourceHTTPPost, Framework: "generic", Description: "Generic POST method"},
 	{VarPattern: "*", MethodName: "cookie", Category: CategoryHTTP, SourceType: SourceHTTPCookie, Framework: "generic", Description: "Generic cookie method"},
 	{VarPattern: "*", MethodName: "header", Category: CategoryHTTP, SourceType: SourceHTTPHeader, Framework: "generic", Description: "Generic header method"},
 	{VarPattern: "*", MethodName: "param", Category: CategoryHTTP, SourceType: SourceUserInput, Framework: "generic", Description: "Generic param method"},
 	{VarPattern: "*", MethodName: "input", Category: CategoryHTTP, SourceType: SourceUserInput, Framework: "generic", Description: "Generic input method"},
-	{VarPattern: "*", MethodName: "request", Category: CategoryHTTP, SourceType: SourceUserInput, Framework: "generic", Description: "Generic request method"},
 	{VarPattern: "*", MethodName: "query", Category: CategoryHTTP, SourceType: SourceHTTPGet, Framework: "generic", Description: "Generic query method"},
 
-	// File operations
+	// =====================================================
+	// FILE OPERATIONS - NOT user input (filesystem, not HTTP)
+	// =====================================================
 	{VarPattern: "*", MethodName: "read", Category: CategoryFile, SourceType: SourceFile, Framework: "generic", Description: "File read"},
-	{VarPattern: "*", MethodName: "write", Category: CategoryFile, SourceType: SourceFile, Framework: "generic", Description: "File write"},
 	{VarPattern: "*", MethodName: "file_get_contents", Category: CategoryFile, SourceType: SourceFile, Framework: "generic", Description: "Get file contents"},
-	{VarPattern: "*", MethodName: "include", Category: CategoryFile, SourceType: SourceFile, Framework: "generic", Description: "File include"},
-	{VarPattern: "*", MethodName: "require", Category: CategoryFile, SourceType: SourceFile, Framework: "generic", Description: "File require"},
 	{VarPattern: "*", MethodName: "fopen", Category: CategoryFile, SourceType: SourceFile, Framework: "generic", Description: "Open file"},
 
-	// Command execution
+	// =====================================================
+	// COMMAND EXECUTION - Tracked for taint propagation
+	// NOTE: These are SINKS, not sources. Kept for compatibility.
+	// =====================================================
 	{VarPattern: "*", MethodName: "exec", Category: CategoryCommand, SourceType: SourceUserInput, Framework: "generic", Description: "Command exec"},
 	{VarPattern: "*", MethodName: "shell_exec", Category: CategoryCommand, SourceType: SourceUserInput, Framework: "generic", Description: "Shell exec"},
 	{VarPattern: "*", MethodName: "system", Category: CategoryCommand, SourceType: SourceUserInput, Framework: "generic", Description: "System call"},

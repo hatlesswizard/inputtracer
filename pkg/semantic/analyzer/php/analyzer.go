@@ -18,15 +18,10 @@ import (
 // PHPAnalyzer implements the LanguageAnalyzer interface for PHP
 type PHPAnalyzer struct {
 	*analyzer.BaseAnalyzer
-	superglobals    map[string]types.SourceType
-	inputFunctions  map[string]types.SourceType
+	superglobals     map[string]types.SourceType
+	inputFunctions   map[string]types.SourceType
 	dbFetchFunctions map[string]bool
-
-	// Universal pattern-based detection (compiled regexes for performance)
-	inputMethodPattern    *regexp.Regexp // Methods that return user input
-	inputPropertyPattern  *regexp.Regexp // Properties that hold user input
-	inputObjectPattern    *regexp.Regexp // Object/variable names that suggest input carrier
-	excludeMethodPattern  *regexp.Regexp // Methods to exclude (database queries, etc.)
+	// Note: Universal pattern-based detection now uses centralized patterns from phpPatterns package
 }
 
 // NewPHPAnalyzer creates a new PHP analyzer
@@ -39,53 +34,14 @@ func NewPHPAnalyzer() *PHPAnalyzer {
 		dbFetchFunctions: m.GetDBFetchFunctionsMap(),
 	}
 
-	// Initialize universal pattern-based detection
-	// These patterns detect input sources across ALL PHP frameworks generically
-	a.initUniversalPatterns()
-
 	// Register framework patterns (kept for backward compatibility)
 	a.registerFrameworkPatterns()
 
 	return a
 }
 
-// initUniversalPatterns initializes regex patterns for universal input detection
-// This approach detects user input sources across ANY PHP framework without
-// requiring framework-specific hardcoding
-func (a *PHPAnalyzer) initUniversalPatterns() {
-	// High-confidence method names that ALWAYS indicate user input
-	// These are specific enough to detect without checking the object name
-	// Pattern matches:
-	// - Explicit input getters: input, get_input, getInput, get_var, variable
-	// - HTTP method getters: getPost, getQuery, getCookie, getHeader, etc.
-	// - PSR-7 methods: getQueryParams, getParsedBody, getCookieParams, etc.
-	// - All input: all()
-	a.inputMethodPattern = regexp.MustCompile(`(?i)^(get_?)?(input|var|variable|query_?params?|parsed_?body|cookie_?params?|server_?params?|uploaded_?files?|headers?|all)$|^(get_?)?(post|cookie|param)s?$`)
-
-	// Property names that typically hold user input (for array access patterns like ->input['key'])
-	// Matches: input, request, params, query, cookies, headers, body, data, args, post, get, files, server
-	// These are properties that typically store user data in framework objects
-	a.inputPropertyPattern = regexp.MustCompile(`(?i)^(input|request|params?|query|cookies?|headers?|body|data|args?|post|get|files?|server|attributes?|payload)s?$`)
-
-	// Object/variable names that suggest the object is an input carrier
-	// These are common names for request objects across frameworks
-	// Also matches chain calls like "->getRequest()" or "Factory::getApplication()->getInput()"
-	a.inputObjectPattern = regexp.MustCompile(`(?i)(request|input|req|params?|http|ctx|context|mybb|getRequest\(\)|getApplication\(\))`)
-
-	// Method names to EXCLUDE from input detection (false positive prevention)
-	// These are methods that might match patterns but aren't typically user input
-	a.excludeMethodPattern = regexp.MustCompile(`(?i)^(getData|getBody|getContent|fetch|find|load|read)$`)
-}
-
-// isContextDependentInputMethod returns true if the method name is a generic getter
-// that should only be detected as user input when called on a request-like object
-func (a *PHPAnalyzer) isContextDependentInputMethod(methodName string) bool {
-	// Methods like getVal, getText, getInt, getBool are used in MediaWiki on request objects
-	// but are also used on many other objects (Title, Message, etc.)
-	// Only detect these when the object looks like a request
-	contextDependent := regexp.MustCompile(`(?i)^(get_?)?(val|text|int|bool|array|raw_?val|check)$`)
-	return contextDependent.MatchString(methodName)
-}
+// Note: Universal pattern detection now uses centralized patterns from phpPatterns package
+// See pkg/sources/php/patterns.go for InputMethodPattern, InputPropertyPattern, etc.
 
 // registerFrameworkPatterns loads PHP framework patterns from pkg/sources/php
 // This centralizes all framework patterns in one place
@@ -1068,8 +1024,8 @@ func (a *PHPAnalyzer) FindInputSources(root *sitter.Node, source []byte) ([]*typ
 		}
 		methodName := analyzer.GetNodeText(nameNode, source)
 
-		// PDO fetch methods
-		if methodName == "fetch" || methodName == "fetchAll" || methodName == "fetchColumn" {
+		// PDO fetch methods - uses centralized patterns
+		if phpPatterns.IsPDOFetchMethod(methodName) {
 			flowNode := &types.FlowNode{
 				ID:         analyzer.GenerateNodeID("", node),
 				Type:       types.NodeSource,
@@ -1083,10 +1039,10 @@ func (a *PHPAnalyzer) FindInputSources(root *sitter.Node, source []byte) ([]*typ
 			sources = append(sources, flowNode)
 		}
 
-		// Universal pattern-based method detection
+		// Universal pattern-based method detection (uses centralized patterns from phpPatterns)
 		// This detects ANY method that looks like an input getter, not just specific frameworks
-		isInputMethod := a.inputMethodPattern.MatchString(methodName)
-		isContextDependent := a.isContextDependentInputMethod(methodName)
+		isInputMethod := phpPatterns.IsInputMethod(methodName)
+		isContextDependent := phpPatterns.IsContextDependentMethod(methodName)
 
 		// For context-dependent methods (like getVal, getText), check if the object
 		// looks like a request carrier before flagging as user input
@@ -1096,15 +1052,15 @@ func (a *PHPAnalyzer) FindInputSources(root *sitter.Node, source []byte) ([]*typ
 			if objNode != nil {
 				objText := analyzer.GetNodeText(objNode, source)
 				// Only detect if the object looks like a request carrier
-				if a.inputObjectPattern.MatchString(objText) {
+				if phpPatterns.IsInputObject(objText) {
 					isInputMethod = true
 				}
 			}
 		}
 
 		if isInputMethod {
-			// Determine source type based on method name hints
-			sourceType := a.inferSourceTypeFromMethodName(methodName)
+			// Determine source type based on method name hints (convert from common.SourceType)
+			sourceType := types.SourceType(phpPatterns.InferSourceTypeFromMethodName(methodName))
 
 			flowNode := &types.FlowNode{
 				ID:         analyzer.GenerateNodeID("", node),
@@ -1151,11 +1107,11 @@ func (a *PHPAnalyzer) FindInputSources(root *sitter.Node, source []byte) ([]*typ
 		}
 		propName := analyzer.GetNodeText(propNameNode, source)
 
-		// Universal pattern-based property detection
+		// Universal pattern-based property detection (uses centralized patterns from phpPatterns)
 		// Matches any property name that looks like it holds user input
-		if a.inputPropertyPattern.MatchString(propName) {
-			// Determine source type based on property name hints
-			sourceType := a.inferSourceTypeFromPropertyName(propName)
+		if phpPatterns.IsInputProperty(propName) {
+			// Determine source type based on property name hints (convert from common.SourceType)
+			sourceType := types.SourceType(phpPatterns.InferSourceTypeFromPropertyName(propName))
 
 			flowNode := &types.FlowNode{
 				ID:         analyzer.GenerateNodeID("", node),
@@ -1211,9 +1167,9 @@ func (a *PHPAnalyzer) FindInputSources(root *sitter.Node, source []byte) ([]*typ
 		propName := analyzer.GetNodeText(propNameNode, source)
 
 		// Check if the object name suggests it's an input carrier
-		// AND the property looks like an input property
-		if a.inputObjectPattern.MatchString(objName) && a.inputPropertyPattern.MatchString(propName) {
-			sourceType := a.inferSourceTypeFromPropertyName(propName)
+		// AND the property looks like an input property (uses centralized patterns)
+		if phpPatterns.IsInputObject(objName) && phpPatterns.IsInputProperty(propName) {
+			sourceType := types.SourceType(phpPatterns.InferSourceTypeFromPropertyName(propName))
 
 			flowNode := &types.FlowNode{
 				ID:         analyzer.GenerateNodeID("", node),
@@ -1233,97 +1189,28 @@ func (a *PHPAnalyzer) FindInputSources(root *sitter.Node, source []byte) ([]*typ
 	return sources, nil
 }
 
-// inferSourceTypeFromMethodName determines the source type based on method name patterns
-func (a *PHPAnalyzer) inferSourceTypeFromMethodName(methodName string) types.SourceType {
-	lowerName := strings.ToLower(methodName)
-
-	// Check for specific type hints in the method name
-	switch {
-	case strings.Contains(lowerName, "cookie"):
-		return types.SourceHTTPCookie
-	case strings.Contains(lowerName, "header"):
-		return types.SourceHTTPHeader
-	case strings.Contains(lowerName, "server"):
-		return types.SourceHTTPHeader
-	case strings.Contains(lowerName, "post") || strings.Contains(lowerName, "body") || strings.Contains(lowerName, "parsed"):
-		return types.SourceHTTPPost
-	case strings.Contains(lowerName, "query") || strings.Contains(lowerName, "get"):
-		return types.SourceHTTPGet
-	case strings.Contains(lowerName, "file") || strings.Contains(lowerName, "upload"):
-		return types.SourceHTTPBody
-	default:
-		return types.SourceUserInput
-	}
-}
-
-// inferSourceTypeFromPropertyName determines the source type based on property name patterns
-func (a *PHPAnalyzer) inferSourceTypeFromPropertyName(propName string) types.SourceType {
-	lowerName := strings.ToLower(propName)
-
-	// Check for specific type hints in the property name
-	switch {
-	case strings.Contains(lowerName, "cookie"):
-		return types.SourceHTTPCookie
-	case strings.Contains(lowerName, "header"):
-		return types.SourceHTTPHeader
-	case strings.Contains(lowerName, "server"):
-		return types.SourceHTTPHeader
-	case strings.Contains(lowerName, "post") || strings.Contains(lowerName, "body"):
-		return types.SourceHTTPPost
-	case strings.Contains(lowerName, "query") || lowerName == "get":
-		return types.SourceHTTPGet
-	case strings.Contains(lowerName, "file"):
-		return types.SourceHTTPBody
-	default:
-		return types.SourceUserInput
-	}
-}
+// Note: inferSourceTypeFromMethodName and inferSourceTypeFromPropertyName
+// have been moved to pkg/sources/php/inference.go for centralization.
+// Use phpPatterns.InferSourceTypeFromMethodName() and phpPatterns.InferSourceTypeFromPropertyName()
+// with type conversion: types.SourceType(phpPatterns.InferSourceTypeFrom*())
 
 // DetectFrameworks detects which PHP frameworks are being used
+// Uses centralized framework detection patterns from phpPatterns package
 func (a *PHPAnalyzer) DetectFrameworks(symbolTable *types.SymbolTable, source []byte) ([]string, error) {
-	var frameworks []string
-
-	// Check imports for framework hints
+	// Extract import paths
+	var imports []string
 	for _, imp := range symbolTable.Imports {
-		path := strings.ToLower(imp.Path)
-
-		if strings.Contains(path, "illuminate") || strings.Contains(path, "laravel") {
-			if !contains(frameworks, "laravel") {
-				frameworks = append(frameworks, "laravel")
-			}
-		}
-		if strings.Contains(path, "symfony") {
-			if !contains(frameworks, "symfony") {
-				frameworks = append(frameworks, "symfony")
-			}
-		}
-		if strings.Contains(path, "codeigniter") || strings.Contains(path, "ci_") {
-			if !contains(frameworks, "codeigniter") {
-				frameworks = append(frameworks, "codeigniter")
-			}
-		}
+		imports = append(imports, imp.Path)
 	}
 
-	// Check class names
+	// Extract class names
+	var classNames []string
 	for className := range symbolTable.Classes {
-		lowerName := strings.ToLower(className)
-		if lowerName == "mybb" {
-			if !contains(frameworks, "mybb") {
-				frameworks = append(frameworks, "mybb")
-			}
-		}
+		classNames = append(classNames, className)
 	}
 
-	// Check for WordPress patterns
-	sourceStr := string(source)
-	if strings.Contains(sourceStr, "wp_") || strings.Contains(sourceStr, "WP_") ||
-		strings.Contains(sourceStr, "WordPress") || strings.Contains(sourceStr, "get_option(") {
-		if !contains(frameworks, "wordpress") {
-			frameworks = append(frameworks, "wordpress")
-		}
-	}
-
-	return frameworks, nil
+	// Use centralized framework detection
+	return phpPatterns.DetectFrameworks(imports, classNames, string(source)), nil
 }
 
 // AnalyzeMethodBody analyzes a method body for data flow
