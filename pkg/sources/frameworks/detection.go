@@ -18,13 +18,8 @@ type FrameworkIndicator struct {
 }
 
 // PHPFrameworkIndicators contains file path indicators for PHP frameworks
+// Note: Only Laravel and Symfony are supported
 var PHPFrameworkIndicators = []FrameworkIndicator{
-	{
-		Framework:   "wordpress",
-		Language:    "php",
-		Indicators:  []string{"wp-config.php", "wp-includes/version.php"},
-		Description: "WordPress CMS",
-	},
 	{
 		Framework:   "laravel",
 		Language:    "php",
@@ -36,36 +31,6 @@ var PHPFrameworkIndicators = []FrameworkIndicator{
 		Language:    "php",
 		Indicators:  []string{"symfony.lock", "config/bundles.php"},
 		Description: "Symfony framework",
-	},
-	{
-		Framework:   "drupal",
-		Language:    "php",
-		Indicators:  []string{"core/includes/bootstrap.inc"},
-		Description: "Drupal CMS",
-	},
-	{
-		Framework:   "yii2",
-		Language:    "php",
-		Indicators:  []string{"yii"},
-		Description: "Yii 2 framework",
-	},
-	{
-		Framework:   "cakephp",
-		Language:    "php",
-		Indicators:  []string{"config/app.php", "src/Application.php"},
-		Description: "CakePHP framework",
-	},
-	{
-		Framework:   "phpbb",
-		Language:    "php",
-		Indicators:  []string{"phpbb/request/request.php"},
-		Description: "phpBB forum software",
-	},
-	{
-		Framework:   "prestashop",
-		Language:    "php",
-		Indicators:  []string{"config/defines.inc.php"},
-		Description: "PrestaShop e-commerce",
 	},
 }
 
@@ -274,30 +239,36 @@ func DetectFramework(codebasePath string) string {
 	return "unknown"
 }
 
-// DetectFrameworkByLanguage detects which framework is being used for a specific language
-func DetectFrameworkByLanguage(codebasePath string, language string) string {
-	var indicators []FrameworkIndicator
-
+// getIndicatorsForLanguage returns framework indicators for a specific language
+func getIndicatorsForLanguage(language string) []FrameworkIndicator {
 	switch language {
 	case "php":
-		indicators = PHPFrameworkIndicators
+		return PHPFrameworkIndicators
 	case "ruby":
-		indicators = RubyFrameworkIndicators
+		return RubyFrameworkIndicators
 	case "javascript", "typescript":
-		indicators = JavaScriptFrameworkIndicators
+		return JavaScriptFrameworkIndicators
 	case "python":
-		indicators = PythonFrameworkIndicators
+		return PythonFrameworkIndicators
 	case "java":
-		indicators = JavaFrameworkIndicators
+		return JavaFrameworkIndicators
 	case "go":
-		indicators = GoFrameworkIndicators
+		return GoFrameworkIndicators
 	case "c_sharp", "csharp":
-		indicators = CSharpFrameworkIndicators
+		return CSharpFrameworkIndicators
 	case "rust":
-		indicators = RustFrameworkIndicators
+		return RustFrameworkIndicators
 	case "cpp", "c++":
-		indicators = CppFrameworkIndicators
+		return CppFrameworkIndicators
 	default:
+		return nil
+	}
+}
+
+// DetectFrameworkByLanguage detects which framework is being used for a specific language
+func DetectFrameworkByLanguage(codebasePath string, language string) string {
+	indicators := getIndicatorsForLanguage(language)
+	if indicators == nil {
 		indicators = AllFrameworkIndicators
 	}
 
@@ -324,28 +295,8 @@ func GetFrameworkIndicators(framework string) []string {
 
 // GetFrameworksForLanguage returns all known frameworks for a language
 func GetFrameworksForLanguage(language string) []string {
-	var indicators []FrameworkIndicator
-
-	switch language {
-	case "php":
-		indicators = PHPFrameworkIndicators
-	case "ruby":
-		indicators = RubyFrameworkIndicators
-	case "javascript", "typescript":
-		indicators = JavaScriptFrameworkIndicators
-	case "python":
-		indicators = PythonFrameworkIndicators
-	case "java":
-		indicators = JavaFrameworkIndicators
-	case "go":
-		indicators = GoFrameworkIndicators
-	case "c_sharp", "csharp":
-		indicators = CSharpFrameworkIndicators
-	case "rust":
-		indicators = RustFrameworkIndicators
-	case "cpp", "c++":
-		indicators = CppFrameworkIndicators
-	default:
+	indicators := getIndicatorsForLanguage(language)
+	if indicators == nil {
 		return nil
 	}
 

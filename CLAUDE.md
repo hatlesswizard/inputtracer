@@ -148,59 +148,33 @@ The library categorizes input sources by type: `HTTP_GET`, `HTTP_POST`, `HTTP_CO
 
 ---
 
-## ENFORCED WORKFLOW - Hooks Will Block You
+## ENFORCED WORKFLOW
 
-**These workflows are ENFORCED by global hooks. Skipping steps will BLOCK your actions.**
+**See `~/.claude/CLAUDE.md` for detailed workflow system documentation** (state machine, blocking rules, auto-marking, recovery procedures).
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  1. BRAINSTORM → 2. PLAN → 3. EXECUTE → 4. MEMORY_CHECK    │
-│       ↓                                                      │
-│  5. SIMPLIFY → 6. INTERACTIVE_TEST → 7. COMPLETE            │
-└─────────────────────────────────────────────────────────────┘
-```
+This project follows the global 7-step workflow with these **project-specific notes**:
 
-### What Gets Blocked
+### InputTracer-Specific Workflow Requirements
 
-| Action | Blocked Until |
-|--------|---------------|
-| Edit/Write code files | BRAINSTORM + PLAN complete |
-| Git commit/push | INTERACTIVE_TEST complete |
+| Step | Project-Specific Requirement |
+|------|------------------------------|
+| **EXECUTE** | Always run `go test ./...` after code changes |
+| **MEMORY_CHECK** | Important - Tree-Sitter parsers can be memory-intensive. Use `memory-optimizer` agent. |
+| **SIMPLIFY** | Focus on `pkg/tracer/` and `pkg/sources/` packages |
+| **INTERACTIVE_TEST** | **Library has no UI** - use test suite verification instead of Playwright |
 
-### The 7 Steps
+### Testing Verification (Libraries)
 
-1. **BRAINSTORM** - Invoke `superpowers:brainstorming`, explore approaches
-2. **PLAN** - Invoke `superpowers:writing-plans`, create numbered steps
-3. **EXECUTE** - Write the implementation code
-4. **MEMORY_CHECK** - Use `memory-optimizer` agent, fix any issues
-5. **SIMPLIFY** - Use `code-simplifier` agent on changed files
-6. **INTERACTIVE_TEST** - Use Playwright + `perfectionist-loop` agent
-7. **COMPLETE** - Final verification, run full test suite
-
-### Workflow Commands
+Since InputTracer is a library without a web UI, verify via comprehensive testing:
 
 ```bash
-# Check current status (visual display)
-~/.claude/scripts/workflow-state.sh status
-
-# See what step is next
-~/.claude/scripts/workflow-state.sh next
-
-# Reset for new task
-~/.claude/scripts/workflow-state.sh reset
-
-# Set task description
-~/.claude/scripts/workflow-state.sh task "Add feature X"
-
-# Mark steps complete
-~/.claude/scripts/workflow-state.sh mark BRAINSTORM
-~/.claude/scripts/workflow-state.sh mark PLAN
-~/.claude/scripts/workflow-state.sh mark EXECUTE
-~/.claude/scripts/workflow-state.sh mark MEMORY_CHECK
-~/.claude/scripts/workflow-state.sh mark SIMPLIFY
-~/.claude/scripts/workflow-state.sh mark INTERACTIVE_TEST
-~/.claude/scripts/workflow-state.sh mark COMPLETE
+go test ./...            # All tests pass
+go test -race ./...      # No race conditions
+go test -bench=. ./...   # Performance acceptable
+go build ./...           # Builds successfully
 ```
+
+When all tests pass, use `superpowers:verification-before-completion` skill to mark INTERACTIVE_TEST complete.
 
 ### Quick Start
 
