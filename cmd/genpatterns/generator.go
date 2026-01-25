@@ -162,6 +162,50 @@ func (g *Generator) writeInit(b *strings.Builder, framework string, fw *Framewor
 	b.WriteString("}\n")
 }
 
+// GenerateWordPress generates wordpress.go content
+func (g *Generator) GenerateWordPress(methods []ParsedMethod, fw *FrameworkDefinition) string {
+	var b strings.Builder
+
+	g.writeHeader(&b, fw, "https://github.com/WordPress/WordPress")
+	g.writePackage(&b)
+	g.writeImport(&b)
+
+	b.WriteString("var wordpressPatterns = []*common.FrameworkPattern{\n")
+
+	for _, m := range methods {
+		sourceType := InferWordPressSourceType(m.Name)
+		populatedFrom := InferPopulatedFrom(sourceType)
+		description := InferDescription(fw.Name, m.Name, false, sourceType)
+		g.writeWordPressPattern(&b, fw, m, sourceType, populatedFrom, description)
+	}
+
+	b.WriteString("}\n\n")
+	g.writeInit(&b, "wordpress", fw)
+
+	return b.String()
+}
+
+func (g *Generator) writeWordPressPattern(b *strings.Builder, fw *FrameworkDefinition, m ParsedMethod, sourceType string, populatedFrom []string, description string) {
+	id := fmt.Sprintf("%s_%s", fw.Name, m.Name)
+	name := fmt.Sprintf("%s $request->%s()", "WordPress", m.Name)
+
+	b.WriteString("\t{\n")
+	b.WriteString(fmt.Sprintf("\t\tID:            %q,\n", id))
+	b.WriteString(fmt.Sprintf("\t\tFramework:     %q,\n", fw.Name))
+	b.WriteString(fmt.Sprintf("\t\tLanguage:      %q,\n", fw.Language))
+	b.WriteString(fmt.Sprintf("\t\tName:          %q,\n", name))
+	b.WriteString(fmt.Sprintf("\t\tDescription:   %q,\n", description))
+	b.WriteString(fmt.Sprintf("\t\tClassPattern:  %q,\n", fw.ClassPattern))
+	b.WriteString(fmt.Sprintf("\t\tMethodPattern: \"^%s$\",\n", m.Name))
+	b.WriteString(fmt.Sprintf("\t\tSourceType:    common.%s,\n", sourceType))
+	b.WriteString(fmt.Sprintf("\t\tCarrierClass:  %q,\n", fw.CarrierClass))
+	if len(populatedFrom) > 0 {
+		b.WriteString(fmt.Sprintf("\t\tPopulatedFrom: []string{%s},\n", g.formatStringSlice(populatedFrom)))
+	}
+	b.WriteString(fmt.Sprintf("\t\tTags:          []string{%s},\n", g.formatStringSlice(fw.Tags)))
+	b.WriteString("\t},\n")
+}
+
 func (g *Generator) formatStringSlice(s []string) string {
 	quoted := make([]string, len(s))
 	for i, v := range s {

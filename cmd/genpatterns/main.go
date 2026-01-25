@@ -18,7 +18,7 @@ func main() {
 	parser := NewParser()
 	generator := NewGenerator()
 
-	frameworks := []string{"laravel", "symfony"}
+	frameworks := []string{"laravel", "symfony", "wordpress"}
 	if *framework != "" {
 		frameworks = []string{*framework}
 	}
@@ -43,6 +43,8 @@ func main() {
 			content = generateLaravel(parser, generator, sources, fw)
 		case "symfony":
 			content = generateSymfony(parser, generator, sources, fw)
+		case "wordpress":
+			content = generateWordPress(parser, generator, sources, fw)
 		}
 
 		outputPath := filepath.Join(*outputDir, fwName+".go")
@@ -88,11 +90,33 @@ func generateSymfony(parser *Parser, generator *Generator, sources map[string]st
 	return generator.GenerateSymfony(filterExcluded(allMethods), allProperties, fw)
 }
 
+func generateWordPress(parser *Parser, generator *Generator, sources map[string]string, fw *FrameworkDefinition) string {
+	var allMethods []ParsedMethod
+
+	// Parse WP_REST_Request methods
+	if src, ok := sources["WP_REST_Request"]; ok {
+		allMethods = append(allMethods, parser.ParseMethods(src, "WP_REST_Request")...)
+	}
+
+	return generator.GenerateWordPress(filterWordPressExcluded(allMethods), fw)
+}
+
 // filterExcluded removes methods that are in the exclusion list
 func filterExcluded(methods []ParsedMethod) []ParsedMethod {
 	var filtered []ParsedMethod
 	for _, m := range methods {
 		if !IsExcluded(m.Name) {
+			filtered = append(filtered, m)
+		}
+	}
+	return filtered
+}
+
+// filterWordPressExcluded removes WordPress-specific excluded methods
+func filterWordPressExcluded(methods []ParsedMethod) []ParsedMethod {
+	var filtered []ParsedMethod
+	for _, m := range methods {
+		if !IsExcluded(m.Name) && !WordPressExcludedMethods[m.Name] {
 			filtered = append(filtered, m)
 		}
 	}

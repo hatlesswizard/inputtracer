@@ -65,6 +65,45 @@ func InferPopulatedFrom(sourceType string) []string {
 	}
 }
 
+// InferWordPressSourceType determines SourceType for WordPress REST API methods
+func InferWordPressSourceType(name string) string {
+	lower := strings.ToLower(name)
+
+	// Exact matches for WordPress methods
+	switch lower {
+	case "get_query_params":
+		return "SourceHTTPGet"
+	case "get_body_params":
+		return "SourceHTTPPost"
+	case "get_json_params":
+		return "SourceHTTPBody"
+	case "get_body":
+		return "SourceHTTPBody"
+	case "get_file_params":
+		return "SourceHTTPFile"
+	case "get_header", "get_headers":
+		return "SourceHTTPHeader"
+	case "get_param", "get_params", "get_default_params":
+		return "SourceUserInput"
+	}
+
+	// Partial matches
+	switch {
+	case strings.Contains(lower, "query"):
+		return "SourceHTTPGet"
+	case strings.Contains(lower, "body"):
+		return "SourceHTTPBody"
+	case strings.Contains(lower, "file"):
+		return "SourceHTTPFile"
+	case strings.Contains(lower, "header"):
+		return "SourceHTTPHeader"
+	case strings.Contains(lower, "cookie"):
+		return "SourceHTTPCookie"
+	default:
+		return "SourceUserInput"
+	}
+}
+
 // InferDescription generates a description for the method based on framework and type.
 func InferDescription(framework, methodName string, isProperty bool, sourceType string) string {
 	var typeDesc string

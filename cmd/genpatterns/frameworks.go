@@ -54,6 +54,46 @@ var Frameworks = map[string]*FrameworkDefinition{
 			{URL: "https://raw.githubusercontent.com/symfony/http-foundation/7.3/Request.php", ClassName: "Request"},
 		},
 	},
+	"wordpress": {
+		Name:            "wordpress",
+		Language:        "php",
+		CarrierClass:    "WP_REST_Request",
+		ClassPattern:    "^WP_REST_Request$",
+		Tags:            []string{"cms", "rest-api", "generated"},
+		FrameworkDetect: []string{"wp-config.php", "wp-content/", "wp-includes/", "wp-admin/"},
+		Sources: []FrameworkSource{
+			{URL: "https://raw.githubusercontent.com/WordPress/WordPress/master/wp-includes/rest-api/class-wp-rest-request.php", ClassName: "WP_REST_Request"},
+		},
+	},
+}
+
+// WordPressExcludedMethods are WordPress-specific methods that don't return user input
+var WordPressExcludedMethods = map[string]bool{
+	// Route/URL metadata
+	"get_route":           true,
+	"get_method":          true,
+	"get_url_params":      true, // URL params are route params, not user input
+	"get_attributes":      true,
+	"set_url_params":      true,
+	"set_query_params":    true,
+	"set_body_params":     true,
+	"set_file_params":     true,
+	"set_headers":         true,
+	"set_body":            true,
+	"set_method":          true,
+	"set_route":           true,
+	"set_attributes":      true,
+	"add_header":          true,
+	"remove_header":       true,
+	"set_param":           true,
+	"set_default_params":  true,
+	// Checks
+	"has_param":           true,
+	"has_valid_params":    true,
+	"sanitize_params":     true,
+	// Content type
+	"get_content_type":    true,
+	"is_json_content_type": true,
 }
 
 // SymfonyPropertyMappings maps Symfony Request public properties
