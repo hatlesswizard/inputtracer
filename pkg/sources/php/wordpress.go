@@ -25,7 +25,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceUserInput,
 		CarrierClass:  "WP_REST_Request",
 		PopulatedFrom: []string{"$_GET", "$_POST", "php://input"},
-		Confidence:    1.0,
 		Tags:          []string{"rest-api", "modern"},
 	},
 	{
@@ -39,7 +38,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceUserInput,
 		CarrierClass:  "WP_REST_Request",
 		PopulatedFrom: []string{"$_GET", "$_POST", "php://input"},
-		Confidence:    1.0,
 		Tags:          []string{"rest-api", "modern"},
 	},
 	{
@@ -53,7 +51,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPGet,
 		CarrierClass:  "WP_REST_Request",
 		PopulatedFrom: []string{"$_GET"},
-		Confidence:    1.0,
 		Tags:          []string{"rest-api", "modern"},
 	},
 	{
@@ -67,7 +64,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPPost,
 		CarrierClass:  "WP_REST_Request",
 		PopulatedFrom: []string{"$_POST"},
-		Confidence:    1.0,
 		Tags:          []string{"rest-api", "modern"},
 	},
 	{
@@ -81,7 +77,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPJSON,
 		CarrierClass:  "WP_REST_Request",
 		PopulatedFrom: []string{"php://input"},
-		Confidence:    1.0,
 		Tags:          []string{"rest-api", "modern", "json"},
 	},
 	{
@@ -95,7 +90,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPBody,
 		CarrierClass:  "WP_REST_Request",
 		PopulatedFrom: []string{"php://input"},
-		Confidence:    1.0,
 		Tags:          []string{"rest-api", "modern"},
 	},
 	{
@@ -109,7 +103,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPFile,
 		CarrierClass:  "WP_REST_Request",
 		PopulatedFrom: []string{"$_FILES"},
-		Confidence:    1.0,
 		Tags:          []string{"rest-api", "modern", "upload"},
 	},
 	{
@@ -123,7 +116,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPHeader,
 		CarrierClass:  "WP_REST_Request",
 		PopulatedFrom: []string{"$_SERVER"},
-		Confidence:    1.0,
 		Tags:          []string{"rest-api", "modern"},
 	},
 	{
@@ -137,7 +129,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPHeader,
 		CarrierClass:  "WP_REST_Request",
 		PopulatedFrom: []string{"$_SERVER"},
-		Confidence:    1.0,
 		Tags:          []string{"rest-api", "modern"},
 	},
 	{
@@ -150,7 +141,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^get_url_params$",
 		SourceType:    common.SourceHTTPPath,
 		CarrierClass:  "WP_REST_Request",
-		Confidence:    1.0,
 		Tags:          []string{"rest-api", "modern"},
 	},
 
@@ -166,7 +156,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_REQUEST"},
-		Confidence:    1.0,
 		Tags:          []string{"ajax", "legacy"},
 	},
 
@@ -182,7 +171,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceHTTPPost,
 		PopulatedFrom: []string{"$_POST"},
-		Confidence:    1.0,
 		Tags:          []string{"form", "traditional"},
 	},
 	{
@@ -194,7 +182,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"$_GET"},
-		Confidence:    1.0,
 		Tags:          []string{"query", "traditional"},
 	},
 
@@ -210,7 +197,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		Description:   "PHP filter_input retrieves external variable",
 		MethodPattern: "^filter_input$",
 		SourceType:    common.SourceUserInput,
-		Confidence:    1.0,
 		Tags:          []string{"filter", "validation"},
 	},
 	{
@@ -221,7 +207,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		Description:   "PHP filter_input_array retrieves multiple external variables",
 		MethodPattern: "^filter_input_array$",
 		SourceType:    common.SourceUserInput,
-		Confidence:    1.0,
 		Tags:          []string{"filter", "validation"},
 	},
 
@@ -237,7 +222,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceHTTPCookie,
 		PopulatedFrom: []string{"$_COOKIE"},
-		Confidence:    1.0,
 		Tags:          []string{"cookie", "session"},
 	},
 
@@ -253,7 +237,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceHTTPFile,
 		PopulatedFrom: []string{"$_FILES"},
-		Confidence:    1.0,
 		Tags:          []string{"upload", "media"},
 	},
 	{
@@ -265,7 +248,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^wp_handle_upload$",
 		SourceType:    common.SourceHTTPFile,
 		PopulatedFrom: []string{"$_FILES"},
-		Confidence:    1.0,
 		Tags:          []string{"upload", "media"},
 	},
 
@@ -281,7 +263,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceHTTPPath,
 		PopulatedFrom: []string{"$_SERVER['REQUEST_URI']"},
-		Confidence:    0.95,
 		Tags:          []string{"server", "path"},
 	},
 	{
@@ -293,7 +274,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"$_SERVER['QUERY_STRING']"},
-		Confidence:    0.95,
 		Tags:          []string{"server", "query"},
 	},
 	{
@@ -305,7 +285,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceHTTPHeader,
 		PopulatedFrom: []string{"$_SERVER['HTTP_REFERER']"},
-		Confidence:    0.9,
 		Tags:          []string{"server", "header"},
 	},
 	{
@@ -317,7 +296,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceHTTPHeader,
 		PopulatedFrom: []string{"$_SERVER['HTTP_USER_AGENT']"},
-		Confidence:    0.9,
 		Tags:          []string{"server", "header"},
 	},
 
@@ -339,7 +317,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^wp_unslash$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST", "$_COOKIE"},
-		Confidence:    1.0,
 		Tags:          []string{"input-processing", "sanitization"},
 	},
 
@@ -353,7 +330,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^stripslashes_deep$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    0.9,
 		Tags:          []string{"input-processing", "sanitization"},
 	},
 
@@ -371,7 +347,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^sanitize_text_field$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    1.0,
 		Tags:          []string{"sanitization", "common"},
 	},
 	{
@@ -383,7 +358,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^sanitize_textarea_field$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    1.0,
 		Tags:          []string{"sanitization"},
 	},
 	{
@@ -395,7 +369,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^sanitize_email$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    1.0,
 		Tags:          []string{"sanitization"},
 	},
 	{
@@ -407,7 +380,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^sanitize_file_name$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_FILES"},
-		Confidence:    1.0,
 		Tags:          []string{"sanitization", "upload"},
 	},
 	{
@@ -419,7 +391,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^sanitize_key$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    1.0,
 		Tags:          []string{"sanitization"},
 	},
 	{
@@ -431,7 +402,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^sanitize_title$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    0.95,
 		Tags:          []string{"sanitization"},
 	},
 	{
@@ -443,7 +413,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^sanitize_url$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    1.0,
 		Tags:          []string{"sanitization"},
 	},
 	{
@@ -455,7 +424,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^esc_url_raw$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    1.0,
 		Tags:          []string{"sanitization"},
 	},
 	{
@@ -467,7 +435,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^absint$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    1.0,
 		Tags:          []string{"sanitization", "integer"},
 	},
 	{
@@ -479,7 +446,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^intval$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    0.8, // Lower confidence - could be non-input
 		Tags:          []string{"sanitization", "integer"},
 	},
 
@@ -496,7 +462,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^wp_parse_args$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    0.85,
 		Tags:          []string{"args", "parsing"},
 	},
 	{
@@ -507,7 +472,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		Description:   "WordPress shortcode attributes - processes user-provided shortcode attrs",
 		MethodPattern: "^shortcode_atts$",
 		SourceType:    common.SourceUserInput,
-		Confidence:    0.9,
 		Tags:          []string{"shortcode", "parsing"},
 	},
 
@@ -526,7 +490,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceUserInput,
 		CarrierClass:  "WP_REST_Request",
 		PopulatedFrom: []string{"$_GET", "$_POST", "php://input"},
-		Confidence:    1.0,
 		Tags:          []string{"rest-api", "array-access"},
 	},
 	{
@@ -540,7 +503,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceUserInput,
 		CarrierClass:  "WP_REST_Request",
 		PopulatedFrom: []string{"$_GET", "$_POST", "php://input"},
-		Confidence:    1.0,
 		Tags:          []string{"rest-api", "array-access"},
 	},
 	{
@@ -553,7 +515,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^has_param$",
 		SourceType:    common.SourceUserInput,
 		CarrierClass:  "WP_REST_Request",
-		Confidence:    0.8,
 		Tags:          []string{"rest-api"},
 	},
 	{
@@ -566,7 +527,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^get_default_params$",
 		SourceType:    common.SourceUserInput,
 		CarrierClass:  "WP_REST_Request",
-		Confidence:    0.7,
 		Tags:          []string{"rest-api"},
 	},
 
@@ -583,7 +543,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^check_ajax_referer$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_POST", "$_GET", "$_REQUEST"},
-		Confidence:    0.9,
 		Tags:          []string{"ajax", "security", "nonce"},
 	},
 	{
@@ -595,7 +554,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^wp_verify_nonce$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_POST", "$_GET", "$_REQUEST"},
-		Confidence:    0.85,
 		Tags:          []string{"security", "nonce"},
 	},
 
@@ -611,7 +569,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^media_handle_upload$",
 		SourceType:    common.SourceHTTPFile,
 		PopulatedFrom: []string{"$_FILES"},
-		Confidence:    1.0,
 		Tags:          []string{"upload", "media"},
 	},
 	{
@@ -623,7 +580,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^wp_handle_sideload$",
 		SourceType:    common.SourceHTTPFile,
 		PopulatedFrom: []string{"$_FILES"},
-		Confidence:    1.0,
 		Tags:          []string{"upload", "sideload"},
 	},
 
@@ -639,7 +595,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceHTTPPath,
 		PopulatedFrom: []string{"$_SERVER['PHP_SELF']"},
-		Confidence:    0.95,
 		Tags:          []string{"server", "path", "xss-risk"},
 	},
 	{
@@ -651,7 +606,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceHTTPPath,
 		PopulatedFrom: []string{"$_SERVER['PATH_INFO']"},
-		Confidence:    0.95,
 		Tags:          []string{"server", "path"},
 	},
 	{
@@ -663,7 +617,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceHTTPHeader,
 		PopulatedFrom: []string{"$_SERVER['HTTP_HOST']"},
-		Confidence:    0.9,
 		Tags:          []string{"server", "header"},
 	},
 	{
@@ -675,7 +628,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceHTTPHeader,
 		PopulatedFrom: []string{"$_SERVER['CONTENT_TYPE']"},
-		Confidence:    0.85,
 		Tags:          []string{"server", "header"},
 	},
 	{
@@ -687,7 +639,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceHTTPHeader,
 		PopulatedFrom: []string{"$_SERVER['HTTP_AUTHORIZATION']"},
-		Confidence:    1.0,
 		Tags:          []string{"server", "header", "auth"},
 	},
 	{
@@ -699,7 +650,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceHTTPHeader,
 		PopulatedFrom: []string{"$_SERVER['HTTP_X_FORWARDED_FOR']"},
-		Confidence:    0.9,
 		Tags:          []string{"server", "header", "proxy"},
 	},
 
@@ -716,7 +666,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^get_query_var$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"$_GET", "$_SERVER['REQUEST_URI']"},
-		Confidence:    0.9,
 		Tags:          []string{"query", "url"},
 	},
 	{
@@ -728,7 +677,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		ClassPattern:  "^WP_Query$",
 		MethodPattern: "^get$",
 		SourceType:    common.SourceHTTPGet,
-		Confidence:    0.85,
 		Tags:          []string{"query"},
 	},
 
@@ -745,7 +693,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^sanitize_user$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    1.0,
 		Tags:          []string{"sanitization", "user"},
 	},
 	{
@@ -757,7 +704,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^sanitize_html_class$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    0.9,
 		Tags:          []string{"sanitization"},
 	},
 	{
@@ -769,7 +715,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^sanitize_mime_type$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_FILES", "$_POST"},
-		Confidence:    0.95,
 		Tags:          []string{"sanitization", "upload"},
 	},
 	{
@@ -781,7 +726,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^wp_kses$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    1.0,
 		Tags:          []string{"sanitization", "html"},
 	},
 	{
@@ -793,7 +737,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^wp_kses_post$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    1.0,
 		Tags:          []string{"sanitization", "html"},
 	},
 	{
@@ -805,7 +748,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^wp_kses_data$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    1.0,
 		Tags:          []string{"sanitization", "html"},
 	},
 	{
@@ -817,7 +759,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^map_deep$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_GET", "$_POST", "$_REQUEST"},
-		Confidence:    0.85,
 		Tags:          []string{"sanitization", "array"},
 	},
 
@@ -832,7 +773,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		Description:   "WordPress HTTP API response body - external data (NOT direct user input)",
 		MethodPattern: "^wp_remote_retrieve_body$",
 		SourceType:    common.SourceNetwork,
-		Confidence:    0.7,
 		Tags:          []string{"http", "external"},
 	},
 
@@ -848,7 +788,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceHTTPPost,
 		PopulatedFrom: []string{"$_POST"},
-		Confidence:    0.9,
 		Tags:          []string{"form", "check"},
 	},
 	{
@@ -860,7 +799,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		AccessPattern: "superglobal",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_REQUEST"},
-		Confidence:    0.85,
 		Tags:          []string{"check"},
 	},
 
@@ -876,7 +814,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^wp_doing_ajax$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"$_REQUEST"},
-		Confidence:    0.7,
 		Tags:          []string{"ajax", "context"},
 	},
 
@@ -892,7 +829,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^wp_check_filetype$",
 		SourceType:    common.SourceHTTPFile,
 		PopulatedFrom: []string{"$_FILES"},
-		Confidence:    0.95,
 		Tags:          []string{"upload", "validation"},
 	},
 	{
@@ -904,7 +840,6 @@ var wordpressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^wp_check_filetype_and_ext$",
 		SourceType:    common.SourceHTTPFile,
 		PopulatedFrom: []string{"$_FILES"},
-		Confidence:    0.95,
 		Tags:          []string{"upload", "validation"},
 	},
 }

@@ -19,7 +19,6 @@ var cgiPatterns = []*common.FrameworkPattern{
 		Description:    "CGI query string environment variable",
 		PropertyPattern: "^QUERY_STRING$",
 		SourceType:     common.SourceHTTPGet,
-		Confidence:     1.0,
 		Tags:           []string{"cgi", "web", "legacy"},
 	},
 	{
@@ -30,7 +29,6 @@ var cgiPatterns = []*common.FrameworkPattern{
 		Description:    "CGI content length environment variable",
 		PropertyPattern: "^CONTENT_LENGTH$",
 		SourceType:     common.SourceHTTPBody,
-		Confidence:     1.0,
 		Tags:           []string{"cgi", "web", "legacy"},
 	},
 	{
@@ -41,7 +39,6 @@ var cgiPatterns = []*common.FrameworkPattern{
 		Description:    "CGI content type environment variable",
 		PropertyPattern: "^CONTENT_TYPE$",
 		SourceType:     common.SourceHTTPHeader,
-		Confidence:     1.0,
 		Tags:           []string{"cgi", "web", "legacy"},
 	},
 	{
@@ -52,7 +49,6 @@ var cgiPatterns = []*common.FrameworkPattern{
 		Description:    "CGI HTTP cookie environment variable",
 		PropertyPattern: "^HTTP_COOKIE$",
 		SourceType:     common.SourceHTTPCookie,
-		Confidence:     1.0,
 		Tags:           []string{"cgi", "web", "legacy"},
 	},
 	{
@@ -63,7 +59,6 @@ var cgiPatterns = []*common.FrameworkPattern{
 		Description:    "CGI request method environment variable",
 		PropertyPattern: "^REQUEST_METHOD$",
 		SourceType:     common.SourceHTTPHeader,
-		Confidence:     1.0,
 		Tags:           []string{"cgi", "web", "legacy"},
 	},
 	{
@@ -74,7 +69,6 @@ var cgiPatterns = []*common.FrameworkPattern{
 		Description:    "CGI path info environment variable",
 		PropertyPattern: "^PATH_INFO$",
 		SourceType:     common.SourceHTTPPath,
-		Confidence:     1.0,
 		Tags:           []string{"cgi", "web", "legacy"},
 	},
 	{
@@ -85,7 +79,6 @@ var cgiPatterns = []*common.FrameworkPattern{
 		Description:    "CGI remote address environment variable",
 		PropertyPattern: "^REMOTE_ADDR$",
 		SourceType:     common.SourceNetwork,
-		Confidence:     1.0,
 		Tags:           []string{"cgi", "web", "legacy"},
 	},
 	{
@@ -96,7 +89,6 @@ var cgiPatterns = []*common.FrameworkPattern{
 		Description:    "CGI user agent environment variable",
 		PropertyPattern: "^HTTP_USER_AGENT$",
 		SourceType:     common.SourceHTTPHeader,
-		Confidence:     1.0,
 		Tags:           []string{"cgi", "web", "legacy"},
 	},
 	{
@@ -107,7 +99,6 @@ var cgiPatterns = []*common.FrameworkPattern{
 		Description:    "CGI referer environment variable",
 		PropertyPattern: "^HTTP_REFERER$",
 		SourceType:     common.SourceHTTPHeader,
-		Confidence:     1.0,
 		Tags:           []string{"cgi", "web", "legacy"},
 	},
 	{
@@ -118,7 +109,6 @@ var cgiPatterns = []*common.FrameworkPattern{
 		Description:    "CGI host environment variable",
 		PropertyPattern: "^HTTP_HOST$",
 		SourceType:     common.SourceHTTPHeader,
-		Confidence:     1.0,
 		Tags:           []string{"cgi", "web", "legacy"},
 	},
 }
@@ -133,7 +123,6 @@ var corePatterns = []*common.FrameworkPattern{
 		Description:   "Command line arguments array",
 		PropertyPattern: "^argv$",
 		SourceType:   common.SourceCLIArg,
-		Confidence:   1.0,
 		Tags:         []string{"cli", "core"},
 	},
 	{
@@ -144,7 +133,6 @@ var corePatterns = []*common.FrameworkPattern{
 		Description:   "Command line argument count",
 		PropertyPattern: "^argc$",
 		SourceType:   common.SourceCLIArg,
-		Confidence:   1.0,
 		Tags:         []string{"cli", "core"},
 	},
 	{
@@ -155,7 +143,6 @@ var corePatterns = []*common.FrameworkPattern{
 		Description:   "Environment variables array (main parameter)",
 		PropertyPattern: "^envp$",
 		SourceType:   common.SourceEnvVar,
-		Confidence:   1.0,
 		Tags:         []string{"environment", "core"},
 	},
 	{
@@ -166,7 +153,6 @@ var corePatterns = []*common.FrameworkPattern{
 		Description:   "Global environment variables array",
 		PropertyPattern: "^environ$",
 		SourceType:   common.SourceEnvVar,
-		Confidence:   1.0,
 		Tags:         []string{"environment", "core"},
 	},
 	{
@@ -177,7 +163,6 @@ var corePatterns = []*common.FrameworkPattern{
 		Description:   "Standard input stream",
 		PropertyPattern: "^stdin$",
 		SourceType:   common.SourceStdin,
-		Confidence:   1.0,
 		Tags:         []string{"stdin", "core"},
 	},
 }
@@ -193,7 +178,6 @@ var inputFunctionPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^getenv$",
 		SourceType:   common.SourceEnvVar,
 		SourceKey:    `getenv\s*\(\s*"([^"]+)"`,
-		Confidence:   1.0,
 		Tags:         []string{"environment", "core"},
 	},
 	{
@@ -204,7 +188,6 @@ var inputFunctionPatterns = []*common.FrameworkPattern{
 		Description:   "Read string from stdin (unsafe, deprecated)",
 		MethodPattern: "^gets$",
 		SourceType:   common.SourceStdin,
-		Confidence:   1.0,
 		Tags:         []string{"stdin", "core", "unsafe"},
 	},
 	{
@@ -215,7 +198,6 @@ var inputFunctionPatterns = []*common.FrameworkPattern{
 		Description:   "Read string from stream",
 		MethodPattern: "^fgets$",
 		SourceType:   common.SourceUserInput,
-		Confidence:   0.9,
 		Tags:         []string{"stdin", "file", "core"},
 	},
 	{
@@ -226,7 +208,6 @@ var inputFunctionPatterns = []*common.FrameworkPattern{
 		Description:   "Formatted input from stdin",
 		MethodPattern: "^scanf$",
 		SourceType:   common.SourceStdin,
-		Confidence:   1.0,
 		Tags:         []string{"stdin", "core"},
 	},
 	{
@@ -237,7 +218,6 @@ var inputFunctionPatterns = []*common.FrameworkPattern{
 		Description:   "Formatted input from stream",
 		MethodPattern: "^fscanf$",
 		SourceType:   common.SourceUserInput,
-		Confidence:   0.9,
 		Tags:         []string{"stdin", "file", "core"},
 	},
 	{
@@ -248,7 +228,6 @@ var inputFunctionPatterns = []*common.FrameworkPattern{
 		Description:   "Read single character from stdin",
 		MethodPattern: "^getchar$",
 		SourceType:   common.SourceStdin,
-		Confidence:   1.0,
 		Tags:         []string{"stdin", "core"},
 	},
 	{
@@ -259,7 +238,6 @@ var inputFunctionPatterns = []*common.FrameworkPattern{
 		Description:   "Binary read from stream",
 		MethodPattern: "^fread$",
 		SourceType:   common.SourceFile,
-		Confidence:   0.9,
 		Tags:         []string{"file", "core"},
 	},
 	{
@@ -270,7 +248,6 @@ var inputFunctionPatterns = []*common.FrameworkPattern{
 		Description:   "POSIX read from file descriptor",
 		MethodPattern: "^read$",
 		SourceType:   common.SourceUserInput,
-		Confidence:   0.85,
 		Tags:         []string{"file", "network", "core"},
 	},
 	{
@@ -281,7 +258,6 @@ var inputFunctionPatterns = []*common.FrameworkPattern{
 		Description:   "Receive data from socket",
 		MethodPattern: "^recv$",
 		SourceType:   common.SourceNetwork,
-		Confidence:   1.0,
 		Tags:         []string{"network", "core"},
 	},
 	{
@@ -292,7 +268,6 @@ var inputFunctionPatterns = []*common.FrameworkPattern{
 		Description:   "Receive data from socket with address",
 		MethodPattern: "^recvfrom$",
 		SourceType:   common.SourceNetwork,
-		Confidence:   1.0,
 		Tags:         []string{"network", "core"},
 	},
 }

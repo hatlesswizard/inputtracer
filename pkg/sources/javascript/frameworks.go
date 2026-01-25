@@ -120,23 +120,6 @@ func IsNetworkResponse(expr string) bool {
 	return NetworkResponsePattern.MatchString(expr)
 }
 
-// GetInputConfidence returns confidence score based on method context
-func GetInputConfidence(methodName string, objectName string) float64 {
-	// High confidence for explicit input methods on request objects
-	if InputMethodPattern.MatchString(methodName) && InputObjectPattern.MatchString(objectName) {
-		return 0.95
-	}
-	// High confidence for DOM sources
-	if DOMSourcePattern.MatchString(methodName) || DOMSourcePattern.MatchString(objectName) {
-		return 0.9
-	}
-	// Medium confidence for network responses
-	if NetworkResponsePattern.MatchString(methodName) {
-		return 0.8
-	}
-	return 0.5
-}
-
 // GetAllPatterns returns all registered framework patterns
 func GetAllPatterns() []*common.FrameworkPattern {
 	return Registry.GetAll()
@@ -177,7 +160,6 @@ var domPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^search$",
 		SourceType:      common.SourceHTTPGet,
 		PopulatedFrom:   []string{"URL query string"},
-		Confidence:      0.95,
 		Tags:            []string{"browser", "dom"},
 	},
 	{
@@ -189,7 +171,6 @@ var domPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^hash$",
 		SourceType:      common.SourceUserInput,
 		PopulatedFrom:   []string{"URL fragment"},
-		Confidence:      0.95,
 		Tags:            []string{"browser", "dom"},
 	},
 	{
@@ -201,7 +182,6 @@ var domPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^href$",
 		SourceType:      common.SourceUserInput,
 		PopulatedFrom:   []string{"URL"},
-		Confidence:      0.9,
 		Tags:            []string{"browser", "dom"},
 	},
 	{
@@ -213,7 +193,6 @@ var domPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^cookie$",
 		SourceType:      common.SourceHTTPCookie,
 		PopulatedFrom:   []string{"HTTP Cookie header"},
-		Confidence:      0.95,
 		Tags:            []string{"browser", "dom"},
 	},
 	{
@@ -225,7 +204,6 @@ var domPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^referrer$",
 		SourceType:      common.SourceUserInput,
 		PopulatedFrom:   []string{"HTTP Referer header"},
-		Confidence:      0.85,
 		Tags:            []string{"browser", "dom"},
 	},
 	{
@@ -237,7 +215,6 @@ var domPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^URL$",
 		SourceType:      common.SourceUserInput,
 		PopulatedFrom:   []string{"URL"},
-		Confidence:      0.9,
 		Tags:            []string{"browser", "dom"},
 	},
 	{
@@ -249,7 +226,6 @@ var domPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^value$",
 		SourceType:      common.SourceUserInput,
 		PopulatedFrom:   []string{"Form input"},
-		Confidence:      0.95,
 		Tags:            []string{"browser", "dom", "form"},
 	},
 }
@@ -265,7 +241,6 @@ var fetchPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^json$",
 		SourceType:    common.SourceNetwork,
 		PopulatedFrom: []string{"HTTP response body"},
-		Confidence:    0.8,
 		Tags:          []string{"browser", "network"},
 	},
 	{
@@ -277,7 +252,6 @@ var fetchPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^text$",
 		SourceType:    common.SourceNetwork,
 		PopulatedFrom: []string{"HTTP response body"},
-		Confidence:    0.8,
 		Tags:          []string{"browser", "network"},
 	},
 	{
@@ -289,7 +263,6 @@ var fetchPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^formData$",
 		SourceType:    common.SourceNetwork,
 		PopulatedFrom: []string{"HTTP response body"},
-		Confidence:    0.8,
 		Tags:          []string{"browser", "network"},
 	},
 	{
@@ -301,7 +274,6 @@ var fetchPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^blob$",
 		SourceType:    common.SourceNetwork,
 		PopulatedFrom: []string{"HTTP response body"},
-		Confidence:    0.8,
 		Tags:          []string{"browser", "network"},
 	},
 	{
@@ -313,7 +285,6 @@ var fetchPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^arrayBuffer$",
 		SourceType:    common.SourceNetwork,
 		PopulatedFrom: []string{"HTTP response body"},
-		Confidence:    0.8,
 		Tags:          []string{"browser", "network"},
 	},
 }
@@ -329,7 +300,6 @@ var xhrPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^response$",
 		SourceType:      common.SourceNetwork,
 		PopulatedFrom:   []string{"HTTP response body"},
-		Confidence:      0.8,
 		Tags:            []string{"browser", "network"},
 	},
 	{
@@ -341,7 +311,6 @@ var xhrPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^responseText$",
 		SourceType:      common.SourceNetwork,
 		PopulatedFrom:   []string{"HTTP response body"},
-		Confidence:      0.8,
 		Tags:            []string{"browser", "network"},
 	},
 	{
@@ -353,7 +322,6 @@ var xhrPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^responseXML$",
 		SourceType:      common.SourceNetwork,
 		PopulatedFrom:   []string{"HTTP response body"},
-		Confidence:      0.8,
 		Tags:            []string{"browser", "network"},
 	},
 }
@@ -369,7 +337,6 @@ var urlSearchParamsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^get$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"URL query string"},
-		Confidence:    0.9,
 		Tags:          []string{"browser", "url"},
 	},
 	{
@@ -381,7 +348,6 @@ var urlSearchParamsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^getAll$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"URL query string"},
-		Confidence:    0.9,
 		Tags:          []string{"browser", "url"},
 	},
 }
@@ -397,7 +363,6 @@ var formDataPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^get$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"Form input"},
-		Confidence:    0.9,
 		Tags:          []string{"browser", "form"},
 	},
 	{
@@ -409,7 +374,6 @@ var formDataPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^getAll$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"Form input"},
-		Confidence:    0.9,
 		Tags:          []string{"browser", "form"},
 	},
 }
@@ -425,7 +389,6 @@ var nodePatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^argv$",
 		SourceType:      common.SourceCLIArg,
 		PopulatedFrom:   []string{"Command line"},
-		Confidence:      0.95,
 		Tags:            []string{"node", "cli"},
 	},
 	{
@@ -437,7 +400,6 @@ var nodePatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^env$",
 		SourceType:      common.SourceEnvVar,
 		PopulatedFrom:   []string{"Environment"},
-		Confidence:      0.95,
 		Tags:            []string{"node", "environment"},
 	},
 	{
@@ -449,7 +411,6 @@ var nodePatterns = []*common.FrameworkPattern{
 		MethodPattern: "^readFile(Sync)?$",
 		SourceType:    common.SourceFile,
 		PopulatedFrom: []string{"File system"},
-		Confidence:    0.85,
 		Tags:          []string{"node", "file"},
 	},
 	{
@@ -461,7 +422,6 @@ var nodePatterns = []*common.FrameworkPattern{
 		MethodPattern: "^question$",
 		SourceType:    common.SourceStdin,
 		PopulatedFrom: []string{"Standard input"},
-		Confidence:    0.9,
 		Tags:          []string{"node", "stdin"},
 	},
 }

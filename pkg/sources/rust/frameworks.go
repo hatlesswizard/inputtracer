@@ -19,7 +19,6 @@ var actixPatterns = []*common.FrameworkPattern{
 		Description:  "Actix-web query string extractor",
 		ClassPattern: "^web::Query$",
 		SourceType:   common.SourceHTTPGet,
-		Confidence:   1.0,
 		Tags:         []string{"web", "async", "popular"},
 	},
 	{
@@ -30,7 +29,6 @@ var actixPatterns = []*common.FrameworkPattern{
 		Description:  "Actix-web form data extractor",
 		ClassPattern: "^web::Form$",
 		SourceType:   common.SourceHTTPPost,
-		Confidence:   1.0,
 		Tags:         []string{"web", "async", "popular"},
 	},
 	{
@@ -41,7 +39,6 @@ var actixPatterns = []*common.FrameworkPattern{
 		Description:  "Actix-web path parameter extractor",
 		ClassPattern: "^web::Path$",
 		SourceType:   common.SourceHTTPPath,
-		Confidence:   1.0,
 		Tags:         []string{"web", "async", "popular"},
 	},
 	{
@@ -52,7 +49,6 @@ var actixPatterns = []*common.FrameworkPattern{
 		Description:  "Actix-web JSON body extractor",
 		ClassPattern: "^web::Json$",
 		SourceType:   common.SourceHTTPJSON,
-		Confidence:   1.0,
 		Tags:         []string{"web", "async", "popular"},
 	},
 	{
@@ -63,7 +59,6 @@ var actixPatterns = []*common.FrameworkPattern{
 		Description:  "Actix-web raw body bytes",
 		ClassPattern: "^web::Bytes$",
 		SourceType:   common.SourceHTTPBody,
-		Confidence:   1.0,
 		Tags:         []string{"web", "async"},
 	},
 	{
@@ -75,7 +70,6 @@ var actixPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^headers$",
 		CarrierClass:  "HttpRequest",
 		SourceType:    common.SourceHTTPHeader,
-		Confidence:    1.0,
 		Tags:          []string{"web", "async"},
 	},
 	{
@@ -87,7 +81,6 @@ var actixPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^cookie$",
 		CarrierClass:  "HttpRequest",
 		SourceType:    common.SourceHTTPCookie,
-		Confidence:    1.0,
 		Tags:          []string{"web", "async"},
 	},
 	{
@@ -98,7 +91,6 @@ var actixPatterns = []*common.FrameworkPattern{
 		Description:   "Actix-web streaming payload",
 		ClassPattern:  "^Payload$",
 		SourceType:    common.SourceHTTPBody,
-		Confidence:    1.0,
 		Tags:          []string{"web", "async", "streaming"},
 	},
 }
@@ -113,7 +105,6 @@ var rocketPatterns = []*common.FrameworkPattern{
 		Description:   "Rocket form data derive macro",
 		MethodPattern: "^FromForm$",
 		SourceType:    common.SourceHTTPPost,
-		Confidence:    1.0,
 		Tags:          []string{"web", "type-safe"},
 	},
 	{
@@ -124,7 +115,6 @@ var rocketPatterns = []*common.FrameworkPattern{
 		Description:   "Rocket request guard derive macro",
 		MethodPattern: "^FromRequest$",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    1.0,
 		Tags:          []string{"web", "type-safe"},
 	},
 	{
@@ -135,7 +125,6 @@ var rocketPatterns = []*common.FrameworkPattern{
 		Description:  "Rocket form extractor",
 		ClassPattern: "^Form$",
 		SourceType:   common.SourceHTTPPost,
-		Confidence:   1.0,
 		Tags:         []string{"web", "type-safe"},
 	},
 	{
@@ -146,7 +135,6 @@ var rocketPatterns = []*common.FrameworkPattern{
 		Description:  "Rocket JSON body extractor",
 		ClassPattern: "^Json$",
 		SourceType:   common.SourceHTTPJSON,
-		Confidence:   1.0,
 		Tags:         []string{"web", "type-safe"},
 	},
 	{
@@ -157,7 +145,6 @@ var rocketPatterns = []*common.FrameworkPattern{
 		Description:  "Rocket raw body data",
 		ClassPattern: "^Data$",
 		SourceType:   common.SourceHTTPBody,
-		Confidence:   0.9,
 		Tags:         []string{"web", "type-safe"},
 	},
 	{
@@ -168,7 +155,6 @@ var rocketPatterns = []*common.FrameworkPattern{
 		Description:  "Rocket cookie jar",
 		ClassPattern: "^CookieJar$",
 		SourceType:   common.SourceHTTPCookie,
-		Confidence:   1.0,
 		Tags:         []string{"web", "type-safe"},
 	},
 }
@@ -183,7 +169,6 @@ var axumPatterns = []*common.FrameworkPattern{
 		Description:  "Axum query string extractor",
 		ClassPattern: "^(extract::)?Query$",
 		SourceType:   common.SourceHTTPGet,
-		Confidence:   1.0,
 		Tags:         []string{"web", "tokio", "modular"},
 	},
 	{
@@ -194,7 +179,6 @@ var axumPatterns = []*common.FrameworkPattern{
 		Description:  "Axum form data extractor",
 		ClassPattern: "^(extract::)?Form$",
 		SourceType:   common.SourceHTTPPost,
-		Confidence:   1.0,
 		Tags:         []string{"web", "tokio", "modular"},
 	},
 	{
@@ -205,7 +189,6 @@ var axumPatterns = []*common.FrameworkPattern{
 		Description:  "Axum path parameter extractor",
 		ClassPattern: "^(extract::)?Path$",
 		SourceType:   common.SourceHTTPPath,
-		Confidence:   1.0,
 		Tags:         []string{"web", "tokio", "modular"},
 	},
 	{
@@ -216,7 +199,6 @@ var axumPatterns = []*common.FrameworkPattern{
 		Description:  "Axum JSON body extractor",
 		ClassPattern: "^(extract::)?Json$",
 		SourceType:   common.SourceHTTPJSON,
-		Confidence:   1.0,
 		Tags:         []string{"web", "tokio", "modular"},
 	},
 	{
@@ -227,7 +209,6 @@ var axumPatterns = []*common.FrameworkPattern{
 		Description:  "Axum raw body extractor",
 		ClassPattern: "^(extract::)?RawBody$",
 		SourceType:   common.SourceHTTPBody,
-		Confidence:   1.0,
 		Tags:         []string{"web", "tokio"},
 	},
 	{
@@ -238,7 +219,6 @@ var axumPatterns = []*common.FrameworkPattern{
 		Description:  "Axum typed header extractor",
 		ClassPattern: "^TypedHeader$",
 		SourceType:   common.SourceHTTPHeader,
-		Confidence:   1.0,
 		Tags:         []string{"web", "tokio"},
 	},
 	{
@@ -249,7 +229,6 @@ var axumPatterns = []*common.FrameworkPattern{
 		Description:  "Axum extension extractor (shared state)",
 		ClassPattern: "^Extension$",
 		SourceType:   common.SourceUserInput,
-		Confidence:   0.7,
 		Tags:         []string{"web", "tokio", "state"},
 	},
 }
@@ -264,7 +243,6 @@ var warpPatterns = []*common.FrameworkPattern{
 		Description:   "Warp query filter",
 		MethodPattern: "^query$",
 		SourceType:    common.SourceHTTPGet,
-		Confidence:    1.0,
 		Tags:          []string{"web", "filters", "composable"},
 	},
 	{
@@ -275,7 +253,6 @@ var warpPatterns = []*common.FrameworkPattern{
 		Description:   "Warp form body filter",
 		MethodPattern: "^form$",
 		SourceType:    common.SourceHTTPPost,
-		Confidence:    1.0,
 		Tags:          []string{"web", "filters"},
 	},
 	{
@@ -286,7 +263,6 @@ var warpPatterns = []*common.FrameworkPattern{
 		Description:   "Warp JSON body filter",
 		MethodPattern: "^json$",
 		SourceType:    common.SourceHTTPJSON,
-		Confidence:    1.0,
 		Tags:          []string{"web", "filters"},
 	},
 	{
@@ -297,7 +273,6 @@ var warpPatterns = []*common.FrameworkPattern{
 		Description:   "Warp bytes body filter",
 		MethodPattern: "^bytes$",
 		SourceType:    common.SourceHTTPBody,
-		Confidence:    1.0,
 		Tags:          []string{"web", "filters"},
 	},
 	{
@@ -308,7 +283,6 @@ var warpPatterns = []*common.FrameworkPattern{
 		Description:   "Warp path parameter filter",
 		MethodPattern: "^param$",
 		SourceType:    common.SourceHTTPPath,
-		Confidence:    1.0,
 		Tags:          []string{"web", "filters"},
 	},
 	{
@@ -319,7 +293,6 @@ var warpPatterns = []*common.FrameworkPattern{
 		Description:   "Warp header filter",
 		MethodPattern: "^header$",
 		SourceType:    common.SourceHTTPHeader,
-		Confidence:    1.0,
 		Tags:          []string{"web", "filters"},
 	},
 	{
@@ -330,7 +303,6 @@ var warpPatterns = []*common.FrameworkPattern{
 		Description:   "Warp cookie filter",
 		MethodPattern: "^cookie$",
 		SourceType:    common.SourceHTTPCookie,
-		Confidence:    1.0,
 		Tags:          []string{"web", "filters"},
 	},
 }
@@ -346,7 +318,6 @@ var tidePatterns = []*common.FrameworkPattern{
 		MethodPattern: "^body_string$",
 		CarrierClass:  "Request",
 		SourceType:    common.SourceHTTPBody,
-		Confidence:    1.0,
 		Tags:          []string{"web", "async", "minimal"},
 	},
 	{
@@ -358,7 +329,6 @@ var tidePatterns = []*common.FrameworkPattern{
 		MethodPattern: "^body_json$",
 		CarrierClass:  "Request",
 		SourceType:    common.SourceHTTPJSON,
-		Confidence:    1.0,
 		Tags:          []string{"web", "async", "minimal"},
 	},
 	{
@@ -370,7 +340,6 @@ var tidePatterns = []*common.FrameworkPattern{
 		MethodPattern: "^body_form$",
 		CarrierClass:  "Request",
 		SourceType:    common.SourceHTTPPost,
-		Confidence:    1.0,
 		Tags:          []string{"web", "async", "minimal"},
 	},
 	{
@@ -382,7 +351,6 @@ var tidePatterns = []*common.FrameworkPattern{
 		MethodPattern: "^query$",
 		CarrierClass:  "Request",
 		SourceType:    common.SourceHTTPGet,
-		Confidence:    1.0,
 		Tags:          []string{"web", "async", "minimal"},
 	},
 	{
@@ -394,7 +362,6 @@ var tidePatterns = []*common.FrameworkPattern{
 		MethodPattern: "^param$",
 		CarrierClass:  "Request",
 		SourceType:    common.SourceHTTPPath,
-		Confidence:    1.0,
 		Tags:          []string{"web", "async", "minimal"},
 	},
 }
@@ -409,7 +376,6 @@ var cliPatterns = []*common.FrameworkPattern{
 		Description:   "Clap command line parser derive",
 		MethodPattern: "^Parser$",
 		SourceType:    common.SourceCLIArg,
-		Confidence:    1.0,
 		Tags:          []string{"cli", "parsing"},
 	},
 	{
@@ -420,7 +386,6 @@ var cliPatterns = []*common.FrameworkPattern{
 		Description:   "Clap arguments derive",
 		MethodPattern: "^Args$",
 		SourceType:    common.SourceCLIArg,
-		Confidence:    1.0,
 		Tags:          []string{"cli", "parsing"},
 	},
 	{
@@ -432,7 +397,6 @@ var cliPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^value_of$",
 		CarrierClass:  "ArgMatches",
 		SourceType:    common.SourceCLIArg,
-		Confidence:    1.0,
 		Tags:          []string{"cli", "parsing"},
 	},
 	{
@@ -444,7 +408,6 @@ var cliPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^get_one$",
 		CarrierClass:  "ArgMatches",
 		SourceType:    common.SourceCLIArg,
-		Confidence:    1.0,
 		Tags:          []string{"cli", "parsing"},
 	},
 	{
@@ -455,7 +418,6 @@ var cliPatterns = []*common.FrameworkPattern{
 		Description:   "StructOpt parse CLI arguments",
 		MethodPattern: "^from_args$",
 		SourceType:    common.SourceCLIArg,
-		Confidence:    1.0,
 		Tags:          []string{"cli", "parsing", "legacy"},
 	},
 }

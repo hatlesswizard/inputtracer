@@ -441,13 +441,13 @@ func NewMatcher() *Matcher {
 			NodeTypes:   []string{"function_call_expression"},
 		},
 
-		// CodeIgniter style input
+		// Generic GET method
 		{
 			Name:         "->get()",
 			Pattern:      `->\s*get\s*\(\s*['"]`,
 			Language:     "php",
 			Labels:       []common.InputLabel{common.LabelHTTPGet, common.LabelUserInput},
-			Description:  "CodeIgniter/Symfony style GET parameter",
+			Description:  "Generic/Symfony style GET parameter",
 			NodeTypes:    []string{"member_call_expression"},
 			KeyExtractor: `->\s*get\s*\(\s*['"]([^'"]+)`,
 		},

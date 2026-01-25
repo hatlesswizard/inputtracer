@@ -41,7 +41,6 @@ type ExpressionResult struct {
 	Expression     string   `json:"expression"`
 	SourceTypes    []string `json:"source_types,omitempty"`
 	Key            string   `json:"key,omitempty"`
-	Confidence     float64  `json:"confidence"`
 	MatchedCarrier string   `json:"matched_carrier,omitempty"`
 	NeedsTracing   bool     `json:"needs_tracing"`
 	IsSuperglobal  bool     `json:"is_superglobal"`
@@ -191,14 +190,12 @@ func (c *Classifier) classifyExpression(expr extractor.ExtractedExpression) Expr
 		Expression:  expr.Expression,
 		Key:         expr.Key,
 		IsEscaped:   expr.IsEscaped,
-		Confidence:  0,
 		SourceTypes: make([]string, 0),
 	}
 
 	// Check if it's a direct superglobal
 	if expr.Type == "superglobal" {
 		result.IsSuperglobal = true
-		result.Confidence = 1.0
 		result.SourceTypes = superglobalToSourceTypes(expr.PropertyName) // PropertyName stores the superglobal type
 		return result
 	}
@@ -208,7 +205,6 @@ func (c *Classifier) classifyExpression(expr extractor.ExtractedExpression) Expr
 		for _, cp := range c.carrierPatterns {
 			if cp.pattern.MatchString(expr.Expression) {
 				result.SourceTypes = cp.carrier.SourceTypes
-				result.Confidence = cp.carrier.Confidence
 				result.MatchedCarrier = cp.carrier.ClassName + "." + cp.carrier.PropertyName
 				if cp.carrier.MethodName != "" {
 					result.MatchedCarrier = cp.carrier.ClassName + "." + cp.carrier.MethodName + "()"
@@ -223,7 +219,6 @@ func (c *Classifier) classifyExpression(expr extractor.ExtractedExpression) Expr
 	if expr.Type == "property_access" || expr.Type == "method_call" ||
 		expr.Type == "sql_embedded" || expr.Type == "concatenated" || expr.Type == "escaped" {
 		result.NeedsTracing = true
-		result.Confidence = 0
 	}
 
 	return result

@@ -27,9 +27,6 @@ type FrameworkPattern struct {
 	PopulatedBy     string   `json:"populated_by,omitempty"`   // Method that populates the carrier
 	PopulatedFrom   []string `json:"populated_from,omitempty"` // Original sources (e.g., ["$_GET", "$_POST"])
 
-	// Confidence score (0.0 to 1.0)
-	Confidence float64 `json:"confidence"`
-
 	// Tags for categorization
 	Tags []string `json:"tags,omitempty"`
 }

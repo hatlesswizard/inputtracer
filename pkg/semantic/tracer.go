@@ -699,9 +699,8 @@ func (t *Tracer) TraceBackwardBatch(targets []string, codebasePath string) (*typ
 			varResult := result.PerVariable[originalTarget]
 
 			path := types.BackwardPath{
-				Steps:      make([]types.BackwardStep, 0),
-				Confidence: 0.8,
-				CrossFile:  false,
+				Steps:     make([]types.BackwardStep, 0),
+				CrossFile: false,
 			}
 
 			path.Steps = append(path.Steps, types.BackwardStep{
@@ -741,10 +740,9 @@ func (t *Tracer) TraceBackwardBatch(targets []string, codebasePath string) (*typ
 				innerSources := t.traceBackwardRecursiveWithContext(ctx, assign.Source, filePath, make(map[string]bool), 0)
 				for _, innerSource := range innerSources {
 					innerPath := types.BackwardPath{
-						Source:     innerSource,
-						Steps:      make([]types.BackwardStep, 0),
-						Confidence: 0.6,
-						CrossFile:  innerSource.FilePath != filePath,
+						Source:    innerSource,
+						Steps:     make([]types.BackwardStep, 0),
+						CrossFile: innerSource.FilePath != filePath,
 					}
 					innerPath.Steps = append(innerPath.Steps, types.BackwardStep{
 						StepNumber:  0,
@@ -955,9 +953,8 @@ func (t *Tracer) traceBackwardInFileWithContext(ctx *TraceContext, filePath stri
 
 		// Found an assignment to target - trace backward from source
 		path := types.BackwardPath{
-			Steps:      make([]types.BackwardStep, 0),
-			Confidence: 0.8,
-			CrossFile:  false,
+			Steps:     make([]types.BackwardStep, 0),
+			CrossFile: false,
 		}
 
 		// Add the assignment as a step
@@ -991,10 +988,9 @@ func (t *Tracer) traceBackwardInFileWithContext(ctx *TraceContext, filePath stri
 				innerSources := t.traceBackwardRecursiveWithContext(ctx, assign.Source, filePath, make(map[string]bool), 0)
 				for _, innerSource := range innerSources {
 					innerPath := types.BackwardPath{
-						Source:     innerSource,
-						Steps:      make([]types.BackwardStep, 0),
-						Confidence: 0.6,
-						CrossFile:  innerSource.FilePath != filePath,
+						Source:    innerSource,
+						Steps:     make([]types.BackwardStep, 0),
+						CrossFile: innerSource.FilePath != filePath,
 					}
 					innerPath.Steps = append(innerPath.Steps, types.BackwardStep{
 						StepNumber:  0,
@@ -1124,7 +1120,6 @@ func (t *Tracer) identifySource(expr string, filePath string, line int) *types.S
 				Expression: expr,
 				FilePath:   filePath,
 				Line:       line,
-				Confidence: 1.0,
 			}
 		}
 	}
@@ -1141,7 +1136,6 @@ func (t *Tracer) identifySource(expr string, filePath string, line int) *types.S
 				Expression: expr,
 				FilePath:   filePath,
 				Line:       line,
-				Confidence: 0.9,
 			}
 		}
 	}
@@ -1158,19 +1152,16 @@ func (t *Tracer) identifySource(expr string, filePath string, line int) *types.S
 			Expression: expr,
 			FilePath:   filePath,
 			Line:       line,
-			Confidence: 0.95,
 		}
 	}
 
 	// Check method call patterns using centralized patterns
 	if phpPatterns.IsInputMethodCall(expr) {
-		confidence := phpPatterns.GetInputConfidence("", expr)
 		return &types.SourceInfo{
 			Type:       types.SourceUserInput,
 			Expression: expr,
 			FilePath:   filePath,
 			Line:       line,
-			Confidence: confidence,
 		}
 	}
 
@@ -1188,7 +1179,6 @@ func (t *Tracer) identifySource(expr string, filePath string, line int) *types.S
 				Expression: expr,
 				FilePath:   filePath,
 				Line:       line,
-				Confidence: 0.85,
 			}
 		}
 	}
@@ -1200,7 +1190,6 @@ func (t *Tracer) identifySource(expr string, filePath string, line int) *types.S
 			Expression: expr,
 			FilePath:   filePath,
 			Line:       line,
-			Confidence: 0.8,
 		}
 	}
 

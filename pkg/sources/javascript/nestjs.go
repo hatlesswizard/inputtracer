@@ -15,7 +15,6 @@ var nestjsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Body$",
 		SourceType:    common.SourceHTTPBody,
 		PopulatedFrom: []string{"HTTP body"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "nestjs", "decorator"},
 	},
 	{
@@ -27,7 +26,6 @@ var nestjsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Query$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"query string"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "nestjs", "decorator"},
 	},
 	{
@@ -39,7 +37,6 @@ var nestjsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Param$",
 		SourceType:    common.SourceHTTPPath,
 		PopulatedFrom: []string{"URL path"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "nestjs", "decorator"},
 	},
 	{
@@ -51,7 +48,6 @@ var nestjsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Headers$",
 		SourceType:    common.SourceHTTPHeader,
 		PopulatedFrom: []string{"HTTP headers"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "nestjs", "decorator"},
 	},
 	{
@@ -63,7 +59,6 @@ var nestjsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Ip$",
 		SourceType:    common.SourceNetwork,
 		PopulatedFrom: []string{"TCP connection", "X-Forwarded-For header"},
-		Confidence:    0.9,
 		Tags:          []string{"framework", "nestjs", "decorator"},
 	},
 	{
@@ -75,7 +70,6 @@ var nestjsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^HostParam$",
 		SourceType:    common.SourceHTTPHeader,
 		PopulatedFrom: []string{"HTTP Host header"},
-		Confidence:    0.9,
 		Tags:          []string{"framework", "nestjs", "decorator"},
 	},
 	{
@@ -87,7 +81,6 @@ var nestjsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Session$",
 		SourceType:    common.SourceSession,
 		PopulatedFrom: []string{"session storage"},
-		Confidence:    0.7, // Session data may contain user input
 		Tags:          []string{"framework", "nestjs", "decorator"},
 	},
 	{
@@ -99,7 +92,6 @@ var nestjsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^UploadedFile$",
 		SourceType:    common.SourceHTTPFile,
 		PopulatedFrom: []string{"HTTP multipart form data"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "nestjs", "decorator", "file"},
 	},
 	{
@@ -111,7 +103,6 @@ var nestjsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^UploadedFiles$",
 		SourceType:    common.SourceHTTPFile,
 		PopulatedFrom: []string{"HTTP multipart form data"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "nestjs", "decorator", "file"},
 	},
 	{
@@ -123,7 +114,6 @@ var nestjsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Req$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"HTTP request"},
-		Confidence:    0.9,
 		Tags:          []string{"framework", "nestjs", "decorator"},
 	},
 	{
@@ -135,7 +125,6 @@ var nestjsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Request$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"HTTP request"},
-		Confidence:    0.9,
 		Tags:          []string{"framework", "nestjs", "decorator"},
 	},
 }

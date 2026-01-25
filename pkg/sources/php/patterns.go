@@ -248,19 +248,6 @@ func IsContextDependentMethod(methodName string) bool {
 	return ContextDependentMethodPattern.MatchString(methodName)
 }
 
-// GetInputConfidence returns confidence score based on method context
-func GetInputConfidence(methodName string, objectName string) float64 {
-	// High confidence for explicit input methods
-	if InputMethodPattern.MatchString(methodName) {
-		return 0.95
-	}
-	// Medium confidence for context-dependent methods on request objects
-	if ContextDependentMethodPattern.MatchString(methodName) && InputObjectPattern.MatchString(objectName) {
-		return 0.8
-	}
-	return 0.5
-}
-
 // MatchesInputCarrier returns true if the expression matches patterns suggesting user input
 // This checks object name, property name, and method name combinations
 func MatchesInputCarrier(objName, propOrMethodName string, isMethod bool) bool {

@@ -20,12 +20,6 @@ type FrameworkIndicator struct {
 // PHPFrameworkIndicators contains file path indicators for PHP frameworks
 var PHPFrameworkIndicators = []FrameworkIndicator{
 	{
-		Framework:   "mybb",
-		Language:    "php",
-		Indicators:  []string{"inc/class_core.php", "inc/init.php"},
-		Description: "MyBB forum software",
-	},
-	{
 		Framework:   "wordpress",
 		Language:    "php",
 		Indicators:  []string{"wp-config.php", "wp-includes/version.php"},
@@ -42,12 +36,6 @@ var PHPFrameworkIndicators = []FrameworkIndicator{
 		Language:    "php",
 		Indicators:  []string{"symfony.lock", "config/bundles.php"},
 		Description: "Symfony framework",
-	},
-	{
-		Framework:   "codeigniter",
-		Language:    "php",
-		Indicators:  []string{"system/core/CodeIgniter.php"},
-		Description: "CodeIgniter framework",
 	},
 	{
 		Framework:   "drupal",

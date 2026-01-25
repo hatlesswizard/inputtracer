@@ -9,7 +9,6 @@ type AnnotationMapping struct {
 	SourceType  common.SourceType
 	Framework   string
 	Description string
-	Confidence  float64
 }
 
 // InputAnnotations maps Java annotation names to their source type mappings
@@ -22,49 +21,41 @@ var InputAnnotations = map[string]AnnotationMapping{
 		SourceType:  common.SourceHTTPGet,
 		Framework:   "spring",
 		Description: "Spring request parameter from query string or form",
-		Confidence:  0.95,
 	},
 	"PathVariable": {
 		SourceType:  common.SourceHTTPPath,
 		Framework:   "spring",
 		Description: "Spring URL path variable",
-		Confidence:  0.95,
 	},
 	"RequestBody": {
 		SourceType:  common.SourceHTTPBody,
 		Framework:   "spring",
 		Description: "Spring request body (JSON/XML)",
-		Confidence:  0.95,
 	},
 	"RequestHeader": {
 		SourceType:  common.SourceHTTPHeader,
 		Framework:   "spring",
 		Description: "Spring HTTP header value",
-		Confidence:  0.95,
 	},
 	"CookieValue": {
 		SourceType:  common.SourceHTTPCookie,
 		Framework:   "spring",
 		Description: "Spring cookie value",
-		Confidence:  0.95,
 	},
 	"ModelAttribute": {
 		SourceType:  common.SourceHTTPPost,
 		Framework:   "spring",
 		Description: "Spring model attribute (form binding)",
-		Confidence:  0.95,
 	},
 	"RequestPart": {
 		SourceType:  common.SourceHTTPFile,
 		Framework:   "spring",
 		Description: "Spring multipart request part",
-		Confidence:  0.95,
 	},
 	"MatrixVariable": {
 		SourceType:  common.SourceHTTPGet,
 		Framework:   "spring",
 		Description: "Spring matrix variable from URL",
-		Confidence:  0.95,
 	},
 
 	// ============================================================================
@@ -74,43 +65,36 @@ var InputAnnotations = map[string]AnnotationMapping{
 		SourceType:  common.SourceHTTPGet,
 		Framework:   "jax-rs",
 		Description: "JAX-RS query parameter",
-		Confidence:  0.95,
 	},
 	"PathParam": {
 		SourceType:  common.SourceHTTPPath,
 		Framework:   "jax-rs",
 		Description: "JAX-RS URL path parameter",
-		Confidence:  0.95,
 	},
 	"FormParam": {
 		SourceType:  common.SourceHTTPPost,
 		Framework:   "jax-rs",
 		Description: "JAX-RS form parameter",
-		Confidence:  0.95,
 	},
 	"HeaderParam": {
 		SourceType:  common.SourceHTTPHeader,
 		Framework:   "jax-rs",
 		Description: "JAX-RS HTTP header parameter",
-		Confidence:  0.95,
 	},
 	"CookieParam": {
 		SourceType:  common.SourceHTTPCookie,
 		Framework:   "jax-rs",
 		Description: "JAX-RS cookie parameter",
-		Confidence:  0.95,
 	},
 	"BeanParam": {
 		SourceType:  common.SourceUserInput,
 		Framework:   "jax-rs",
 		Description: "JAX-RS bean parameter (aggregates multiple sources)",
-		Confidence:  0.9,
 	},
 	"MatrixParam": {
 		SourceType:  common.SourceHTTPGet,
 		Framework:   "jax-rs",
 		Description: "JAX-RS matrix parameter from URL",
-		Confidence:  0.95,
 	},
 
 	// ============================================================================
@@ -120,25 +104,21 @@ var InputAnnotations = map[string]AnnotationMapping{
 		SourceType:  common.SourceHTTPGet,
 		Framework:   "micronaut",
 		Description: "Micronaut query value",
-		Confidence:  0.95,
 	},
 	"PathValue": {
 		SourceType:  common.SourceHTTPPath,
 		Framework:   "micronaut",
 		Description: "Micronaut path value",
-		Confidence:  0.95,
 	},
 	"Body": {
 		SourceType:  common.SourceHTTPBody,
 		Framework:   "micronaut",
 		Description: "Micronaut request body",
-		Confidence:  0.95,
 	},
 	"Header": {
 		SourceType:  common.SourceHTTPHeader,
 		Framework:   "micronaut",
 		Description: "Micronaut HTTP header",
-		Confidence:  0.95,
 	},
 
 	// ============================================================================
@@ -148,7 +128,6 @@ var InputAnnotations = map[string]AnnotationMapping{
 		SourceType:  common.SourceHTTPGet,
 		Framework:   "vertx",
 		Description: "Vert.x request parameter",
-		Confidence:  0.9,
 	},
 
 	// ============================================================================
@@ -158,7 +137,6 @@ var InputAnnotations = map[string]AnnotationMapping{
 		SourceType:  common.SourceHTTPGet,
 		Framework:   "struts2",
 		Description: "Struts 2 action parameter",
-		Confidence:  0.9,
 	},
 
 	// ============================================================================
@@ -168,7 +146,6 @@ var InputAnnotations = map[string]AnnotationMapping{
 		SourceType:  common.SourceHTTPBody,
 		Framework:   "play",
 		Description: "Play Framework body parser",
-		Confidence:  0.9,
 	},
 
 	// ============================================================================
@@ -178,7 +155,6 @@ var InputAnnotations = map[string]AnnotationMapping{
 		SourceType:  common.SourceHTTPHeader,
 		Framework:   "dropwizard",
 		Description: "Dropwizard authentication (often from header)",
-		Confidence:  0.85,
 	},
 }
 

@@ -20,7 +20,6 @@ var aspNetCorePatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^HttpRequest$",
 		PropertyPattern: "^Query$",
 		SourceType:      common.SourceHTTPGet,
-		Confidence:      1.0,
 		Tags:            []string{"web", "microsoft", "modern"},
 	},
 	{
@@ -32,7 +31,6 @@ var aspNetCorePatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^HttpRequest$",
 		PropertyPattern: "^Form$",
 		SourceType:      common.SourceHTTPPost,
-		Confidence:      1.0,
 		Tags:            []string{"web", "microsoft", "modern"},
 	},
 	{
@@ -44,7 +42,6 @@ var aspNetCorePatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^HttpRequest$",
 		PropertyPattern: "^Body$",
 		SourceType:      common.SourceHTTPBody,
-		Confidence:      1.0,
 		Tags:            []string{"web", "microsoft", "modern"},
 	},
 	{
@@ -56,7 +53,6 @@ var aspNetCorePatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^HttpRequest$",
 		PropertyPattern: "^Headers$",
 		SourceType:      common.SourceHTTPHeader,
-		Confidence:      1.0,
 		Tags:            []string{"web", "microsoft", "modern"},
 	},
 	{
@@ -68,7 +64,6 @@ var aspNetCorePatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^HttpRequest$",
 		PropertyPattern: "^Cookies$",
 		SourceType:      common.SourceHTTPCookie,
-		Confidence:      1.0,
 		Tags:            []string{"web", "microsoft", "modern"},
 	},
 	{
@@ -80,7 +75,6 @@ var aspNetCorePatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^HttpRequest$",
 		PropertyPattern: "^RouteValues$",
 		SourceType:      common.SourceHTTPPath,
-		Confidence:      1.0,
 		Tags:            []string{"web", "microsoft", "modern"},
 	},
 	// Model binding attributes
@@ -92,7 +86,6 @@ var aspNetCorePatterns = []*common.FrameworkPattern{
 		Description:   "ASP.NET Core query parameter binding",
 		MethodPattern: "^FromQuery$",
 		SourceType:    common.SourceHTTPGet,
-		Confidence:    1.0,
 		Tags:          []string{"web", "microsoft", "binding"},
 	},
 	{
@@ -103,7 +96,6 @@ var aspNetCorePatterns = []*common.FrameworkPattern{
 		Description:   "ASP.NET Core body binding",
 		MethodPattern: "^FromBody$",
 		SourceType:    common.SourceHTTPBody,
-		Confidence:    1.0,
 		Tags:          []string{"web", "microsoft", "binding"},
 	},
 	{
@@ -114,7 +106,6 @@ var aspNetCorePatterns = []*common.FrameworkPattern{
 		Description:   "ASP.NET Core form binding",
 		MethodPattern: "^FromForm$",
 		SourceType:    common.SourceHTTPPost,
-		Confidence:    1.0,
 		Tags:          []string{"web", "microsoft", "binding"},
 	},
 	{
@@ -125,7 +116,6 @@ var aspNetCorePatterns = []*common.FrameworkPattern{
 		Description:   "ASP.NET Core header binding",
 		MethodPattern: "^FromHeader$",
 		SourceType:    common.SourceHTTPHeader,
-		Confidence:    1.0,
 		Tags:          []string{"web", "microsoft", "binding"},
 	},
 	{
@@ -136,7 +126,6 @@ var aspNetCorePatterns = []*common.FrameworkPattern{
 		Description:   "ASP.NET Core route binding",
 		MethodPattern: "^FromRoute$",
 		SourceType:    common.SourceHTTPPath,
-		Confidence:    1.0,
 		Tags:          []string{"web", "microsoft", "binding"},
 	},
 }
@@ -152,7 +141,6 @@ var aspNetMvcPatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^HttpRequestBase$",
 		PropertyPattern: "^QueryString$",
 		SourceType:      common.SourceHTTPGet,
-		Confidence:      1.0,
 		Tags:            []string{"web", "microsoft", "legacy"},
 	},
 	{
@@ -164,7 +152,6 @@ var aspNetMvcPatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^HttpRequestBase$",
 		PropertyPattern: "^Form$",
 		SourceType:      common.SourceHTTPPost,
-		Confidence:      1.0,
 		Tags:            []string{"web", "microsoft", "legacy"},
 	},
 	{
@@ -176,7 +163,6 @@ var aspNetMvcPatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^HttpRequestBase$",
 		PropertyPattern: "^Params$",
 		SourceType:      common.SourceHTTPRequest,
-		Confidence:      1.0,
 		PopulatedFrom:   []string{"QueryString", "Form", "Cookies"},
 		Tags:            []string{"web", "microsoft", "legacy"},
 	},
@@ -189,7 +175,6 @@ var aspNetMvcPatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^HttpRequestBase$",
 		PropertyPattern: "^InputStream$",
 		SourceType:      common.SourceHTTPBody,
-		Confidence:      1.0,
 		Tags:            []string{"web", "microsoft", "legacy"},
 	},
 	{
@@ -201,7 +186,6 @@ var aspNetMvcPatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^HttpRequestBase$",
 		PropertyPattern: "^Files$",
 		SourceType:      common.SourceHTTPFile,
-		Confidence:      1.0,
 		Tags:            []string{"web", "microsoft", "legacy", "upload"},
 	},
 }
@@ -217,7 +201,6 @@ var nancyPatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^Request$",
 		PropertyPattern: "^Query$",
 		SourceType:      common.SourceHTTPGet,
-		Confidence:      1.0,
 		Tags:            []string{"web", "lightweight"},
 	},
 	{
@@ -229,7 +212,6 @@ var nancyPatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^Request$",
 		PropertyPattern: "^Form$",
 		SourceType:      common.SourceHTTPPost,
-		Confidence:      1.0,
 		Tags:            []string{"web", "lightweight"},
 	},
 	{
@@ -241,7 +223,6 @@ var nancyPatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^Request$",
 		PropertyPattern: "^Body$",
 		SourceType:      common.SourceHTTPBody,
-		Confidence:      1.0,
 		Tags:            []string{"web", "lightweight"},
 	},
 	{
@@ -252,7 +233,6 @@ var nancyPatterns = []*common.FrameworkPattern{
 		Description:   "Nancy model binding",
 		MethodPattern: "^Bind$",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    1.0,
 		Tags:          []string{"web", "lightweight", "binding"},
 	},
 	{
@@ -263,7 +243,6 @@ var nancyPatterns = []*common.FrameworkPattern{
 		Description:   "Nancy model binding to existing object",
 		MethodPattern: "^BindTo$",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    1.0,
 		Tags:          []string{"web", "lightweight", "binding"},
 	},
 }
@@ -278,7 +257,6 @@ var serviceStackPatterns = []*common.FrameworkPattern{
 		Description:   "ServiceStack request interface",
 		ClassPattern:  "^IRequest$",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    1.0,
 		Tags:          []string{"web", "api", "services"},
 	},
 	{
@@ -290,7 +268,6 @@ var serviceStackPatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^IRequest$",
 		PropertyPattern: "^QueryString$",
 		SourceType:      common.SourceHTTPGet,
-		Confidence:      1.0,
 		Tags:            []string{"web", "api", "services"},
 	},
 	{
@@ -302,7 +279,6 @@ var serviceStackPatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^IRequest$",
 		PropertyPattern: "^FormData$",
 		SourceType:      common.SourceHTTPPost,
-		Confidence:      1.0,
 		Tags:            []string{"web", "api", "services"},
 	},
 	{
@@ -313,7 +289,6 @@ var serviceStackPatterns = []*common.FrameworkPattern{
 		Description:     "ServiceStack request DTO auto-binding",
 		ClassPattern:    "^IReturn",
 		SourceType:      common.SourceHTTPRequest,
-		Confidence:      0.9,
 		Tags:            []string{"web", "api", "services", "dto"},
 	},
 	{
@@ -324,7 +299,6 @@ var serviceStackPatterns = []*common.FrameworkPattern{
 		Description:   "ServiceStack get raw request body",
 		MethodPattern: "^GetRawBody(Async)?$",
 		SourceType:    common.SourceHTTPBody,
-		Confidence:    1.0,
 		Tags:          []string{"web", "api", "services"},
 	},
 }

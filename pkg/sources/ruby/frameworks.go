@@ -20,7 +20,6 @@ var railsPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^params$",
 		SourceType:      common.SourceHTTPRequest,
 		PopulatedFrom:   []string{"query_parameters", "request_parameters", "path_parameters"},
-		Confidence:      1.0,
 		Tags:            []string{"web", "mvc", "popular"},
 	},
 	{
@@ -32,7 +31,6 @@ var railsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^permit$",
 		CarrierClass:  "ActionController::Parameters",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    1.0,
 		Tags:          []string{"web", "mvc", "security"},
 	},
 	{
@@ -44,7 +42,6 @@ var railsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^require$",
 		CarrierClass:  "ActionController::Parameters",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    1.0,
 		Tags:          []string{"web", "mvc", "security"},
 	},
 	{
@@ -56,7 +53,6 @@ var railsPatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^ActionDispatch::Request$",
 		PropertyPattern: "^params$",
 		SourceType:      common.SourceHTTPRequest,
-		Confidence:      1.0,
 		Tags:            []string{"web", "mvc"},
 	},
 	{
@@ -68,7 +64,6 @@ var railsPatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^ActionDispatch::Request$",
 		PropertyPattern: "^body$",
 		SourceType:      common.SourceHTTPBody,
-		Confidence:      1.0,
 		Tags:            []string{"web", "mvc"},
 	},
 	{
@@ -79,7 +74,6 @@ var railsPatterns = []*common.FrameworkPattern{
 		Description:   "Rails raw POST body",
 		MethodPattern: "^raw_post$",
 		SourceType:    common.SourceHTTPBody,
-		Confidence:    1.0,
 		Tags:          []string{"web", "mvc"},
 	},
 	{
@@ -91,7 +85,6 @@ var railsPatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^ActionDispatch::Request$",
 		PropertyPattern: "^headers$",
 		SourceType:      common.SourceHTTPHeader,
-		Confidence:      1.0,
 		Tags:            []string{"web", "mvc"},
 	},
 	{
@@ -102,7 +95,6 @@ var railsPatterns = []*common.FrameworkPattern{
 		Description:     "Rails cookie jar",
 		PropertyPattern: "^cookies$",
 		SourceType:      common.SourceHTTPCookie,
-		Confidence:      1.0,
 		Tags:            []string{"web", "mvc"},
 	},
 	{
@@ -113,7 +105,6 @@ var railsPatterns = []*common.FrameworkPattern{
 		Description:     "Rails session store",
 		PropertyPattern: "^session$",
 		SourceType:      common.SourceSession,
-		Confidence:      1.0,
 		Tags:            []string{"web", "mvc"},
 	},
 	{
@@ -125,7 +116,6 @@ var railsPatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^ActionDispatch::Request$",
 		PropertyPattern: "^env$",
 		SourceType:      common.SourceHTTPHeader,
-		Confidence:      0.9,
 		Tags:            []string{"web", "mvc", "rack"},
 	},
 }
@@ -140,7 +130,6 @@ var sinatraPatterns = []*common.FrameworkPattern{
 		Description:     "Sinatra combined request parameters",
 		PropertyPattern: "^params$",
 		SourceType:      common.SourceHTTPRequest,
-		Confidence:      1.0,
 		Tags:            []string{"web", "dsl", "lightweight"},
 	},
 	{
@@ -152,7 +141,6 @@ var sinatraPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^read$",
 		CarrierClass:  "Rack::Request",
 		SourceType:    common.SourceHTTPBody,
-		Confidence:    1.0,
 		Tags:          []string{"web", "dsl", "lightweight"},
 	},
 	{
@@ -163,7 +151,6 @@ var sinatraPatterns = []*common.FrameworkPattern{
 		Description:   "Sinatra Rack environment",
 		PropertyPattern: "^env$",
 		SourceType:    common.SourceHTTPHeader,
-		Confidence:    0.9,
 		Tags:          []string{"web", "dsl", "rack"},
 	},
 	{
@@ -174,7 +161,6 @@ var sinatraPatterns = []*common.FrameworkPattern{
 		Description:   "Sinatra halt helper (takes user input for response)",
 		MethodPattern: "^halt$",
 		SourceType:    common.SourceUserInput,
-		Confidence:    0.7,
 		Tags:          []string{"web", "dsl"},
 	},
 }
@@ -189,7 +175,6 @@ var hanamiPatterns = []*common.FrameworkPattern{
 		Description:     "Hanami action parameters",
 		PropertyPattern: "^params$",
 		SourceType:      common.SourceHTTPRequest,
-		Confidence:      1.0,
 		Tags:            []string{"web", "modern", "clean"},
 	},
 	{
@@ -201,7 +186,6 @@ var hanamiPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^get$",
 		CarrierClass:  "Hanami::Action::Params",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    1.0,
 		Tags:          []string{"web", "modern"},
 	},
 	{
@@ -213,7 +197,6 @@ var hanamiPatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^Hanami::Action::Request$",
 		PropertyPattern: "^params$",
 		SourceType:      common.SourceHTTPRequest,
-		Confidence:      1.0,
 		Tags:            []string{"web", "modern"},
 	},
 }
@@ -228,7 +211,6 @@ var grapePatterns = []*common.FrameworkPattern{
 		Description:     "Grape API parameters",
 		PropertyPattern: "^params$",
 		SourceType:      common.SourceHTTPRequest,
-		Confidence:      1.0,
 		Tags:            []string{"api", "rest"},
 	},
 	{
@@ -239,7 +221,6 @@ var grapePatterns = []*common.FrameworkPattern{
 		Description:     "Grape declared parameters (filtered)",
 		MethodPattern:   "^declared$",
 		SourceType:      common.SourceHTTPRequest,
-		Confidence:      1.0,
 		Tags:            []string{"api", "rest", "filtered"},
 	},
 	{
@@ -250,7 +231,6 @@ var grapePatterns = []*common.FrameworkPattern{
 		Description:   "Grape request body",
 		MethodPattern: "^read$",
 		SourceType:    common.SourceHTTPBody,
-		Confidence:    1.0,
 		Tags:          []string{"api", "rest"},
 	},
 	{
@@ -261,7 +241,6 @@ var grapePatterns = []*common.FrameworkPattern{
 		Description:     "Grape request headers",
 		PropertyPattern: "^headers$",
 		SourceType:      common.SourceHTTPHeader,
-		Confidence:      1.0,
 		Tags:            []string{"api", "rest"},
 	},
 	{
@@ -272,7 +251,6 @@ var grapePatterns = []*common.FrameworkPattern{
 		Description:   "Grape Rack environment",
 		PropertyPattern: "^env$",
 		SourceType:    common.SourceHTTPHeader,
-		Confidence:    0.9,
 		Tags:          []string{"api", "rack"},
 	},
 }
@@ -287,7 +265,6 @@ var padrinoPatterns = []*common.FrameworkPattern{
 		Description:     "Padrino request parameters",
 		PropertyPattern: "^params$",
 		SourceType:      common.SourceHTTPRequest,
-		Confidence:      1.0,
 		Tags:            []string{"web", "modular", "sinatra"},
 	},
 	{
@@ -298,7 +275,6 @@ var padrinoPatterns = []*common.FrameworkPattern{
 		Description:   "Padrino request body",
 		MethodPattern: "^read$",
 		SourceType:    common.SourceHTTPBody,
-		Confidence:    1.0,
 		Tags:          []string{"web", "modular"},
 	},
 	{
@@ -309,7 +285,6 @@ var padrinoPatterns = []*common.FrameworkPattern{
 		Description:     "Padrino flash messages (user-originated data)",
 		PropertyPattern: "^flash$",
 		SourceType:      common.SourceSession,
-		Confidence:      0.8,
 		Tags:            []string{"web", "modular"},
 	},
 }
@@ -325,7 +300,6 @@ var rackPatterns = []*common.FrameworkPattern{
 		ClassPattern:    "^Rack::Request$",
 		PropertyPattern: "^params$",
 		SourceType:      common.SourceHTTPRequest,
-		Confidence:      1.0,
 		Tags:            []string{"web", "interface", "core"},
 	},
 	{
@@ -337,7 +311,6 @@ var rackPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^GET$",
 		ClassPattern:  "^Rack::Request$",
 		SourceType:    common.SourceHTTPGet,
-		Confidence:    1.0,
 		Tags:          []string{"web", "interface", "core"},
 	},
 	{
@@ -349,7 +322,6 @@ var rackPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^POST$",
 		ClassPattern:  "^Rack::Request$",
 		SourceType:    common.SourceHTTPPost,
-		Confidence:    1.0,
 		Tags:          []string{"web", "interface", "core"},
 	},
 	{
@@ -360,7 +332,6 @@ var rackPatterns = []*common.FrameworkPattern{
 		Description:     "Rack environment hash (contains all request data)",
 		PropertyPattern: "^env$",
 		SourceType:      common.SourceHTTPRequest,
-		Confidence:      0.9,
 		Tags:            []string{"web", "interface", "core"},
 	},
 }

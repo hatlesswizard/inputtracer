@@ -22,7 +22,6 @@ var servletPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPGet,
 		CarrierClass:  "HttpServletRequest",
 		PopulatedFrom: []string{"query string", "form data"},
-		Confidence:    0.95,
 		Tags:          []string{"servlet"},
 	},
 	{
@@ -36,7 +35,6 @@ var servletPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPGet,
 		CarrierClass:  "HttpServletRequest",
 		PopulatedFrom: []string{"query string", "form data"},
-		Confidence:    0.95,
 		Tags:          []string{"servlet"},
 	},
 	{
@@ -50,7 +48,6 @@ var servletPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPGet,
 		CarrierClass:  "HttpServletRequest",
 		PopulatedFrom: []string{"query string", "form data"},
-		Confidence:    0.95,
 		Tags:          []string{"servlet"},
 	},
 	{
@@ -64,7 +61,6 @@ var servletPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPHeader,
 		CarrierClass:  "HttpServletRequest",
 		PopulatedFrom: []string{"HTTP headers"},
-		Confidence:    0.95,
 		Tags:          []string{"servlet"},
 	},
 	{
@@ -78,7 +74,6 @@ var servletPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPHeader,
 		CarrierClass:  "HttpServletRequest",
 		PopulatedFrom: []string{"HTTP headers"},
-		Confidence:    0.95,
 		Tags:          []string{"servlet"},
 	},
 	{
@@ -92,7 +87,6 @@ var servletPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPCookie,
 		CarrierClass:  "HttpServletRequest",
 		PopulatedFrom: []string{"cookies"},
-		Confidence:    0.95,
 		Tags:          []string{"servlet"},
 	},
 	{
@@ -106,7 +100,6 @@ var servletPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPBody,
 		CarrierClass:  "HttpServletRequest",
 		PopulatedFrom: []string{"HTTP body"},
-		Confidence:    0.95,
 		Tags:          []string{"servlet"},
 	},
 	{
@@ -120,7 +113,6 @@ var servletPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPBody,
 		CarrierClass:  "HttpServletRequest",
 		PopulatedFrom: []string{"HTTP body"},
-		Confidence:    0.95,
 		Tags:          []string{"servlet"},
 	},
 	{
@@ -134,7 +126,6 @@ var servletPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPPath,
 		CarrierClass:  "HttpServletRequest",
 		PopulatedFrom: []string{"URL path"},
-		Confidence:    0.95,
 		Tags:          []string{"servlet"},
 	},
 	{
@@ -148,7 +139,6 @@ var servletPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPGet,
 		CarrierClass:  "HttpServletRequest",
 		PopulatedFrom: []string{"query string"},
-		Confidence:    0.95,
 		Tags:          []string{"servlet"},
 	},
 	{
@@ -162,7 +152,6 @@ var servletPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPFile,
 		CarrierClass:  "HttpServletRequest",
 		PopulatedFrom: []string{"multipart form"},
-		Confidence:    0.95,
 		Tags:          []string{"servlet"},
 	},
 	{
@@ -176,7 +165,6 @@ var servletPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPFile,
 		CarrierClass:  "HttpServletRequest",
 		PopulatedFrom: []string{"multipart form"},
-		Confidence:    0.95,
 		Tags:          []string{"servlet"},
 	},
 }
@@ -192,7 +180,6 @@ var springPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^RequestParam$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"query string"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "spring", "annotation"},
 	},
 	{
@@ -204,7 +191,6 @@ var springPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^PathVariable$",
 		SourceType:    common.SourceHTTPPath,
 		PopulatedFrom: []string{"URL path"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "spring", "annotation"},
 	},
 	{
@@ -216,7 +202,6 @@ var springPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^RequestBody$",
 		SourceType:    common.SourceHTTPBody,
 		PopulatedFrom: []string{"HTTP body"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "spring", "annotation"},
 	},
 	{
@@ -228,7 +213,6 @@ var springPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^RequestHeader$",
 		SourceType:    common.SourceHTTPHeader,
 		PopulatedFrom: []string{"HTTP headers"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "spring", "annotation"},
 	},
 	{
@@ -240,7 +224,6 @@ var springPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^CookieValue$",
 		SourceType:    common.SourceHTTPCookie,
 		PopulatedFrom: []string{"cookies"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "spring", "annotation"},
 	},
 	{
@@ -252,7 +235,6 @@ var springPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^ModelAttribute$",
 		SourceType:    common.SourceHTTPPost,
 		PopulatedFrom: []string{"form data"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "spring", "annotation"},
 	},
 	{
@@ -264,7 +246,6 @@ var springPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^RequestPart$",
 		SourceType:    common.SourceHTTPFile,
 		PopulatedFrom: []string{"multipart form"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "spring", "annotation"},
 	},
 	{
@@ -276,7 +257,6 @@ var springPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^MatrixVariable$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"URL matrix parameters"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "spring", "annotation"},
 	},
 	{
@@ -289,7 +269,6 @@ var springPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPFile,
 		CarrierClass:  "MultipartFile",
 		PopulatedFrom: []string{"uploaded file"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "spring"},
 	},
 }
@@ -305,7 +284,6 @@ var jaxrsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^QueryParam$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"query string"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "jax-rs", "annotation"},
 	},
 	{
@@ -317,7 +295,6 @@ var jaxrsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^PathParam$",
 		SourceType:    common.SourceHTTPPath,
 		PopulatedFrom: []string{"URL path"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "jax-rs", "annotation"},
 	},
 	{
@@ -329,7 +306,6 @@ var jaxrsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^FormParam$",
 		SourceType:    common.SourceHTTPPost,
 		PopulatedFrom: []string{"form data"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "jax-rs", "annotation"},
 	},
 	{
@@ -341,7 +317,6 @@ var jaxrsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^HeaderParam$",
 		SourceType:    common.SourceHTTPHeader,
 		PopulatedFrom: []string{"HTTP headers"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "jax-rs", "annotation"},
 	},
 	{
@@ -353,7 +328,6 @@ var jaxrsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^CookieParam$",
 		SourceType:    common.SourceHTTPCookie,
 		PopulatedFrom: []string{"cookies"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "jax-rs", "annotation"},
 	},
 	{
@@ -365,7 +339,6 @@ var jaxrsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^BeanParam$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"multiple sources"},
-		Confidence:    0.9,
 		Tags:          []string{"framework", "jax-rs", "annotation"},
 	},
 	{
@@ -377,7 +350,6 @@ var jaxrsPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^MatrixParam$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"URL matrix parameters"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "jax-rs", "annotation"},
 	},
 }
@@ -393,7 +365,6 @@ var micronautPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^QueryValue$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"query string"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "micronaut", "annotation"},
 	},
 	{
@@ -405,7 +376,6 @@ var micronautPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^PathValue$",
 		SourceType:    common.SourceHTTPPath,
 		PopulatedFrom: []string{"URL path"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "micronaut", "annotation"},
 	},
 	{
@@ -417,7 +387,6 @@ var micronautPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Body$",
 		SourceType:    common.SourceHTTPBody,
 		PopulatedFrom: []string{"HTTP body"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "micronaut", "annotation"},
 	},
 	{
@@ -429,7 +398,6 @@ var micronautPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Header$",
 		SourceType:    common.SourceHTTPHeader,
 		PopulatedFrom: []string{"HTTP headers"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "micronaut", "annotation"},
 	},
 	{
@@ -441,7 +409,6 @@ var micronautPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^CookieValue$",
 		SourceType:    common.SourceHTTPCookie,
 		PopulatedFrom: []string{"cookies"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "micronaut", "annotation"},
 	},
 }
@@ -457,7 +424,6 @@ var vertxPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Param$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"query string", "URL path"},
-		Confidence:    0.9,
 		Tags:          []string{"framework", "vertx", "annotation"},
 	},
 	{
@@ -469,7 +435,6 @@ var vertxPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^getParam$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"query string"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "vertx"},
 	},
 	{
@@ -481,7 +446,6 @@ var vertxPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^asJsonObject$",
 		SourceType:    common.SourceHTTPJSON,
 		PopulatedFrom: []string{"JSON body"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "vertx"},
 	},
 }

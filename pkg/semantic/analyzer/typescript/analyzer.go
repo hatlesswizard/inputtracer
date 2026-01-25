@@ -56,7 +56,6 @@ func (a *TypeScriptAnalyzer) registerFrameworkPatterns() {
 			CarrierProperty: p.CarrierProperty,
 			PopulatedBy:     p.PopulatedBy,
 			PopulatedFrom:   p.PopulatedFrom,
-			Confidence:      p.Confidence,
 		}
 		a.AddFrameworkPattern(fp)
 	}

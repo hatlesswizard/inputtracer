@@ -363,7 +363,6 @@ type FlowMapMetadata struct {
 	Language         string    `json:"language"`
 	Framework        string    `json:"framework,omitempty"`
 	TracerVersion    string    `json:"tracer_version"`
-	Confidence       float64   `json:"confidence"` // 0.0 to 1.0
 }
 
 // ============================================================================
@@ -761,9 +760,6 @@ type BackwardPath struct {
 	// Steps from source to target (in forward order for readability)
 	Steps []BackwardStep `json:"steps"`
 
-	// Confidence score (0.0 to 1.0)
-	Confidence float64 `json:"confidence"`
-
 	// Whether path crosses file boundaries
 	CrossFile bool `json:"cross_file"`
 }
@@ -800,7 +796,6 @@ type SourceInfo struct {
 	Expression  string     `json:"expression"`    // e.g., "$_GET['id']"
 	FilePath    string     `json:"file_path"`
 	Line        int        `json:"line"`
-	Confidence  float64    `json:"confidence"`
 }
 
 // ============================================================================
@@ -830,9 +825,6 @@ type FrameworkPattern struct {
 	CarrierProperty string    `json:"carrier_property,omitempty"`
 	PopulatedBy     string    `json:"populated_by,omitempty"`     // Method that populates
 	PopulatedFrom   []string  `json:"populated_from,omitempty"`   // Original sources
-
-	// Confidence
-	Confidence      float64   `json:"confidence"` // 0.0 to 1.0
 }
 
 // FrameworkPatternData is a simple struct for importing patterns from pkg/sources
@@ -853,7 +845,6 @@ type FrameworkPatternData struct {
 	CarrierProperty string
 	PopulatedBy     string
 	PopulatedFrom   []string
-	Confidence      float64
 }
 
 // FromData creates a FrameworkPattern from FrameworkPatternData
@@ -874,7 +865,6 @@ func (d *FrameworkPatternData) ToFrameworkPattern() *FrameworkPattern {
 		CarrierProperty: d.CarrierProperty,
 		PopulatedBy:     d.PopulatedBy,
 		PopulatedFrom:   d.PopulatedFrom,
-		Confidence:      d.Confidence,
 	}
 }
 

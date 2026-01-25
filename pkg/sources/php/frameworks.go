@@ -83,7 +83,6 @@ func IsInputMethodCall(expr string) bool {
 
 // Note: IsContextDependentMethod, IsInputMethod, IsInputProperty, IsInputObject
 // are defined in patterns.go using the centralized regex patterns.
-// GetInputConfidence is also defined in patterns.go.
 
 // GetAllPatterns returns all registered framework patterns
 func GetAllPatterns() []*common.FrameworkPattern {
@@ -114,15 +113,6 @@ func containsSubstring(s, substr string) bool {
 	return false
 }
 
-func containsAny(s string, substrs []string) bool {
-	for _, substr := range substrs {
-		if contains(s, substr) {
-			return true
-		}
-	}
-	return false
-}
-
 // =============================================================================
 // FRAMEWORK DETECTION
 // Centralized framework detection patterns (moved from pkg/semantic/analyzer/php)
@@ -141,20 +131,10 @@ var FrameworkDetectionPatterns = map[string]FrameworkDetection{
 		ClassPatterns:   []string{},
 		SourcePatterns:  []string{"Symfony\\"},
 	},
-	"codeigniter": {
-		ImportPatterns:  []string{"codeigniter", "ci_"},
-		ClassPatterns:   []string{"CI_Controller", "CI_Model"},
-		SourcePatterns:  []string{"CodeIgniter\\"},
-	},
 	"wordpress": {
 		ImportPatterns:  []string{},
 		ClassPatterns:   []string{"WP_REST_Request", "WP_Query"},
 		SourcePatterns:  []string{"wp_", "WP_", "WordPress", "get_option("},
-	},
-	"mybb": {
-		ImportPatterns:  []string{},
-		ClassPatterns:   []string{"mybb", "MyBB"},
-		SourcePatterns:  []string{"$mybb->", "MyBB"},
 	},
 	"drupal": {
 		ImportPatterns:  []string{"drupal"},
@@ -347,8 +327,4 @@ func findSubstring(s, substr string) int {
 		}
 	}
 	return -1
-}
-
-func init() {
-	// Initialize the registry
 }

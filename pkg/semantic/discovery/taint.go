@@ -49,12 +49,11 @@ type TaintSink struct {
 
 // TaintFlow represents one propagation path from source to sink
 type TaintFlow struct {
-	Source     TaintSource `json:"source"`
-	Sink       TaintSink   `json:"sink"`
-	FilePath   string      `json:"file_path"`
-	Line       int         `json:"line"`
-	Confidence float64     `json:"confidence"`
-	FlowType   string      `json:"flow_type"` // "direct_assignment", "foreach_population", "method_return", "parameter_pass"
+	Source   TaintSource `json:"source"`
+	Sink     TaintSink   `json:"sink"`
+	FilePath string      `json:"file_path"`
+	Line     int         `json:"line"`
+	FlowType string      `json:"flow_type"` // "direct_assignment", "foreach_population", "method_return", "parameter_pass"
 }
 
 // InputCarrier represents a discovered class property or method that carries user input
@@ -67,7 +66,6 @@ type InputCarrier struct {
 	PopulatedIn   string   `json:"populated_in"`             // Constructor or method name that populates it
 	FilePath      string   `json:"file_path"`
 	Line          int      `json:"line"`
-	Confidence    float64  `json:"confidence"`
 }
 
 // TaintPropagator traces data flow from superglobals to class properties/methods
@@ -476,12 +474,11 @@ func (p *TaintPropagator) traceAssignment(usage SuperglobalUsage, source TaintSo
 			}
 
 			flow := TaintFlow{
-				Source:     source,
-				Sink:       sink,
-				FilePath:   usage.FilePath,
-				Line:       usage.Line,
-				Confidence: 1.0,
-				FlowType:   "direct_assignment",
+				Source:   source,
+				Sink:     sink,
+				FilePath: usage.FilePath,
+				Line:     usage.Line,
+				FlowType: "direct_assignment",
 			}
 			p.flows = append(p.flows, flow)
 		}
@@ -525,12 +522,11 @@ func (p *TaintPropagator) traceForeach(usage SuperglobalUsage, source TaintSourc
 		}
 
 		flow := TaintFlow{
-			Source:     source,
-			Sink:       sink,
-			FilePath:   usage.FilePath,
-			Line:       usage.Line,
-			Confidence: 1.0,
-			FlowType:   "foreach_population",
+			Source:   source,
+			Sink:     sink,
+			FilePath: usage.FilePath,
+			Line:     usage.Line,
+			FlowType: "foreach_population",
 		}
 		p.flows = append(p.flows, flow)
 	}
@@ -548,12 +544,11 @@ func (p *TaintPropagator) traceForeach(usage SuperglobalUsage, source TaintSourc
 		}
 
 		flow := TaintFlow{
-			Source:     source,
-			Sink:       sink,
-			FilePath:   usage.FilePath,
-			Line:       usage.Line,
-			Confidence: 1.0,
-			FlowType:   "foreach_population",
+			Source:   source,
+			Sink:     sink,
+			FilePath: usage.FilePath,
+			Line:     usage.Line,
+			FlowType: "foreach_population",
 		}
 		p.flows = append(p.flows, flow)
 	}
@@ -580,12 +575,11 @@ func (p *TaintPropagator) traceReturn(usage SuperglobalUsage, source TaintSource
 	}
 
 	flow := TaintFlow{
-		Source:     source,
-		Sink:       sink,
-		FilePath:   usage.FilePath,
-		Line:       usage.Line,
-		Confidence: 1.0,
-		FlowType:   "method_return",
+		Source:   source,
+		Sink:     sink,
+		FilePath: usage.FilePath,
+		Line:     usage.Line,
+		FlowType: "method_return",
 	}
 	p.flows = append(p.flows, flow)
 }
@@ -627,12 +621,11 @@ func (p *TaintPropagator) traceMethodCall(usage SuperglobalUsage, source TaintSo
 		}
 
 		flow := TaintFlow{
-			Source:     source,
-			Sink:       sink,
-			FilePath:   usage.FilePath,
-			Line:       usage.Line,
-			Confidence: 1.0,
-			FlowType:   "method_call_propagation",
+			Source:   source,
+			Sink:     sink,
+			FilePath: usage.FilePath,
+			Line:     usage.Line,
+			FlowType: "method_call_propagation",
 		}
 		p.flows = append(p.flows, flow)
 		return
@@ -662,12 +655,11 @@ func (p *TaintPropagator) traceMethodCall(usage SuperglobalUsage, source TaintSo
 			}
 
 			flow := TaintFlow{
-				Source:     source,
-				Sink:       sink,
-				FilePath:   usage.FilePath,
-				Line:       usage.Line,
-				Confidence: 1.0,
-				FlowType:   "method_call_propagation",
+				Source:   source,
+				Sink:     sink,
+				FilePath: usage.FilePath,
+				Line:     usage.Line,
+				FlowType: "method_call_propagation",
 			}
 			p.flows = append(p.flows, flow)
 		}
@@ -701,7 +693,6 @@ func (p *TaintPropagator) discoverCarriers() {
 				AccessPattern: flow.Sink.AccessMethod,
 				FilePath:      flow.FilePath,
 				Line:          flow.Line,
-				Confidence:    flow.Confidence,
 			}
 
 			if flow.Sink.Type == "property" {
@@ -797,7 +788,6 @@ func (p *TaintPropagator) discoverMethodCarriersFromProperties() {
 							PopulatedIn:   methodName,
 							FilePath:      classInfo.FilePath,
 							Line:          methodInfo.Line,
-							Confidence:    0.9, // Slightly lower confidence for indirect
 						}
 						p.carriers = append(p.carriers, methodCarrier)
 					}
@@ -831,7 +821,6 @@ func (p *TaintPropagator) discoverMethodCarriersFromProperties() {
 							PopulatedIn:   methodName,
 							FilePath:      classInfo.FilePath,
 							Line:          methodInfo.Line,
-							Confidence:    0.9,
 						}
 						p.carriers = append(p.carriers, methodCarrier)
 					}

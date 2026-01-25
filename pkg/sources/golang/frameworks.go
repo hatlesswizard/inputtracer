@@ -20,7 +20,6 @@ var ginPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Query$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"query string"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "gin"},
 	},
 	{
@@ -32,7 +31,6 @@ var ginPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^DefaultQuery$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"query string"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "gin"},
 	},
 	{
@@ -44,7 +42,6 @@ var ginPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^QueryArray$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"query string"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "gin"},
 	},
 	{
@@ -56,7 +53,6 @@ var ginPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Param$",
 		SourceType:    common.SourceHTTPPath,
 		PopulatedFrom: []string{"URL path"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "gin"},
 	},
 	{
@@ -68,7 +64,6 @@ var ginPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^PostForm$",
 		SourceType:    common.SourceHTTPPost,
 		PopulatedFrom: []string{"form data"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "gin"},
 	},
 	{
@@ -80,7 +75,6 @@ var ginPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^DefaultPostForm$",
 		SourceType:    common.SourceHTTPPost,
 		PopulatedFrom: []string{"form data"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "gin"},
 	},
 	{
@@ -92,7 +86,6 @@ var ginPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^PostFormArray$",
 		SourceType:    common.SourceHTTPPost,
 		PopulatedFrom: []string{"form data"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "gin"},
 	},
 	{
@@ -104,7 +97,6 @@ var ginPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^FormFile$",
 		SourceType:    common.SourceHTTPFile,
 		PopulatedFrom: []string{"uploaded files"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "gin"},
 	},
 	{
@@ -116,7 +108,6 @@ var ginPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^MultipartForm$",
 		SourceType:    common.SourceHTTPPost,
 		PopulatedFrom: []string{"multipart form"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "gin"},
 	},
 	{
@@ -128,7 +119,6 @@ var ginPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^GetHeader$",
 		SourceType:    common.SourceHTTPHeader,
 		PopulatedFrom: []string{"HTTP headers"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "gin"},
 	},
 	{
@@ -140,7 +130,6 @@ var ginPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Cookie$",
 		SourceType:    common.SourceHTTPCookie,
 		PopulatedFrom: []string{"cookies"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "gin"},
 	},
 	{
@@ -152,7 +141,6 @@ var ginPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^BindJSON$",
 		SourceType:    common.SourceHTTPJSON,
 		PopulatedFrom: []string{"JSON body"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "gin"},
 	},
 	{
@@ -164,7 +152,6 @@ var ginPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^ShouldBindJSON$",
 		SourceType:    common.SourceHTTPJSON,
 		PopulatedFrom: []string{"JSON body"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "gin"},
 	},
 	{
@@ -176,7 +163,6 @@ var ginPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Bind$",
 		SourceType:    common.SourceHTTPBody,
 		PopulatedFrom: []string{"HTTP body"},
-		Confidence:    0.9,
 		Tags:          []string{"framework", "gin"},
 	},
 	{
@@ -188,7 +174,6 @@ var ginPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^ShouldBind$",
 		SourceType:    common.SourceHTTPBody,
 		PopulatedFrom: []string{"HTTP body"},
-		Confidence:    0.9,
 		Tags:          []string{"framework", "gin"},
 	},
 	{
@@ -200,7 +185,6 @@ var ginPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^GetRawData$",
 		SourceType:    common.SourceHTTPBody,
 		PopulatedFrom: []string{"HTTP body"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "gin"},
 	},
 }
@@ -216,7 +200,6 @@ var echoPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^QueryParam$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"query string"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "echo"},
 	},
 	{
@@ -228,7 +211,6 @@ var echoPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^QueryParams$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"query string"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "echo"},
 	},
 	{
@@ -240,7 +222,6 @@ var echoPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Param$",
 		SourceType:    common.SourceHTTPPath,
 		PopulatedFrom: []string{"URL path"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "echo"},
 	},
 	{
@@ -252,7 +233,6 @@ var echoPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^FormValue$",
 		SourceType:    common.SourceHTTPPost,
 		PopulatedFrom: []string{"form data"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "echo"},
 	},
 	{
@@ -264,7 +244,6 @@ var echoPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^FormParams$",
 		SourceType:    common.SourceHTTPPost,
 		PopulatedFrom: []string{"form data"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "echo"},
 	},
 	{
@@ -276,7 +255,6 @@ var echoPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^FormFile$",
 		SourceType:    common.SourceHTTPFile,
 		PopulatedFrom: []string{"uploaded files"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "echo"},
 	},
 	{
@@ -288,7 +266,6 @@ var echoPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^MultipartForm$",
 		SourceType:    common.SourceHTTPPost,
 		PopulatedFrom: []string{"multipart form"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "echo"},
 	},
 	{
@@ -300,7 +277,6 @@ var echoPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^Header$",
 		SourceType:      common.SourceHTTPHeader,
 		PopulatedFrom:   []string{"HTTP headers"},
-		Confidence:      0.9,
 		Tags:            []string{"framework", "echo"},
 	},
 	{
@@ -312,7 +288,6 @@ var echoPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Cookie$",
 		SourceType:    common.SourceHTTPCookie,
 		PopulatedFrom: []string{"cookies"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "echo"},
 	},
 	{
@@ -324,7 +299,6 @@ var echoPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Cookies$",
 		SourceType:    common.SourceHTTPCookie,
 		PopulatedFrom: []string{"cookies"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "echo"},
 	},
 	{
@@ -336,7 +310,6 @@ var echoPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Bind$",
 		SourceType:    common.SourceHTTPBody,
 		PopulatedFrom: []string{"HTTP body"},
-		Confidence:    0.9,
 		Tags:          []string{"framework", "echo"},
 	},
 	{
@@ -348,7 +321,6 @@ var echoPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^Body$",
 		SourceType:      common.SourceHTTPBody,
 		PopulatedFrom:   []string{"HTTP body"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "echo"},
 	},
 }
@@ -364,7 +336,6 @@ var fiberPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Query$",
 		SourceType:    common.SourceHTTPGet,
 		PopulatedFrom: []string{"query string"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "fiber"},
 	},
 	{
@@ -376,7 +347,6 @@ var fiberPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Params$",
 		SourceType:    common.SourceHTTPPath,
 		PopulatedFrom: []string{"URL path"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "fiber"},
 	},
 	{
@@ -388,7 +358,6 @@ var fiberPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^FormValue$",
 		SourceType:    common.SourceHTTPPost,
 		PopulatedFrom: []string{"form data"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "fiber"},
 	},
 	{
@@ -400,7 +369,6 @@ var fiberPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^FormFile$",
 		SourceType:    common.SourceHTTPFile,
 		PopulatedFrom: []string{"uploaded files"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "fiber"},
 	},
 	{
@@ -412,7 +380,6 @@ var fiberPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^BodyParser$",
 		SourceType:    common.SourceHTTPBody,
 		PopulatedFrom: []string{"HTTP body"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "fiber"},
 	},
 	{
@@ -424,7 +391,6 @@ var fiberPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Body$",
 		SourceType:    common.SourceHTTPBody,
 		PopulatedFrom: []string{"HTTP body"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "fiber"},
 	},
 	{
@@ -436,7 +402,6 @@ var fiberPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Get$",
 		SourceType:    common.SourceHTTPHeader,
 		PopulatedFrom: []string{"HTTP headers"},
-		Confidence:    0.9,
 		Tags:          []string{"framework", "fiber"},
 	},
 	{
@@ -448,7 +413,6 @@ var fiberPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^Cookies$",
 		SourceType:    common.SourceHTTPCookie,
 		PopulatedFrom: []string{"cookies"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "fiber"},
 	},
 }
@@ -464,7 +428,6 @@ var chiPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^URLParam$",
 		SourceType:    common.SourceHTTPPath,
 		PopulatedFrom: []string{"URL path"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "chi"},
 	},
 	{
@@ -476,7 +439,6 @@ var chiPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^URLParamFromCtx$",
 		SourceType:    common.SourceHTTPPath,
 		PopulatedFrom: []string{"URL path"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "chi"},
 	},
 }

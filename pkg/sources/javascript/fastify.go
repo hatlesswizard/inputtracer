@@ -18,7 +18,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		CarrierProperty: "body",
 		PopulatedBy:     "fastify",
 		PopulatedFrom:   []string{"HTTP POST body"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "post"},
 	},
 	{
@@ -31,7 +30,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		SourceType:      common.SourceHTTPGet,
 		CarrierProperty: "query",
 		PopulatedFrom:   []string{"HTTP GET query string"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "get"},
 	},
 	{
@@ -44,7 +42,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		SourceType:      common.SourceHTTPPath,
 		CarrierProperty: "params",
 		PopulatedFrom:   []string{"HTTP URL path"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "path"},
 	},
 	{
@@ -57,7 +54,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		SourceType:      common.SourceHTTPHeader,
 		CarrierProperty: "headers",
 		PopulatedFrom:   []string{"HTTP headers"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "header"},
 	},
 	{
@@ -69,7 +65,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^raw$",
 		SourceType:      common.SourceHTTPBody,
 		PopulatedFrom:   []string{"HTTP request"},
-		Confidence:      0.8,
 		Tags:            []string{"framework", "http"},
 	},
 	// URL and routing
@@ -82,7 +77,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^url$",
 		SourceType:      common.SourceUserInput,
 		PopulatedFrom:   []string{"HTTP request URL"},
-		Confidence:      0.9,
 		Tags:            []string{"framework", "http"},
 	},
 	{
@@ -94,7 +88,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^routerPath$",
 		SourceType:      common.SourceHTTPPath,
 		PopulatedFrom:   []string{"HTTP URL path"},
-		Confidence:      0.85,
 		Tags:            []string{"framework", "http", "path"},
 	},
 	// IP and connection
@@ -107,7 +100,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^ip$",
 		SourceType:      common.SourceNetwork,
 		PopulatedFrom:   []string{"TCP connection", "X-Forwarded-For header"},
-		Confidence:      0.8,
 		Tags:            []string{"framework", "network"},
 	},
 	{
@@ -119,7 +111,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^ips$",
 		SourceType:      common.SourceHTTPHeader,
 		PopulatedFrom:   []string{"X-Forwarded-For header"},
-		Confidence:      0.8,
 		Tags:            []string{"framework", "http", "header"},
 	},
 	{
@@ -131,7 +122,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^hostname$",
 		SourceType:      common.SourceHTTPHeader,
 		PopulatedFrom:   []string{"HTTP Host header"},
-		Confidence:      0.85,
 		Tags:            []string{"framework", "http", "header"},
 	},
 	// Cookie patterns (with @fastify/cookie)
@@ -146,7 +136,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		CarrierProperty: "cookies",
 		PopulatedBy:     "@fastify/cookie",
 		PopulatedFrom:   []string{"HTTP Cookie header"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "cookie"},
 	},
 	// Session patterns (with @fastify/session)
@@ -161,7 +150,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		CarrierProperty: "session",
 		PopulatedBy:     "@fastify/session",
 		PopulatedFrom:   []string{"Session storage"},
-		Confidence:      0.7,
 		Tags:            []string{"framework", "session"},
 	},
 	// File upload patterns (with @fastify/multipart)
@@ -175,7 +163,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPFile,
 		PopulatedBy:   "@fastify/multipart",
 		PopulatedFrom: []string{"HTTP multipart form data"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "http", "file"},
 	},
 	{
@@ -188,7 +175,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPFile,
 		PopulatedBy:   "@fastify/multipart",
 		PopulatedFrom: []string{"HTTP multipart form data"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "http", "file"},
 	},
 	{
@@ -201,7 +187,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		SourceType:    common.SourceHTTPFile,
 		PopulatedBy:   "@fastify/multipart",
 		PopulatedFrom: []string{"HTTP multipart form data"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "http", "file"},
 	},
 	// JWT patterns (with @fastify/jwt)
@@ -215,7 +200,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		SourceType:      common.SourceHTTPHeader,
 		PopulatedBy:     "@fastify/jwt",
 		PopulatedFrom:   []string{"Authorization header (JWT)"},
-		Confidence:      0.8,
 		Tags:            []string{"framework", "auth"},
 	},
 	// Validation patterns (input that passed validation)
@@ -228,7 +212,6 @@ var fastifyPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^validatedData$",
 		SourceType:      common.SourceUserInput,
 		PopulatedFrom:   []string{"HTTP body", "query string", "URL path"},
-		Confidence:      0.85, // Validated but still user input
 		Tags:            []string{"framework", "validated"},
 	},
 }
@@ -245,7 +228,6 @@ var hapiPatterns = []*common.FrameworkPattern{
 		SourceType:      common.SourceHTTPBody,
 		CarrierProperty: "payload",
 		PopulatedFrom:   []string{"HTTP POST body"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "post"},
 	},
 	{
@@ -258,7 +240,6 @@ var hapiPatterns = []*common.FrameworkPattern{
 		SourceType:      common.SourceHTTPGet,
 		CarrierProperty: "query",
 		PopulatedFrom:   []string{"HTTP GET query string"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "get"},
 	},
 	{
@@ -271,7 +252,6 @@ var hapiPatterns = []*common.FrameworkPattern{
 		SourceType:      common.SourceHTTPPath,
 		CarrierProperty: "params",
 		PopulatedFrom:   []string{"HTTP URL path"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "path"},
 	},
 	{
@@ -284,7 +264,6 @@ var hapiPatterns = []*common.FrameworkPattern{
 		SourceType:      common.SourceHTTPHeader,
 		CarrierProperty: "headers",
 		PopulatedFrom:   []string{"HTTP headers"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "header"},
 	},
 	{
@@ -297,7 +276,6 @@ var hapiPatterns = []*common.FrameworkPattern{
 		SourceType:      common.SourceHTTPCookie,
 		CarrierProperty: "state",
 		PopulatedFrom:   []string{"HTTP Cookie header"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "cookie"},
 	},
 	{
@@ -309,7 +287,6 @@ var hapiPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^path$",
 		SourceType:      common.SourceHTTPPath,
 		PopulatedFrom:   []string{"HTTP URL path"},
-		Confidence:      0.9,
 		Tags:            []string{"framework", "http", "path"},
 	},
 	{
@@ -321,7 +298,6 @@ var hapiPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^url$",
 		SourceType:      common.SourceUserInput,
 		PopulatedFrom:   []string{"HTTP request URL"},
-		Confidence:      0.9,
 		Tags:            []string{"framework", "http"},
 	},
 }

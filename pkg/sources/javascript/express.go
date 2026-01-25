@@ -17,7 +17,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		CarrierProperty: "body",
 		PopulatedBy:     "body-parser",
 		PopulatedFrom:   []string{"HTTP POST body"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "post"},
 	},
 	{
@@ -31,7 +30,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		CarrierProperty: "query",
 		PopulatedBy:     "express",
 		PopulatedFrom:   []string{"HTTP GET query string"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "get"},
 	},
 	{
@@ -45,7 +43,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		CarrierProperty: "params",
 		PopulatedBy:     "express-router",
 		PopulatedFrom:   []string{"HTTP URL path"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "path"},
 	},
 	{
@@ -59,7 +56,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		CarrierProperty: "headers",
 		PopulatedBy:     "http",
 		PopulatedFrom:   []string{"HTTP headers"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "header"},
 	},
 	{
@@ -73,7 +69,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		CarrierProperty: "cookies",
 		PopulatedBy:     "cookie-parser",
 		PopulatedFrom:   []string{"HTTP Cookie header"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "cookie"},
 	},
 	{
@@ -87,7 +82,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		CarrierProperty: "signedCookies",
 		PopulatedBy:     "cookie-parser",
 		PopulatedFrom:   []string{"HTTP Cookie header"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "cookie"},
 	},
 	{
@@ -99,7 +93,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^get$",
 		SourceType:    common.SourceHTTPHeader,
 		PopulatedFrom: []string{"HTTP headers"},
-		Confidence:    0.9,
 		Tags:          []string{"framework", "http", "header"},
 	},
 	{
@@ -111,7 +104,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^header$",
 		SourceType:    common.SourceHTTPHeader,
 		PopulatedFrom: []string{"HTTP headers"},
-		Confidence:    0.9,
 		Tags:          []string{"framework", "http", "header"},
 	},
 	{
@@ -123,7 +115,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^param$",
 		SourceType:    common.SourceUserInput,
 		PopulatedFrom: []string{"HTTP body", "query string", "URL path"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "http"},
 	},
 	{
@@ -137,7 +128,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		CarrierProperty: "files",
 		PopulatedBy:     "multer",
 		PopulatedFrom:   []string{"HTTP multipart form data"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "file"},
 	},
 	{
@@ -151,7 +141,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		CarrierProperty: "file",
 		PopulatedBy:     "multer",
 		PopulatedFrom:   []string{"HTTP multipart form data"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "file"},
 	},
 	{
@@ -163,7 +152,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^hostname$",
 		SourceType:      common.SourceHTTPHeader,
 		PopulatedFrom:   []string{"HTTP Host header"},
-		Confidence:      0.85,
 		Tags:            []string{"framework", "http", "header"},
 	},
 	{
@@ -175,7 +163,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^ip$",
 		SourceType:      common.SourceNetwork,
 		PopulatedFrom:   []string{"TCP connection", "X-Forwarded-For header"},
-		Confidence:      0.8,
 		Tags:            []string{"framework", "network"},
 	},
 	{
@@ -187,7 +174,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^path$",
 		SourceType:      common.SourceHTTPPath,
 		PopulatedFrom:   []string{"HTTP URL path"},
-		Confidence:      0.9,
 		Tags:            []string{"framework", "http", "path"},
 	},
 	{
@@ -199,7 +185,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^url$",
 		SourceType:      common.SourceUserInput,
 		PopulatedFrom:   []string{"HTTP request URL"},
-		Confidence:      0.9,
 		Tags:            []string{"framework", "http"},
 	},
 	{
@@ -211,7 +196,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^originalUrl$",
 		SourceType:      common.SourceUserInput,
 		PopulatedFrom:   []string{"HTTP request URL"},
-		Confidence:      0.9,
 		Tags:            []string{"framework", "http"},
 	},
 	{
@@ -225,7 +209,6 @@ var expressPatterns = []*common.FrameworkPattern{
 		CarrierProperty: "session",
 		PopulatedBy:     "express-session",
 		PopulatedFrom:   []string{"Session storage"},
-		Confidence:      0.7, // Session data may contain user input
 		Tags:            []string{"framework", "session"},
 	},
 }

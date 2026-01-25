@@ -18,7 +18,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		CarrierProperty: "body",
 		PopulatedBy:     "koa-bodyparser",
 		PopulatedFrom:   []string{"HTTP POST body"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "post"},
 	},
 	{
@@ -31,7 +30,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		SourceType:      common.SourceHTTPGet,
 		CarrierProperty: "query",
 		PopulatedFrom:   []string{"HTTP GET query string"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "get"},
 	},
 	{
@@ -43,7 +41,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^querystring$",
 		SourceType:      common.SourceHTTPGet,
 		PopulatedFrom:   []string{"HTTP GET query string"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "get"},
 	},
 	{
@@ -56,7 +53,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		SourceType:      common.SourceHTTPHeader,
 		CarrierProperty: "header",
 		PopulatedFrom:   []string{"HTTP headers"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "header"},
 	},
 	{
@@ -69,7 +65,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		SourceType:      common.SourceHTTPHeader,
 		CarrierProperty: "headers",
 		PopulatedFrom:   []string{"HTTP headers"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "header"},
 	},
 	// ctx shortcuts (delegated from ctx.request)
@@ -83,7 +78,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		SourceType:      common.SourceHTTPGet,
 		CarrierProperty: "query",
 		PopulatedFrom:   []string{"HTTP GET query string"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "get"},
 	},
 	{
@@ -95,7 +89,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^querystring$",
 		SourceType:      common.SourceHTTPGet,
 		PopulatedFrom:   []string{"HTTP GET query string"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "get"},
 	},
 	{
@@ -108,7 +101,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		SourceType:      common.SourceHTTPHeader,
 		CarrierProperty: "header",
 		PopulatedFrom:   []string{"HTTP headers"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "header"},
 	},
 	{
@@ -121,7 +113,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		SourceType:      common.SourceHTTPHeader,
 		CarrierProperty: "headers",
 		PopulatedFrom:   []string{"HTTP headers"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "header"},
 	},
 	// koa-router params
@@ -136,7 +127,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		CarrierProperty: "params",
 		PopulatedBy:     "@koa/router",
 		PopulatedFrom:   []string{"HTTP URL path"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "path"},
 	},
 	// Cookie patterns
@@ -150,7 +140,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		SourceType:      common.SourceHTTPCookie,
 		CarrierProperty: "cookies",
 		PopulatedFrom:   []string{"HTTP Cookie header"},
-		Confidence:      0.9,
 		Tags:            []string{"framework", "http", "cookie"},
 	},
 	{
@@ -162,7 +151,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^get$",
 		SourceType:    common.SourceHTTPCookie,
 		PopulatedFrom: []string{"HTTP Cookie header"},
-		Confidence:    0.95,
 		Tags:          []string{"framework", "http", "cookie"},
 	},
 	// URL and path patterns
@@ -175,7 +163,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^url$",
 		SourceType:      common.SourceUserInput,
 		PopulatedFrom:   []string{"HTTP request URL"},
-		Confidence:      0.9,
 		Tags:            []string{"framework", "http"},
 	},
 	{
@@ -187,7 +174,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^originalUrl$",
 		SourceType:      common.SourceUserInput,
 		PopulatedFrom:   []string{"HTTP request URL"},
-		Confidence:      0.9,
 		Tags:            []string{"framework", "http"},
 	},
 	{
@@ -199,7 +185,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^path$",
 		SourceType:      common.SourceHTTPPath,
 		PopulatedFrom:   []string{"HTTP URL path"},
-		Confidence:      0.9,
 		Tags:            []string{"framework", "http", "path"},
 	},
 	{
@@ -211,7 +196,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^href$",
 		SourceType:      common.SourceUserInput,
 		PopulatedFrom:   []string{"HTTP request URL"},
-		Confidence:      0.9,
 		Tags:            []string{"framework", "http"},
 	},
 	// Header access methods
@@ -224,7 +208,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^get$",
 		SourceType:    common.SourceHTTPHeader,
 		PopulatedFrom: []string{"HTTP headers"},
-		Confidence:    0.9,
 		Tags:          []string{"framework", "http", "header"},
 	},
 	// Host and IP
@@ -237,7 +220,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^host$",
 		SourceType:      common.SourceHTTPHeader,
 		PopulatedFrom:   []string{"HTTP Host header"},
-		Confidence:      0.85,
 		Tags:            []string{"framework", "http", "header"},
 	},
 	{
@@ -249,7 +231,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^hostname$",
 		SourceType:      common.SourceHTTPHeader,
 		PopulatedFrom:   []string{"HTTP Host header"},
-		Confidence:      0.85,
 		Tags:            []string{"framework", "http", "header"},
 	},
 	{
@@ -261,7 +242,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^ip$",
 		SourceType:      common.SourceNetwork,
 		PopulatedFrom:   []string{"TCP connection", "X-Forwarded-For header"},
-		Confidence:      0.8,
 		Tags:            []string{"framework", "network"},
 	},
 	{
@@ -273,7 +253,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^ips$",
 		SourceType:      common.SourceHTTPHeader,
 		PopulatedFrom:   []string{"X-Forwarded-For header"},
-		Confidence:      0.8,
 		Tags:            []string{"framework", "http", "header"},
 	},
 	// File upload with koa-body or similar
@@ -288,7 +267,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		CarrierProperty: "files",
 		PopulatedBy:     "koa-body",
 		PopulatedFrom:   []string{"HTTP multipart form data"},
-		Confidence:      0.95,
 		Tags:            []string{"framework", "http", "file"},
 	},
 	// State (may contain user input)
@@ -300,7 +278,6 @@ var koaPatterns = []*common.FrameworkPattern{
 		Description:     "Koa context state object (may contain user-derived data)",
 		PropertyPattern: "^state$",
 		SourceType:      common.SourceUserInput,
-		Confidence:      0.5, // Low confidence - state could be anything
 		Tags:            []string{"framework"},
 	},
 }

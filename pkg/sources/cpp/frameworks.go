@@ -19,7 +19,6 @@ var crowPatterns = []*common.FrameworkPattern{
 		Description:   "Crow HTTP request object",
 		ClassPattern:  "^crow::request$",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    1.0,
 		Tags:          []string{"web", "framework"},
 	},
 	{
@@ -30,7 +29,6 @@ var crowPatterns = []*common.FrameworkPattern{
 		Description:   "Crow HTTP response object",
 		ClassPattern:  "^crow::response$",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    1.0,
 		Tags:          []string{"web", "framework"},
 	},
 	{
@@ -41,7 +39,6 @@ var crowPatterns = []*common.FrameworkPattern{
 		Description:   "Crow route macro",
 		MethodPattern: "^CROW_ROUTE$",
 		SourceType:    common.SourceHTTPPath,
-		Confidence:    1.0,
 		Tags:          []string{"web", "framework", "routing"},
 	},
 	{
@@ -52,7 +49,6 @@ var crowPatterns = []*common.FrameworkPattern{
 		Description:   "Crow URL query parameters",
 		PropertyPattern: "^url_params$",
 		SourceType:    common.SourceHTTPGet,
-		Confidence:    1.0,
 		Tags:          []string{"web", "framework", "query"},
 	},
 	{
@@ -64,7 +60,6 @@ var crowPatterns = []*common.FrameworkPattern{
 		PropertyPattern: "^body$",
 		CarrierClass:  "crow::request",
 		SourceType:    common.SourceHTTPBody,
-		Confidence:    1.0,
 		Tags:          []string{"web", "framework", "body"},
 	},
 }
@@ -79,7 +74,6 @@ var drogonPatterns = []*common.FrameworkPattern{
 		Description:   "Drogon HTTP request pointer",
 		ClassPattern:  "^HttpRequestPtr$",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    1.0,
 		Tags:          []string{"web", "framework", "async"},
 	},
 	{
@@ -90,7 +84,6 @@ var drogonPatterns = []*common.FrameworkPattern{
 		Description:   "Drogon HTTP response pointer",
 		ClassPattern:  "^HttpResponsePtr$",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    1.0,
 		Tags:          []string{"web", "framework", "async"},
 	},
 	{
@@ -101,7 +94,6 @@ var drogonPatterns = []*common.FrameworkPattern{
 		Description:   "Drogon application singleton",
 		MethodPattern: "^drogon::app$",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    0.8,
 		Tags:          []string{"web", "framework"},
 	},
 	{
@@ -112,7 +104,6 @@ var drogonPatterns = []*common.FrameworkPattern{
 		Description:   "Drogon get request parameter",
 		MethodPattern: "^getParameter$",
 		SourceType:    common.SourceHTTPGet,
-		Confidence:    1.0,
 		Tags:          []string{"web", "framework", "query"},
 	},
 	{
@@ -124,7 +115,6 @@ var drogonPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^getBody$",
 		CarrierClass:  "HttpRequestPtr",
 		SourceType:    common.SourceHTTPBody,
-		Confidence:    1.0,
 		Tags:          []string{"web", "framework", "body"},
 	},
 	{
@@ -136,7 +126,6 @@ var drogonPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^getJsonObject$",
 		CarrierClass:  "HttpRequestPtr",
 		SourceType:    common.SourceHTTPJSON,
-		Confidence:    1.0,
 		Tags:          []string{"web", "framework", "json"},
 	},
 }
@@ -151,7 +140,6 @@ var boostBeastPatterns = []*common.FrameworkPattern{
 		Description:   "Boost.Beast HTTP request",
 		ClassPattern:  "^beast::http::request",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    1.0,
 		Tags:          []string{"web", "library", "boost"},
 	},
 	{
@@ -162,7 +150,6 @@ var boostBeastPatterns = []*common.FrameworkPattern{
 		Description:   "Boost.Beast WebSocket stream",
 		ClassPattern:  "^websocket::stream",
 		SourceType:    common.SourceNetwork,
-		Confidence:    1.0,
 		Tags:          []string{"websocket", "library", "boost"},
 	},
 	{
@@ -173,7 +160,6 @@ var boostBeastPatterns = []*common.FrameworkPattern{
 		Description:   "Boost.Beast request body",
 		MethodPattern: "^body$",
 		SourceType:    common.SourceHTTPBody,
-		Confidence:    0.9,
 		Tags:          []string{"web", "library", "boost"},
 	},
 	{
@@ -184,7 +170,6 @@ var boostBeastPatterns = []*common.FrameworkPattern{
 		Description:   "Boost.Beast request target (path)",
 		MethodPattern: "^target$",
 		SourceType:    common.SourceHTTPPath,
-		Confidence:    0.9,
 		Tags:          []string{"web", "library", "boost"},
 	},
 }
@@ -199,7 +184,6 @@ var cpprestsdkPatterns = []*common.FrameworkPattern{
 		Description:   "cpprestsdk HTTP request",
 		ClassPattern:  "^(web::)?http::http_request$",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    1.0,
 		Tags:          []string{"web", "microsoft", "rest"},
 	},
 	{
@@ -210,7 +194,6 @@ var cpprestsdkPatterns = []*common.FrameworkPattern{
 		Description:   "cpprestsdk HTTP response",
 		ClassPattern:  "^(web::)?http::http_response$",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    1.0,
 		Tags:          []string{"web", "microsoft", "rest"},
 	},
 	{
@@ -221,7 +204,6 @@ var cpprestsdkPatterns = []*common.FrameworkPattern{
 		Description:   "cpprestsdk request URI",
 		MethodPattern: "^request_uri$",
 		SourceType:    common.SourceHTTPPath,
-		Confidence:    1.0,
 		Tags:          []string{"web", "microsoft", "rest"},
 	},
 	{
@@ -232,7 +214,6 @@ var cpprestsdkPatterns = []*common.FrameworkPattern{
 		Description:   "cpprestsdk extract JSON from request",
 		MethodPattern: "^extract_json$",
 		SourceType:    common.SourceHTTPJSON,
-		Confidence:    1.0,
 		Tags:          []string{"web", "microsoft", "json"},
 	},
 	{
@@ -243,7 +224,6 @@ var cpprestsdkPatterns = []*common.FrameworkPattern{
 		Description:   "cpprestsdk extract string from request body",
 		MethodPattern: "^extract_string$",
 		SourceType:    common.SourceHTTPBody,
-		Confidence:    1.0,
 		Tags:          []string{"web", "microsoft", "body"},
 	},
 }
@@ -258,7 +238,6 @@ var pocoPatterns = []*common.FrameworkPattern{
 		Description:   "Poco HTTP server request",
 		ClassPattern:  "^(Poco::Net::)?HTTPServerRequest$",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    1.0,
 		Tags:          []string{"web", "framework", "portable"},
 	},
 	{
@@ -269,7 +248,6 @@ var pocoPatterns = []*common.FrameworkPattern{
 		Description:   "Poco HTTP server response",
 		ClassPattern:  "^(Poco::Net::)?HTTPServerResponse$",
 		SourceType:    common.SourceHTTPRequest,
-		Confidence:    1.0,
 		Tags:          []string{"web", "framework", "portable"},
 	},
 	{
@@ -281,7 +259,6 @@ var pocoPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^getURI$",
 		CarrierClass:  "HTTPServerRequest",
 		SourceType:    common.SourceHTTPPath,
-		Confidence:    1.0,
 		Tags:          []string{"web", "framework", "uri"},
 	},
 	{
@@ -293,7 +270,6 @@ var pocoPatterns = []*common.FrameworkPattern{
 		MethodPattern: "^stream$",
 		CarrierClass:  "HTTPServerRequest",
 		SourceType:    common.SourceHTTPBody,
-		Confidence:    1.0,
 		Tags:          []string{"web", "framework", "body"},
 	},
 	{
@@ -304,7 +280,6 @@ var pocoPatterns = []*common.FrameworkPattern{
 		Description:   "Poco get request host header",
 		MethodPattern: "^getHost$",
 		SourceType:    common.SourceHTTPHeader,
-		Confidence:    1.0,
 		Tags:          []string{"web", "framework", "header"},
 	},
 }
@@ -319,7 +294,6 @@ var qtPatterns = []*common.FrameworkPattern{
 		Description:   "Qt network reply object",
 		ClassPattern:  "^QNetworkReply$",
 		SourceType:    common.SourceNetwork,
-		Confidence:    1.0,
 		Tags:          []string{"qt", "network"},
 	},
 	{
@@ -330,7 +304,6 @@ var qtPatterns = []*common.FrameworkPattern{
 		Description:   "Qt network request object",
 		ClassPattern:  "^QNetworkRequest$",
 		SourceType:    common.SourceNetwork,
-		Confidence:    0.9,
 		Tags:          []string{"qt", "network"},
 	},
 	{
@@ -341,7 +314,6 @@ var qtPatterns = []*common.FrameworkPattern{
 		Description:   "Qt URL query parser",
 		ClassPattern:  "^QUrlQuery$",
 		SourceType:    common.SourceHTTPGet,
-		Confidence:    0.9,
 		Tags:          []string{"qt", "url", "query"},
 	},
 	{
@@ -352,7 +324,6 @@ var qtPatterns = []*common.FrameworkPattern{
 		Description:   "Qt read all data from device/reply",
 		MethodPattern: "^readAll$",
 		SourceType:    common.SourceNetwork,
-		Confidence:    0.85,
 		Tags:          []string{"qt", "network", "file"},
 	},
 	{
@@ -363,7 +334,6 @@ var qtPatterns = []*common.FrameworkPattern{
 		Description:   "Qt read line from device",
 		MethodPattern: "^readLine$",
 		SourceType:    common.SourceUserInput,
-		Confidence:    0.8,
 		Tags:          []string{"qt", "file", "input"},
 	},
 	{
@@ -374,7 +344,6 @@ var qtPatterns = []*common.FrameworkPattern{
 		Description:   "Qt read process stdout",
 		MethodPattern: "^readAllStandardOutput$",
 		SourceType:    common.SourceUserInput,
-		Confidence:    0.9,
 		Tags:          []string{"qt", "process"},
 	},
 }
