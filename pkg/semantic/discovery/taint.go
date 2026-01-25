@@ -768,7 +768,7 @@ func (p *TaintPropagator) discoverMethodCarriersFromProperties() {
 			// Check if method returns a tainted property
 			for _, propName := range props {
 				// Build pattern for return $this->propName
-				returnPattern := regexp.MustCompile(`return\s+\$this->` + regexp.QuoteMeta(propName))
+				returnPattern := phppatterns.BuildReturnPropertyPattern(propName)
 				if returnPattern.MatchString(methodInfo.BodySource) {
 					// Find source types for this property
 					var sourceTypes []string
@@ -804,7 +804,7 @@ func (p *TaintPropagator) discoverMethodCarriersFromProperties() {
 				}
 
 				// Build pattern for return $this->propName[
-				paramReturnPattern := regexp.MustCompile(`return\s+\$this->` + regexp.QuoteMeta(propName) + `\[`)
+				paramReturnPattern := phppatterns.BuildReturnPropertyArrayPattern(propName)
 				if paramReturnPattern.MatchString(methodInfo.BodySource) {
 					var sourceTypes []string
 					for _, carrier := range p.carriers {

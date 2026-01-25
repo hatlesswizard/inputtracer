@@ -3,7 +3,6 @@ package python
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
@@ -856,7 +855,7 @@ func (a *PythonAnalyzer) AnalyzeMethodBody(method *types.MethodDef, source []byt
 		}
 
 		// Check if param flows to self.property
-		selfAssignRegex := regexp.MustCompile(`self\.(\w+)\s*=.*\b` + regexp.QuoteMeta(paramName) + `\b`)
+		selfAssignRegex := pythonPatterns.BuildSelfPropertyAssignPattern(paramName)
 		matches := selfAssignRegex.FindAllStringSubmatch(body, -1)
 		for _, match := range matches {
 			if len(match) > 1 {
@@ -937,12 +936,12 @@ func (a *PythonAnalyzer) TraceExpression(target types.FlowTarget, state *types.A
 // matchesFrameworkPattern checks if an expression matches a framework pattern
 func (a *PythonAnalyzer) matchesFrameworkPattern(expr string, pattern *types.FrameworkPattern) bool {
 	if pattern.PropertyPattern != "" {
-		regex := regexp.MustCompile(`\b` + pattern.PropertyPattern)
+		regex := pythonPatterns.BuildPropertyPattern(pattern.PropertyPattern)
 		return regex.MatchString(expr)
 	}
 
 	if pattern.MethodPattern != "" {
-		regex := regexp.MustCompile(`\.` + pattern.MethodPattern + `\(`)
+		regex := pythonPatterns.BuildMethodCallPattern(pattern.MethodPattern)
 		return regex.MatchString(expr)
 	}
 
@@ -952,15 +951,13 @@ func (a *PythonAnalyzer) matchesFrameworkPattern(expr string, pattern *types.Fra
 // extractKeyFromExpression extracts the key from an expression like request.args['key']
 func (a *PythonAnalyzer) extractKeyFromExpression(expr string) string {
 	// Match ['key'] or ["key"]
-	regex := regexp.MustCompile(`\[['"](\w+)['"]\]`)
-	matches := regex.FindStringSubmatch(expr)
+	matches := pythonPatterns.DictKeyAccessPattern.FindStringSubmatch(expr)
 	if len(matches) > 1 {
 		return matches[1]
 	}
 
 	// Match .get('key')
-	regex2 := regexp.MustCompile(`\.get\(['"](\w+)['"]\)`)
-	matches2 := regex2.FindStringSubmatch(expr)
+	matches2 := pythonPatterns.DictGetPattern.FindStringSubmatch(expr)
 	if len(matches2) > 1 {
 		return matches2[1]
 	}

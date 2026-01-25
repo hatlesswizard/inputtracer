@@ -159,6 +159,66 @@ func BuildConditionalPattern(superglobal string) *regexp.Regexp {
 }
 
 // =============================================================================
+// SEMANTIC ANALYSIS PATTERNS
+// Used by semantic analyzers for flow analysis
+// =============================================================================
+
+var (
+	// ThisPropertyAssignPattern matches $this->property = ...
+	// Used to detect constructor/method parameter flow to properties
+	ThisPropertyAssignPattern = regexp.MustCompile(`\$this->(\w+)\s*=`)
+
+	// ThisArrayPropertyAssignPattern matches $this->property[...] = ...
+	// Used to detect array property assignments
+	ThisArrayPropertyAssignPattern = regexp.MustCompile(`\$this->(\w+)\[.*\]\s*=`)
+
+	// ArrayKeyAccessPattern matches ['key'] or ["key"]
+	// Used to extract array keys from expressions
+	ArrayKeyAccessPattern = regexp.MustCompile(`\[['"](\w+)['"]\]`)
+
+	// VariableKeyAccessPattern matches [$variable]
+	// Used to extract variable-based array access
+	VariableKeyAccessPattern = regexp.MustCompile(`\[(\$\w+)\]`)
+
+	// ReturnThisPropertyPrefix is the static prefix for return $this->property patterns
+	// Use BuildReturnPropertyPattern for dynamic patterns with specific property names
+	ReturnThisPropertyPrefix = `return\s+\$this->`
+
+	// MethodCallSuffix is the suffix pattern for method calls
+	MethodCallSuffix = `\(`
+)
+
+// BuildThisPropertyAssignPattern creates a pattern for $this->property = ... paramName
+func BuildThisPropertyAssignPattern(paramName string) *regexp.Regexp {
+	return regexp.MustCompile(`\$this->(\w+)\s*=.*` + regexp.QuoteMeta(paramName))
+}
+
+// BuildThisArrayPropertyAssignPattern creates a pattern for $this->property[...] = ... paramName
+func BuildThisArrayPropertyAssignPattern(paramName string) *regexp.Regexp {
+	return regexp.MustCompile(`\$this->(\w+)\[.*\]\s*=.*` + regexp.QuoteMeta(paramName))
+}
+
+// BuildReturnPropertyPattern creates a pattern for return $this->propertyName
+func BuildReturnPropertyPattern(propertyName string) *regexp.Regexp {
+	return regexp.MustCompile(ReturnThisPropertyPrefix + regexp.QuoteMeta(propertyName))
+}
+
+// BuildReturnPropertyArrayPattern creates a pattern for return $this->propertyName[
+func BuildReturnPropertyArrayPattern(propertyName string) *regexp.Regexp {
+	return regexp.MustCompile(ReturnThisPropertyPrefix + regexp.QuoteMeta(propertyName) + `\[`)
+}
+
+// BuildPropertyAccessPattern creates a pattern for $var->property or $var->property[
+func BuildPropertyAccessPattern(propertyName string) *regexp.Regexp {
+	return regexp.MustCompile(`\$\w+->(` + regexp.QuoteMeta(propertyName) + `)(\[|$)`)
+}
+
+// BuildMethodCallPattern creates a pattern for ->methodName(
+func BuildMethodCallPattern(methodName string) *regexp.Regexp {
+	return regexp.MustCompile(`->` + methodName + MethodCallSuffix)
+}
+
+// =============================================================================
 // HELPER FUNCTIONS
 // =============================================================================
 

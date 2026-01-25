@@ -1243,7 +1243,7 @@ func (a *PHPAnalyzer) AnalyzeMethodBody(method *types.MethodDef, source []byte, 
 		}
 
 		// Check if param flows to $this->property
-		thisAssignRegex := regexp.MustCompile(`\$this->(\w+)\s*=.*` + regexp.QuoteMeta(paramName))
+		thisAssignRegex := phpPatterns.BuildThisPropertyAssignPattern(paramName)
 		matches := thisAssignRegex.FindAllStringSubmatch(body, -1)
 		for _, match := range matches {
 			if len(match) > 1 {
@@ -1253,7 +1253,7 @@ func (a *PHPAnalyzer) AnalyzeMethodBody(method *types.MethodDef, source []byte, 
 		}
 
 		// Check if param flows to $this->property[$key] = ...
-		thisArrayAssignRegex := regexp.MustCompile(`\$this->(\w+)\[.*\]\s*=.*` + regexp.QuoteMeta(paramName))
+		thisArrayAssignRegex := phpPatterns.BuildThisArrayPropertyAssignPattern(paramName)
 		arrayMatches := thisArrayAssignRegex.FindAllStringSubmatch(body, -1)
 		for _, match := range arrayMatches {
 			if len(match) > 1 {
@@ -1359,13 +1359,13 @@ func (a *PHPAnalyzer) matchesFrameworkPattern(expr string, pattern *types.Framew
 	// Check for class->property pattern
 	if pattern.CarrierClass != "" && pattern.CarrierProperty != "" {
 		// Match $varname->property or $varname->property[...]
-		regex := regexp.MustCompile(`\$\w+->(` + regexp.QuoteMeta(pattern.CarrierProperty) + `)(\[|$)`)
+		regex := phpPatterns.BuildPropertyAccessPattern(pattern.CarrierProperty)
 		return regex.MatchString(expr)
 	}
 
 	// Check for method call pattern
 	if pattern.MethodPattern != "" {
-		regex := regexp.MustCompile(`->` + pattern.MethodPattern + `\(`)
+		regex := phpPatterns.BuildMethodCallPattern(pattern.MethodPattern)
 		return regex.MatchString(expr)
 	}
 
@@ -1375,15 +1375,13 @@ func (a *PHPAnalyzer) matchesFrameworkPattern(expr string, pattern *types.Framew
 // extractKeyFromExpression extracts the array key from an expression like $mybb->input['thumbnail']
 func (a *PHPAnalyzer) extractKeyFromExpression(expr string) string {
 	// Match ['key'] or ["key"]
-	regex := regexp.MustCompile(`\[['"](\w+)['"]\]`)
-	matches := regex.FindStringSubmatch(expr)
+	matches := phpPatterns.ArrayKeyAccessPattern.FindStringSubmatch(expr)
 	if len(matches) > 1 {
 		return matches[1]
 	}
 
 	// Match [$variable]
-	regex2 := regexp.MustCompile(`\[(\$\w+)\]`)
-	matches2 := regex2.FindStringSubmatch(expr)
+	matches2 := phpPatterns.VariableKeyAccessPattern.FindStringSubmatch(expr)
 	if len(matches2) > 1 {
 		return matches2[1]
 	}

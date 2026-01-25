@@ -4,7 +4,6 @@ package javascript
 import (
 	"fmt"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
@@ -887,7 +886,7 @@ func (a *JSAnalyzer) FindInputSources(root *sitter.Node, source []byte) ([]*type
 			}
 
 			// Try to extract key from get('key')
-			keyRegex := regexp.MustCompile(`\.get\(['"](\w+)['"]\)`)
+			keyRegex := jsPatterns.MapGetPattern
 			if matches := keyRegex.FindStringSubmatch(text); len(matches) > 1 {
 				flowNode.SourceKey = matches[1]
 			}
@@ -938,13 +937,13 @@ func extractJSKey(s string) string {
 	s = strings.TrimSpace(s)
 
 	// Check for bracket notation ['key'] or ["key"]
-	bracketRegex := regexp.MustCompile(`^\[['"](\w+)['"]\]`)
+	bracketRegex := jsPatterns.BracketPropertyPattern
 	if matches := bracketRegex.FindStringSubmatch(s); len(matches) > 1 {
 		return matches[1]
 	}
 
 	// Check for dot notation .key
-	dotRegex := regexp.MustCompile(`^\.(\w+)`)
+	dotRegex := jsPatterns.DotPropertyPattern
 	if matches := dotRegex.FindStringSubmatch(s); len(matches) > 1 {
 		return matches[1]
 	}
@@ -1027,7 +1026,7 @@ func (a *JSAnalyzer) AnalyzeMethodBody(method *types.MethodDef, source []byte, s
 		}
 
 		// Check if param flows to this.property
-		thisAssignRegex := regexp.MustCompile(`this\.(\w+)\s*=.*` + regexp.QuoteMeta(paramName))
+		thisAssignRegex := jsPatterns.BuildThisPropertyAssignPattern(paramName)
 		matches := thisAssignRegex.FindAllStringSubmatch(body, -1)
 		for _, match := range matches {
 			if len(match) > 1 {

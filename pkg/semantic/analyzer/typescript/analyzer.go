@@ -3,7 +3,6 @@ package typescript
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/hatlesswizard/inputtracer/pkg/parser/languages"
@@ -11,6 +10,7 @@ import (
 	"github.com/hatlesswizard/inputtracer/pkg/semantic/types"
 	"github.com/hatlesswizard/inputtracer/pkg/sources"
 	jsPatterns "github.com/hatlesswizard/inputtracer/pkg/sources/javascript"
+	tspatterns "github.com/hatlesswizard/inputtracer/pkg/sources/typescript"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -624,7 +624,7 @@ func (a *TypeScriptAnalyzer) AnalyzeMethodBody(method *types.MethodDef, source [
 			analysis.ParamsToReturn = append(analysis.ParamsToReturn, i)
 		}
 
-		thisAssignRegex := regexp.MustCompile(`this\.(\w+)\s*=.*\b` + regexp.QuoteMeta(param.Name) + `\b`)
+		thisAssignRegex := tspatterns.BuildThisPropertyAssignPattern(param.Name)
 		matches := thisAssignRegex.FindAllStringSubmatch(body, -1)
 		for _, match := range matches {
 			if len(match) > 1 {
@@ -699,12 +699,12 @@ func (a *TypeScriptAnalyzer) TraceExpression(target types.FlowTarget, state *typ
 
 func (a *TypeScriptAnalyzer) matchesFrameworkPattern(expr string, pattern *types.FrameworkPattern) bool {
 	if pattern.PropertyPattern != "" {
-		regex := regexp.MustCompile(`\.` + pattern.PropertyPattern + `\b`)
+		regex := tspatterns.BuildPropertyPattern(pattern.PropertyPattern)
 		return regex.MatchString(expr)
 	}
 
 	if pattern.MethodPattern != "" {
-		regex := regexp.MustCompile(`@` + pattern.MethodPattern + `\(`)
+		regex := tspatterns.BuildDecoratorPattern(pattern.MethodPattern)
 		return regex.MatchString(expr)
 	}
 
@@ -712,14 +712,12 @@ func (a *TypeScriptAnalyzer) matchesFrameworkPattern(expr string, pattern *types
 }
 
 func (a *TypeScriptAnalyzer) extractKeyFromExpression(expr string) string {
-	regex := regexp.MustCompile(`\[['"\x60](\w+)['"\x60]\]`)
-	matches := regex.FindStringSubmatch(expr)
+	matches := tspatterns.BracketKeyAccessPattern.FindStringSubmatch(expr)
 	if len(matches) > 1 {
 		return matches[1]
 	}
 
-	regex2 := regexp.MustCompile(`\.(body|query|params|headers|cookies)\.(\w+)`)
-	matches2 := regex2.FindStringSubmatch(expr)
+	matches2 := tspatterns.RequestPropertyChainPattern.FindStringSubmatch(expr)
 	if len(matches2) > 2 {
 		return matches2[2]
 	}
