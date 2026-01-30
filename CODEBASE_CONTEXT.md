@@ -1,7 +1,9 @@
 # InputTracer Complete Codebase Documentation
-Generated: 2026-01-25 (refreshed)
+Generated: 2026-01-25 20:50 (refreshed via /use-context refresh)
 Project Type: Go Library
-Total Lines of Code: 40,717 (Go)
+Module: github.com/hatlesswizard/inputtracer
+Go Version: 1.21
+Total Lines of Code: 40,717+ (Go)
 Total Files Analyzed: 95+ core library files
 
 ---
@@ -763,6 +765,36 @@ go test -race ./...      # Run with race detector
 
 ---
 
+## 13.5 Pattern Generation Tool (cmd/genpatterns/)
+
+The `genpatterns` command fetches framework source code from GitHub and generates Go pattern files.
+
+```bash
+# Generate all framework patterns
+go run ./cmd/genpatterns -o pkg/sources/php/
+
+# Generate specific framework
+go run ./cmd/genpatterns -framework laravel -o pkg/sources/php/
+
+# Supported frameworks: laravel, symfony, wordpress
+```
+
+**Files:**
+| File | Purpose |
+|------|---------|
+| `main.go` | CLI entry point, framework dispatch |
+| `fetcher.go` | HTTP client to fetch GitHub raw files |
+| `parser.go` | Parses PHP classes for methods/properties |
+| `generator.go` | Generates Go source files with patterns |
+| `frameworks.go` | Framework definitions (URLs, classes, mappings) |
+
+**Generated Files:**
+- `pkg/sources/php/laravel.go` - Laravel Request/Input patterns (541 lines)
+- `pkg/sources/php/symfony.go` - Symfony Request/ParameterBag patterns (288 lines)
+- `pkg/sources/php/wordpress.go` - WordPress WP_REST_Request patterns
+
+---
+
 ## Adding New Framework Support
 
 Create framework patterns in the language-specific subdirectory:
@@ -1285,4 +1317,129 @@ IsCallNodeForLanguage(nodeType, language string) bool
 IsIdentifierNode(nodeType string) bool
 IsIdentifierNodeForLanguage(nodeType, language string) bool
 GetASTNodeTypesForLanguage(language string) ASTNodeTypes
+```
+
+---
+
+## 25. Core Pattern Registry (`pkg/sources/core/registry.go`)
+
+The centralized pattern registry provides fast lookups for input detection.
+
+### 25.1 InputPattern Structure
+```go
+type InputPattern struct {
+    Name        string       // Unique identifier
+    Description string       // Human-readable description
+    Category    SourceType   // Primary category (http_get, http_post, etc.)
+    Labels      []InputLabel // Additional labels
+    Language    string       // Target language (empty = all)
+    Framework   string       // Target framework (empty = all)
+
+    // Pattern matching (use one or more)
+    ExactMatch    string         // Exact string match
+    Regex         *regexp.Regexp // Compiled regex
+    MethodName    string         // Method name to match
+    PropertyName  string         // Property name to match
+    ObjectPattern string         // Object name pattern
+
+    // Context requirements
+    RequireObject bool   // Must be called on an object
+    ObjectType    string // Required object type
+    ParamIndex    int    // Which parameter receives input (-1 = return)
+}
+```
+
+### 25.2 Registry Structure
+```go
+type Registry struct {
+    exactPatterns     map[string]*InputPattern    // O(1) exact match
+    regexPatterns     []*InputPattern             // Regex patterns
+    languagePatterns  map[string][]*InputPattern  // By language
+    frameworkPatterns map[string][]*InputPattern  // By framework
+    nonInputPatterns  map[string]bool             // Explicitly excluded
+}
+```
+
+### 25.3 Registry Functions
+```go
+// Global singleton
+registry := core.GetRegistry()
+
+// Register patterns
+registry.Register(pattern)
+registry.RegisterNonInput("getData")  // Mark as NOT user input
+
+// Match expressions
+result := registry.Match(expr, language, framework)
+result := registry.MatchMethod(objName, methodName, language, framework)
+result := registry.MatchProperty(objName, propName, language, framework)
+
+// Check exclusions
+isNonInput := registry.IsNonInput(expr)
+```
+
+### 25.4 MatchResult
+```go
+type MatchResult struct {
+    Pattern  *InputPattern
+    Category SourceType
+    Labels   []InputLabel
+    Key      string  // Extracted key from regex
+}
+```
+
+---
+
+## 26. Universal Pattern Functions (`pkg/sources/core/patterns.go`)
+
+Pre-compiled regex patterns for cross-language input detection:
+
+```go
+// Get singleton patterns
+patterns := core.GetUniversalPatterns()
+
+// Built-in detection functions
+core.IsInputMethod(methodName)    // Checks if method retrieves input
+core.IsInputProperty(propName)    // Checks if property holds input
+core.IsInputObject(objName)       // Checks if object carries input
+core.IsExcludedMethod(methodName) // Checks exclusion list
+core.ExtractKey(expr)             // Extracts key from ['key'] access
+```
+
+---
+
+## 27. Language Mappings Reference (`pkg/sources/mappings.go`)
+
+Centralized input source mappings for all supported languages.
+
+### 27.1 LanguageMappings Structure
+```go
+type LanguageMappings struct {
+    Language         string
+    InputFunctions   map[string]SourceType  // Method -> source type
+    InputSources     map[string]SourceType  // Property -> source type
+    Superglobals     map[string]SourceType  // PHP superglobals
+    DBFetchFunctions map[string]bool        // PHP DB fetch functions
+    GlobalSources    map[string]SourceType  // JS browser globals
+    DOMSources       map[string]SourceType  // JS DOM properties
+    NodeSources      map[string]SourceType  // Node.js sources
+    CGIEnvVars       map[string]SourceType  // C/C++ CGI vars
+    QtInputMethods   map[string]SourceType  // C++ Qt methods
+    FrameworkTypes   map[string]FrameworkTypeInfo // C++ framework types
+    MethodInputs     map[string]SourceType  // C++ input methods
+    InputMethods     map[string]SourceType  // Java input methods
+    Annotations      map[string]SourceType  // Java/C# annotations
+}
+```
+
+### 27.2 Usage
+```go
+mappings := sources.GetMappings("php")
+inputFuncs := mappings.GetInputFunctionsMap()
+superglobals := mappings.GetSuperglobalsMap()
+
+// Or direct access
+funcs := sources.GetInputFunctions("go")
+sources := sources.GetInputSources("python")
+dbFuncs := sources.GetDBFetchFunctions()  // PHP only
 ```

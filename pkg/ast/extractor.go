@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/hatlesswizard/inputtracer/pkg/sources/patterns"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -131,7 +132,9 @@ func (e *BaseExtractor) ExtractCalls(root *sitter.Node, src []byte) []FunctionCa
 	return calls
 }
 
-// ExpressionContains checks if an expression contains a variable
+// ExpressionContains checks if an expression contains a variable.
+// Uses boundary-aware matching to avoid substring false positives
+// (e.g. "$order" must not match "$order_id").
 func (e *BaseExtractor) ExpressionContains(node *sitter.Node, varName string, src []byte) bool {
 	if node == nil {
 		return false
@@ -144,8 +147,8 @@ func (e *BaseExtractor) ExpressionContains(node *sitter.Node, varName string, sr
 		return true
 	}
 
-	// Check with word boundaries
-	pattern := regexp.MustCompile(`\b` + regexp.QuoteMeta(varName) + `\b`)
+	// Check with word boundaries (handles $-prefixed and @-prefixed vars)
+	pattern := regexp.MustCompile(patterns.VariableBoundaryPattern(varName))
 	return pattern.MatchString(text)
 }
 

@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/hatlesswizard/inputtracer/pkg/sources"
+	"github.com/hatlesswizard/inputtracer/pkg/sources/patterns"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -168,7 +169,9 @@ func (tp *TaintPropagator) checkTainted(value string, node *sitter.Node, src []b
 	return nil
 }
 
-// matchesVariable checks if a value references a tainted variable
+// matchesVariable checks if a value references a tainted variable.
+// Handles exact matches, property access (var.prop, var['prop']),
+// and expression containment with boundary-aware matching.
 func (tp *TaintPropagator) matchesVariable(value, varName string) bool {
 	// Exact match
 	if value == varName {
@@ -182,8 +185,8 @@ func (tp *TaintPropagator) matchesVariable(value, varName string) bool {
 	}
 
 	// Check if variable is used in expression
-	// Use word boundary matching with cached regex
-	pattern := `\b` + regexp.QuoteMeta(varName) + `\b`
+	// Use boundary matching that handles $-prefixed and @-prefixed vars
+	pattern := patterns.VariableBoundaryPattern(varName)
 	return getOrCompileRegex(pattern).MatchString(value)
 }
 
