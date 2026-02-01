@@ -26,13 +26,14 @@ const (
 
 // Definition represents a user input source definition
 type Definition struct {
-	Name         string       // e.g., "$_GET", "req.body"
-	Pattern      string       // Regex pattern to match
-	Language     string       // Target language
-	Labels       []InputLabel // Categories
-	Description  string       // Human-readable description
-	NodeTypes    []string     // Tree-sitter node types to match
-	KeyExtractor string       // Regex to extract key (e.g., from $_GET['key'])
+	Name               string       // e.g., "$_GET", "req.body"
+	Pattern            string       // Regex pattern to match
+	Language           string       // Target language
+	Labels             []InputLabel // Categories
+	Description        string       // Human-readable description
+	NodeTypes          []string     // Tree-sitter node types to match
+	KeyExtractor       string       // Regex to extract key (e.g., from $_GET['key'])
+	ExcludeParentTypes []string     // Skip match if node's parent is one of these AST types
 }
 
 // Match represents a matched source in code
@@ -101,6 +102,21 @@ func (m *BaseMatcher) FindSources(root *sitter.Node, src []byte) []Match {
 					continue
 				}
 				if !re.MatchString(nodeText) {
+					continue
+				}
+			}
+
+			// Check parent type exclusion
+			if len(source.ExcludeParentTypes) > 0 && node.Parent() != nil {
+				parentType := node.Parent().Type()
+				excluded := false
+				for _, ept := range source.ExcludeParentTypes {
+					if parentType == ept {
+						excluded = true
+						break
+					}
+				}
+				if excluded {
 					continue
 				}
 			}
