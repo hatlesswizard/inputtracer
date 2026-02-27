@@ -31,7 +31,7 @@ var LanguageSkipDirs = map[string][]string{
 	"java":       {"target", "build", "bin", "out"},
 	"c_sharp":    {"bin", "obj", "packages"},
 	"ruby":       {"vendor", ".bundle"},
-	"php":        {"vendor", "cache", "tests", "tmp", "storage"},
+	"php":        {"vendor", "cache", "tests", "tmp", "storage", "freemius", "action-scheduler", "redux-core", "redux-framework", "cmb2", "starter-content", "starter-templates"},
 	"ide":        {".idea", ".vscode", ".vs"},
 }
 
@@ -113,6 +113,13 @@ var PHPDiscoverySkipDirs = []string{
 	"/.git/",
 	"/tmp/",
 	"/storage/",
+	"/freemius/",
+	"/action-scheduler/",
+	"/redux-core/",
+	"/redux-framework/",
+	"/cmb2/",
+	"/starter-content/",
+	"/starter-templates/",
 }
 
 // ShouldSkipPHPPath checks if a path should be skipped during PHP discovery

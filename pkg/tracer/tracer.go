@@ -422,25 +422,10 @@ func (t *Tracer) mergeFileResult(result *TraceResult, fr *fileResult) {
 	result.Stats.PropagationPaths += len(fr.Paths)
 }
 
-// runInterproceduralAnalysis performs cross-function taint analysis
+// runInterproceduralAnalysis performs cross-function taint analysis.
+// Delegates to runInterproceduralAnalysisImpl in interprocedural_propagation.go.
 func (t *Tracer) runInterproceduralAnalysis(result *TraceResult) {
-	// Build a map of function names to their tainted state
-	taintedFuncMap := make(map[string]*TaintedFunction)
-	for _, fn := range result.TaintedFunctions {
-		key := fn.FilePath + ":" + fn.Name
-		if existing, ok := taintedFuncMap[key]; ok {
-			// Merge tainted params
-			existing.TaintedParams = append(existing.TaintedParams, fn.TaintedParams...)
-		} else {
-			taintedFuncMap[key] = fn
-		}
-	}
-
-	// TODO: Implement full inter-procedural analysis
-	// This would involve:
-	// 1. Building function summaries
-	// 2. Tracking taint through return values
-	// 3. Following call chains up to MaxDepth
+	t.runInterproceduralAnalysisImpl(result)
 }
 
 // buildFlowGraph builds the flow graph from the analysis results
@@ -522,6 +507,36 @@ func (t *Tracer) buildFlowGraph(result *TraceResult) {
 func (t *Tracer) collectFiles(dirPath string) ([]string, error) {
 	var files []string
 
+	// Build effective skip dirs: merge WordPress vendor dirs for PHP projects
+	skipDirs := make(map[string]bool, len(t.config.SkipDirs))
+	for _, d := range t.config.SkipDirs {
+		skipDirs[d] = true
+	}
+
+	// Check if PHP is in the language filter (or no filter = all languages)
+	phpIncluded := len(t.config.Languages) == 0
+	if !phpIncluded {
+		for _, l := range t.config.Languages {
+			if l == "php" {
+				phpIncluded = true
+				break
+			}
+		}
+	}
+
+	// Add WordPress-specific vendor dirs when analyzing PHP
+	if phpIncluded {
+		wpVendorDirs := []string{
+			"freemius", "action-scheduler", "redux-core", "redux-framework",
+			"cmb2", "starter-content", "starter-templates",
+		}
+		for _, d := range wpVendorDirs {
+			skipDirs[d] = true
+		}
+	}
+
+	absRoot, _ := filepath.Abs(dirPath)
+
 	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil // Skip errors
@@ -529,11 +544,21 @@ func (t *Tracer) collectFiles(dirPath string) ([]string, error) {
 
 		// Skip directories in skip list
 		if info.IsDir() {
-			for _, skip := range t.config.SkipDirs {
-				if info.Name() == skip {
-					return filepath.SkipDir
+			if skipDirs[info.Name()] {
+				return filepath.SkipDir
+			}
+
+			// Skip non-root directories that contain composer.json (third-party packages)
+			if phpIncluded {
+				absPath, _ := filepath.Abs(path)
+				if absPath != absRoot {
+					composerPath := filepath.Join(path, "composer.json")
+					if _, err := os.Stat(composerPath); err == nil {
+						return filepath.SkipDir
+					}
 				}
 			}
+
 			return nil
 		}
 

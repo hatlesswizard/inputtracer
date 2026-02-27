@@ -34,6 +34,7 @@ type Definition struct {
 	NodeTypes          []string     // Tree-sitter node types to match
 	KeyExtractor       string       // Regex to extract key (e.g., from $_GET['key'])
 	ExcludeParentTypes []string     // Skip match if node's parent is one of these AST types
+	ExcludePattern     string       // Regex pattern - skip match if node text matches this
 }
 
 // Match represents a matched source in code
@@ -102,6 +103,14 @@ func (m *BaseMatcher) FindSources(root *sitter.Node, src []byte) []Match {
 					continue
 				}
 				if !re.MatchString(nodeText) {
+					continue
+				}
+			}
+
+			// Check exclude pattern
+			if source.ExcludePattern != "" {
+				re, err := regexp.Compile(source.ExcludePattern)
+				if err == nil && re.MatchString(nodeText) {
 					continue
 				}
 			}

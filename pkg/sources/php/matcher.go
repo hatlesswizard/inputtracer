@@ -264,6 +264,59 @@ func NewMatcher() *Matcher {
 			ExcludeParentTypes: []string{"subscript_expression"},
 		},
 
+		// =====================================================
+		// SUPERGLOBAL WRAPPERS - Functions that pass through superglobals
+		// These create tainted data from superglobal arrays
+		// =====================================================
+		{
+			Name:        "extract($_POST)",
+			Pattern:     `\bextract\s*\(\s*\$_POST`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelHTTPPost, common.LabelUserInput},
+			Description: "extract() from $_POST creates tainted variables",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "extract($_GET)",
+			Pattern:     `\bextract\s*\(\s*\$_GET`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelHTTPGet, common.LabelUserInput},
+			Description: "extract() from $_GET creates tainted variables",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "extract($_REQUEST)",
+			Pattern:     `\bextract\s*\(\s*\$_REQUEST`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelHTTPGet, common.LabelHTTPPost, common.LabelUserInput},
+			Description: "extract() from $_REQUEST creates tainted variables",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "wp_parse_args() with superglobal",
+			Pattern:     `\bwp_parse_args\s*\(\s*\$_(GET|POST|REQUEST)`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelUserInput},
+			Description: "wp_parse_args() with superglobal input",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "stripslashes_deep() with superglobal",
+			Pattern:     `\bstripslashes_deep\s*\(\s*\$_(GET|POST|REQUEST)`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelUserInput},
+			Description: "stripslashes_deep() wrapping superglobal",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "wp_unslash() with superglobal",
+			Pattern:     `\bwp_unslash\s*\(\s*\$_(GET|POST|REQUEST)`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelUserInput},
+			Description: "wp_unslash() wrapping superglobal",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+
 		// Generic input getter methods (universal across frameworks)
 		{
 			Name:         "->get_input()",
@@ -275,13 +328,14 @@ func NewMatcher() *Matcher {
 			KeyExtractor: `->\s*get_input\s*\(\s*['"]([^'"]+)`,
 		},
 		{
-			Name:         "->get_var()",
+			Name:         "->get_var() (non-wpdb)",
 			Pattern:      `->\s*get_var\s*\(`,
 			Language:     "php",
 			Labels:       []common.InputLabel{common.LabelUserInput},
-			Description:  "Generic variable getter method",
+			Description:  "Generic variable getter method (excludes $wpdb which is database)",
 			NodeTypes:    []string{"member_call_expression"},
 			KeyExtractor: `->\s*get_var\s*\(\s*['"]([^'"]+)`,
+			ExcludePattern: `\$wpdb\s*->\s*get_var`,
 		},
 		{
 			Name:         "->variable()",
@@ -449,6 +503,44 @@ func NewMatcher() *Matcher {
 			NodeTypes:   []string{"function_call_expression"},
 		},
 
+		// =====================================================
+		// DATABASE FUNCTIONS - NOT USER INPUT
+		// These return data from database queries,
+		// NOT from the current HTTP request.
+		// =====================================================
+		{
+			Name:        "$wpdb->get_var()",
+			Pattern:     `\$wpdb\s*->\s*get_var\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelDatabase},
+			Description: "WordPress database query - returns single variable (NOT user input)",
+			NodeTypes:   []string{"member_call_expression"},
+		},
+		{
+			Name:        "$wpdb->get_results()",
+			Pattern:     `\$wpdb\s*->\s*get_results\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelDatabase},
+			Description: "WordPress database query - returns result set (NOT user input)",
+			NodeTypes:   []string{"member_call_expression"},
+		},
+		{
+			Name:        "$wpdb->get_row()",
+			Pattern:     `\$wpdb\s*->\s*get_row\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelDatabase},
+			Description: "WordPress database query - returns single row (NOT user input)",
+			NodeTypes:   []string{"member_call_expression"},
+		},
+		{
+			Name:        "get_option()",
+			Pattern:     `\bget_option\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelDatabase},
+			Description: "WordPress options API - reads from wp_options table (NOT user input)",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+
 		// Generic GET method
 		{
 			Name:         "->get()",
@@ -505,6 +597,22 @@ func NewMatcher() *Matcher {
 			Description:  "Object request array access",
 			NodeTypes:    []string{"subscript_expression", "member_access_expression"},
 			KeyExtractor: `->\s*request\s*\[\s*['"]?([^'"\]]+)['"]?\s*\]`,
+		},
+
+		// =====================================================
+		// WP_REST_Request ArrayAccess patterns
+		// WordPress WP_REST_Request implements ArrayAccess, so
+		// $request['param'] is equivalent to $request->get_param('param').
+		// Common variable names: $request, $req, $api_request, $rest_request
+		// =====================================================
+		{
+			Name:         "$request['...'] (WP_REST_Request ArrayAccess)",
+			Pattern:      `\$(?:request|req|api_request|rest_request)\s*\[\s*['"]`,
+			Language:     "php",
+			Labels:       []common.InputLabel{common.LabelUserInput, common.LabelHTTPGet, common.LabelHTTPPost},
+			Description:  "WP_REST_Request ArrayAccess - equivalent to get_param()",
+			NodeTypes:    []string{"subscript_expression"},
+			KeyExtractor: `\[\s*['"]([^'"]+)['"]`,
 		},
 	}
 

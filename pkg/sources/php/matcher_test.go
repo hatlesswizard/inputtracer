@@ -181,6 +181,116 @@ $search = $_GET['data'];
 	}
 }
 
+func TestWPRESTRequestArrayAccess(t *testing.T) {
+	matcher := NewMatcher()
+
+	tests := []struct {
+		name     string
+		code     string
+		wantKey  string
+		wantType string
+	}{
+		{
+			name:     "$request['param'] single quotes",
+			code:     `<?php $value = $request['param_name'];`,
+			wantKey:  "param_name",
+			wantType: "$request['...'] (WP_REST_Request ArrayAccess)",
+		},
+		{
+			name:     `$request["param"] double quotes`,
+			code:     `<?php $value = $request["param_name"];`,
+			wantKey:  "param_name",
+			wantType: "$request['...'] (WP_REST_Request ArrayAccess)",
+		},
+		{
+			name:     "$req['param'] shorthand variable",
+			code:     `<?php $val = $req['id'];`,
+			wantKey:  "id",
+			wantType: "$request['...'] (WP_REST_Request ArrayAccess)",
+		},
+		{
+			name:     "$api_request['param']",
+			code:     `<?php $val = $api_request['slug'];`,
+			wantKey:  "slug",
+			wantType: "$request['...'] (WP_REST_Request ArrayAccess)",
+		},
+		{
+			name:     "$rest_request['param']",
+			code:     `<?php $val = $rest_request['page'];`,
+			wantKey:  "page",
+			wantType: "$request['...'] (WP_REST_Request ArrayAccess)",
+		},
+		{
+			name:     "multiple $request array accesses",
+			code:     `<?php $a = $request['id']; $b = $request['name'];`,
+			wantKey:  "id",
+			wantType: "$request['...'] (WP_REST_Request ArrayAccess)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, src := parsePHP(t, tt.code)
+			matches := matcher.FindSources(root, src)
+
+			found := false
+			for _, m := range matches {
+				if m.SourceType == tt.wantType && m.Key == tt.wantKey {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("expected match type=%q key=%q but got none; all matches: %v (keys: %v)",
+					tt.wantType, tt.wantKey, sourceTypes(matches), matchKeys(matches))
+			}
+		})
+	}
+}
+
+func TestWPRESTRequestArrayAccessNotFalsePositive(t *testing.T) {
+	matcher := NewMatcher()
+
+	tests := []struct {
+		name string
+		code string
+	}{
+		{
+			name: "$response['key'] should not match",
+			code: `<?php $val = $response['data'];`,
+		},
+		{
+			name: "$result['key'] should not match",
+			code: `<?php $val = $result['id'];`,
+		},
+		{
+			name: "$config['key'] should not match",
+			code: `<?php $val = $config['setting'];`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, src := parsePHP(t, tt.code)
+			matches := matcher.FindSources(root, src)
+
+			for _, m := range matches {
+				if m.SourceType == "$request['...'] (WP_REST_Request ArrayAccess)" {
+					t.Errorf("unexpected WP_REST_Request ArrayAccess match for %q", tt.code)
+				}
+			}
+		})
+	}
+}
+
+func matchKeys(matches []common.Match) []string {
+	keys := make([]string, len(matches))
+	for i, m := range matches {
+		keys[i] = m.Key
+	}
+	return keys
+}
+
 func sourceTypes(matches []common.Match) []string {
 	types := make([]string, len(matches))
 	for i, m := range matches {
