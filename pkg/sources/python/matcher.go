@@ -216,7 +216,6 @@ func NewMatcher() *Matcher {
 			Description: "File readlines",
 			NodeTypes:   []string{"call"},
 		},
-
 	}
 
 	return &Matcher{

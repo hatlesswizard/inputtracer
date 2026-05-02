@@ -35,28 +35,31 @@ var LanguageSkipDirs = map[string][]string{
 	"ide":        {".idea", ".vscode", ".vs"},
 }
 
-// DefaultMaxDepth is the default inter-procedural analysis depth
+// DefaultMaxDepth is the default inter-procedural analysis depth.
+// 5 hops covers most real-world call chains without exponential blowup.
 const DefaultMaxDepth = 5
 
-// DefaultSymbolicMaxDepth is used for symbolic execution tracing
+// DefaultSymbolicMaxDepth is used for symbolic execution tracing.
+// Higher than MaxDepth because property-chain resolution needs more hops.
 const DefaultSymbolicMaxDepth = 10
 
-// DefaultPathMaxDepth limits path expansion to prevent combinatorial explosion
+// DefaultPathMaxDepth limits path expansion to prevent combinatorial explosion.
 const DefaultPathMaxDepth = 50
 
-// DefaultCacheSize is the default parser cache size (number of entries)
+// DefaultCacheSize is the default parser cache size (number of AST entries).
 const DefaultCacheSize = 1000
 
-// DefaultCacheMemoryLimit is the memory limit for LRU caches (32MB)
+// DefaultCacheMemoryLimit is the memory ceiling for LRU caches.
+// 32 MB prevents RSS spikes when analysing large repos.
 const DefaultCacheMemoryLimit = 32 * 1024 * 1024
 
-// DefaultFileCacheSize is files to keep in symbolic executor cache
+// DefaultFileCacheSize is the number of parsed files kept in the symbolic executor cache.
 const DefaultFileCacheSize = 100
 
-// DefaultMaxFlowNodes limits nodes to prevent memory issues
+// DefaultMaxFlowNodes caps graph size to prevent unbounded memory growth.
 const DefaultMaxFlowNodes = 10000
 
-// DefaultMaxFlowEdges limits edges to prevent memory issues
+// DefaultMaxFlowEdges caps graph size to prevent unbounded memory growth.
 const DefaultMaxFlowEdges = 20000
 
 // Pre-allocation hints for slices

@@ -31,11 +31,11 @@ func getOrCompileTaintRegex(pattern string) *regexp.Regexp {
 
 // TaintSource represents the origin of tainted data
 type TaintSource struct {
-	Type      string   `json:"type"`       // "superglobal", "function_return", "property"
-	Name      string   `json:"name"`       // "$_GET", "$_POST", etc.
-	Keys      []string `json:"keys"`       // Keys accessed, or ["*"] for all keys
-	FilePath  string   `json:"file_path"`
-	Line      int      `json:"line"`
+	Type     string   `json:"type"` // "superglobal", "function_return", "property"
+	Name     string   `json:"name"` // "$_GET", "$_POST", etc.
+	Keys     []string `json:"keys"` // Keys accessed, or ["*"] for all keys
+	FilePath string   `json:"file_path"`
+	Line     int      `json:"line"`
 }
 
 // TaintSink represents where tainted data ends up
@@ -59,11 +59,11 @@ type TaintFlow struct {
 // InputCarrier represents a discovered class property or method that carries user input
 type InputCarrier struct {
 	ClassName     string   `json:"class_name"`
-	PropertyName  string   `json:"property_name,omitempty"`  // Empty if method-based
-	MethodName    string   `json:"method_name,omitempty"`    // Empty if property-based
-	SourceTypes   []string `json:"source_types"`             // ["$_GET", "$_POST"]
-	AccessPattern string   `json:"access_pattern"`           // "array", "method", "direct"
-	PopulatedIn   string   `json:"populated_in"`             // Constructor or method name that populates it
+	PropertyName  string   `json:"property_name,omitempty"` // Empty if method-based
+	MethodName    string   `json:"method_name,omitempty"`   // Empty if property-based
+	SourceTypes   []string `json:"source_types"`            // ["$_GET", "$_POST"]
+	AccessPattern string   `json:"access_pattern"`          // "array", "method", "direct"
+	PopulatedIn   string   `json:"populated_in"`            // Constructor or method name that populates it
 	FilePath      string   `json:"file_path"`
 	Line          int      `json:"line"`
 }
@@ -79,13 +79,13 @@ type TaintPropagator struct {
 
 // ClassInfo stores information about a class
 type ClassInfo struct {
-	Name           string
-	FilePath       string
-	Properties     map[string]*PropertyInfo
-	Methods        map[string]*MethodInfo
-	Constructor    *MethodInfo
-	ParentClass    string
-	Implements     []string
+	Name        string
+	FilePath    string
+	Properties  map[string]*PropertyInfo
+	Methods     map[string]*MethodInfo
+	Constructor *MethodInfo
+	ParentClass string
+	Implements  []string
 }
 
 // PropertyInfo stores information about a class property
@@ -115,10 +115,10 @@ type MethodInfo struct {
 	BodySource     string   // Only populated for methods that need deep analysis
 
 	// Pre-analyzed patterns (computed once, stored as booleans)
-	hasThisArrayAssign    bool // Has $this->prop[$key] = pattern
-	hasDynamicPropAssign  bool // Has $this->$key = $val pattern
-	hasReturnThisProp     bool // Has return $this->prop pattern
-	analyzedPatterns      bool // Whether patterns have been analyzed
+	hasThisArrayAssign   bool // Has $this->prop[$key] = pattern
+	hasDynamicPropAssign bool // Has $this->$key = $val pattern
+	hasReturnThisProp    bool // Has return $this->prop pattern
+	analyzedPatterns     bool // Whether patterns have been analyzed
 }
 
 // NewTaintPropagator creates a new taint propagation engine
@@ -128,8 +128,8 @@ func NewTaintPropagator() *TaintPropagator {
 
 	return &TaintPropagator{
 		parser:    parser,
-		flows:     make([]TaintFlow, 0, 256),    // Pre-allocate reasonable capacity
-		carriers:  make([]InputCarrier, 0, 64),  // Pre-allocate reasonable capacity
+		flows:     make([]TaintFlow, 0, 256),   // Pre-allocate reasonable capacity
+		carriers:  make([]InputCarrier, 0, 64), // Pre-allocate reasonable capacity
 		classInfo: make(map[string]*ClassInfo),
 	}
 }

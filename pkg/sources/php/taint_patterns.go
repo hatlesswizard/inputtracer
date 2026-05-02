@@ -29,10 +29,10 @@ var TaintPatterns = struct {
 	// ReturnThisPropertyArrayPattern matches return $this->prop[...]
 	ReturnThisPropertyArrayPattern *regexp.Regexp
 }{
-	ThisArrayPattern:      regexp.MustCompile(`\$this->(\w+)\[\$\w+\]\s*=`),
-	DynamicPropPattern:    regexp.MustCompile(`\$this->\$(\w+)\s*=`),
-	ReturnThisPattern:     regexp.MustCompile(`return\s+\$this->(\w+)`),
-	SuperglobalKeyPattern: regexp.MustCompile(`\$_[A-Z]+\s*\[\s*['"]([^'"]+)['"]\s*\]`),
+	ThisArrayPattern:                 regexp.MustCompile(`\$this->(\w+)\[\$\w+\]\s*=`),
+	DynamicPropPattern:               regexp.MustCompile(`\$this->\$(\w+)\s*=`),
+	ReturnThisPattern:                regexp.MustCompile(`return\s+\$this->(\w+)`),
+	SuperglobalKeyPattern:            regexp.MustCompile(`\$_[A-Z]+\s*\[\s*['"]([^'"]+)['"]\s*\]`),
 	LoopVariablePattern:              regexp.MustCompile(`as\s+\$(\w+)\s*=>\s*\$(\w+)`),
 	ForeachValueOnlyPattern:          regexp.MustCompile(`as\s+\$(\w+)\s*\)`),
 	ThisPropertyOptionalArrayPattern: regexp.MustCompile(`\$this->(\w+)(?:\[[^\]]*\])?`),
@@ -65,16 +65,16 @@ var PHPNodeTypes = struct {
 	DeclarationList     string
 
 	// Variable and expression nodes
-	VariableName             string
-	SubscriptExpression      string
-	MemberAccessExpression   string
-	MemberCallExpression     string
-	FunctionCallExpression   string
-	ScopedCallExpression     string
-	AssignmentExpression     string
-	BinaryExpression         string
-	ParenthesizedExpression  string
-	EncapsedString           string
+	VariableName            string
+	SubscriptExpression     string
+	MemberAccessExpression  string
+	MemberCallExpression    string
+	FunctionCallExpression  string
+	ScopedCallExpression    string
+	AssignmentExpression    string
+	BinaryExpression        string
+	ParenthesizedExpression string
+	EncapsedString          string
 
 	// Parameter types
 	SimpleParameter            string
@@ -86,14 +86,14 @@ var PHPNodeTypes = struct {
 	ReturnStatement  string
 
 	// Field names
-	FieldName      string
+	FieldName       string
 	FieldBaseClause string
-	FieldBody      string
-	FieldObject    string
-	FieldIndex     string
-	FieldLeft      string
-	FieldRight     string
-	FieldFunction  string
+	FieldBody       string
+	FieldObject     string
+	FieldIndex      string
+	FieldLeft       string
+	FieldRight      string
+	FieldFunction   string
 
 	// Modifier types
 	VisibilityModifier string
@@ -110,16 +110,16 @@ var PHPNodeTypes = struct {
 	PropertyDeclaration: "property_declaration",
 	DeclarationList:     "declaration_list",
 
-	VariableName:             "variable_name",
-	SubscriptExpression:      "subscript_expression",
-	MemberAccessExpression:   "member_access_expression",
-	MemberCallExpression:     "member_call_expression",
-	FunctionCallExpression:   "function_call_expression",
-	ScopedCallExpression:     "scoped_call_expression",
-	AssignmentExpression:     "assignment_expression",
-	BinaryExpression:         "binary_expression",
-	ParenthesizedExpression:  "parenthesized_expression",
-	EncapsedString:           "encapsed_string",
+	VariableName:            "variable_name",
+	SubscriptExpression:     "subscript_expression",
+	MemberAccessExpression:  "member_access_expression",
+	MemberCallExpression:    "member_call_expression",
+	FunctionCallExpression:  "function_call_expression",
+	ScopedCallExpression:    "scoped_call_expression",
+	AssignmentExpression:    "assignment_expression",
+	BinaryExpression:        "binary_expression",
+	ParenthesizedExpression: "parenthesized_expression",
+	EncapsedString:          "encapsed_string",
 
 	SimpleParameter:            "simple_parameter",
 	VariadicParameter:          "variadic_parameter",

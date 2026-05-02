@@ -27,15 +27,15 @@ const (
 
 // Node represents a function in the call graph
 type Node struct {
-	ID           string   `json:"id"`            // Unique identifier (usually "filepath:funcname")
-	Name         string   `json:"name"`          // Function name
-	FilePath     string   `json:"file_path"`
-	Line         int      `json:"line"`
-	Type         NodeType `json:"type"`
-	Language     string   `json:"language"`
-	ClassName    string   `json:"class_name,omitempty"`    // For methods
-	IsPublic     bool     `json:"is_public"`               // Visibility
-	Signature    string   `json:"signature,omitempty"`     // Full function signature
+	ID        string   `json:"id"`   // Unique identifier (usually "filepath:funcname")
+	Name      string   `json:"name"` // Function name
+	FilePath  string   `json:"file_path"`
+	Line      int      `json:"line"`
+	Type      NodeType `json:"type"`
+	Language  string   `json:"language"`
+	ClassName string   `json:"class_name,omitempty"` // For methods
+	IsPublic  bool     `json:"is_public"`            // Visibility
+	Signature string   `json:"signature,omitempty"`  // Full function signature
 
 	// Distance metrics (computed lazily)
 	DistanceFromEntry int `json:"distance_from_entry"` // -1 if unreachable
@@ -45,15 +45,15 @@ type Node struct {
 type Edge struct {
 	CallerID string `json:"caller_id"`
 	CalleeID string `json:"callee_id"`
-	Line     int    `json:"line"`     // Line of the call site
+	Line     int    `json:"line"` // Line of the call site
 	Column   int    `json:"column"`
 	FilePath string `json:"file_path"`
 
 	// Call metadata
-	ArgumentCount int      `json:"argument_count"`
-	IsConditional bool     `json:"is_conditional"` // Inside if/switch
-	InLoop        bool     `json:"in_loop"`        // Inside loop
-	BranchDepth   int      `json:"branch_depth"`   // Nesting level
+	ArgumentCount int  `json:"argument_count"`
+	IsConditional bool `json:"is_conditional"` // Inside if/switch
+	InLoop        bool `json:"in_loop"`        // Inside loop
+	BranchDepth   int  `json:"branch_depth"`   // Nesting level
 }
 
 // Manager provides sophisticated call graph operations
@@ -72,10 +72,10 @@ type Manager struct {
 	sources     map[string]*Node
 
 	// Precomputed distances (lazily populated)
-	distanceCache     map[string]map[string]int // from -> to -> distance
-	distanceCacheLRU  *list.List
-	distanceCacheMap  map[string]*list.Element
-	maxDistanceCache  int
+	distanceCache    map[string]map[string]int // from -> to -> distance
+	distanceCacheLRU *list.List
+	distanceCacheMap map[string]*list.Element
+	maxDistanceCache int
 
 	// Configuration
 	maxPathLength int

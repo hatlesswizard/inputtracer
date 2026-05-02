@@ -15,11 +15,11 @@ import (
 // CPPAnalyzer implements the LanguageAnalyzer interface for C++
 type CPPAnalyzer struct {
 	*analyzer.BaseAnalyzer
-	inputFunctions  map[string]types.SourceType
-	cgiEnvVars      map[string]types.SourceType
-	qtInputMethods  map[string]types.SourceType
-	frameworkTypes  map[string]sources.FrameworkTypeInfo
-	methodInputs    map[string]types.SourceType
+	inputFunctions map[string]types.SourceType
+	cgiEnvVars     map[string]types.SourceType
+	qtInputMethods map[string]types.SourceType
+	frameworkTypes map[string]sources.FrameworkTypeInfo
+	methodInputs   map[string]types.SourceType
 }
 
 // NewCPPAnalyzer creates a new C++ analyzer
@@ -420,11 +420,11 @@ func (a *CPPAnalyzer) ExtractAssignments(root *sitter.Node, source []byte, scope
 		rightNode := node.ChildByFieldName("right")
 		if leftNode != nil && rightNode != nil {
 			assignment := &types.Assignment{
-				Target:   analyzer.GetNodeText(leftNode, source),
-				Source:   analyzer.GetNodeText(rightNode, source),
-				Line:     int(node.StartPoint().Row) + 1,
-				Column:   int(node.StartPoint().Column),
-				Scope:    scope,
+				Target: analyzer.GetNodeText(leftNode, source),
+				Source: analyzer.GetNodeText(rightNode, source),
+				Line:   int(node.StartPoint().Row) + 1,
+				Column: int(node.StartPoint().Column),
+				Scope:  scope,
 			}
 			assignment.IsTainted, assignment.TaintSource = a.isExpressionTainted(rightNode, source)
 			assignments = append(assignments, assignment)
@@ -885,11 +885,11 @@ func (a *CPPAnalyzer) DetectFrameworks(symbolTable *types.SymbolTable, source []
 	// Also check source for framework type usage
 	sourceText := string(source)
 	frameworkPatterns := map[string][]string{
-		"crow":       {"crow::request", "crow::response", "CROW_ROUTE"},
-		"drogon":     {"HttpRequestPtr", "HttpResponsePtr", "drogon::app"},
+		"crow":        {"crow::request", "crow::response", "CROW_ROUTE"},
+		"drogon":      {"HttpRequestPtr", "HttpResponsePtr", "drogon::app"},
 		"boost.beast": {"beast::http::", "websocket::stream"},
-		"cpprestsdk": {"web::http::", "http_request", "http_response"},
-		"poco":       {"HTTPServerRequest", "HTTPServerResponse", "Poco::Net::"},
+		"cpprestsdk":  {"web::http::", "http_request", "http_response"},
+		"poco":        {"HTTPServerRequest", "HTTPServerResponse", "Poco::Net::"},
 	}
 
 	for framework, patterns := range frameworkPatterns {

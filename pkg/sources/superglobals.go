@@ -151,10 +151,10 @@ func GetSuperglobalByShortName(shortName string) string {
 // come from HTTP request headers and are not to be trusted."
 var PHPServerUserKeys = map[string]SourceType{
 	// URL/Path - User controls the request URL
-	"PHP_SELF":     SourceHTTPPath, // Script path (vulnerable to XSS if not encoded)
-	"REQUEST_URI":  SourceHTTPPath, // Full request URI including query string
-	"QUERY_STRING": SourceHTTPGet,  // Raw query string
-	"PATH_INFO":    SourceHTTPPath, // Extra path after script name
+	"PHP_SELF":       SourceHTTPPath, // Script path (vulnerable to XSS if not encoded)
+	"REQUEST_URI":    SourceHTTPPath, // Full request URI including query string
+	"QUERY_STRING":   SourceHTTPGet,  // Raw query string
+	"PATH_INFO":      SourceHTTPPath, // Extra path after script name
 	"ORIG_PATH_INFO": SourceHTTPPath, // Original PATH_INFO before rewriting
 
 	// HTTP Method and Content
@@ -169,18 +169,18 @@ var PHPServerUserKeys = map[string]SourceType{
 	"AUTH_TYPE":       SourceHTTPHeader, // Authentication type
 
 	// ALL HTTP_* headers are user-controllable (client sends headers)
-	"HTTP_HOST":            SourceHTTPHeader, // Host header (can be spoofed)
-	"HTTP_USER_AGENT":      SourceHTTPHeader, // User-Agent header
-	"HTTP_ACCEPT":          SourceHTTPHeader, // Accept header
-	"HTTP_ACCEPT_LANGUAGE": SourceHTTPHeader, // Accept-Language header
-	"HTTP_ACCEPT_ENCODING": SourceHTTPHeader, // Accept-Encoding header
-	"HTTP_ACCEPT_CHARSET":  SourceHTTPHeader, // Accept-Charset header
-	"HTTP_CONNECTION":      SourceHTTPHeader, // Connection header
-	"HTTP_REFERER":         SourceHTTPHeader, // Referer header (commonly misspelled)
-	"HTTP_COOKIE":          SourceHTTPCookie, // Raw cookie header
-	"HTTP_AUTHORIZATION":   SourceHTTPHeader, // Authorization header
-	"HTTP_CACHE_CONTROL":   SourceHTTPHeader, // Cache-Control header
-	"HTTP_PRAGMA":          SourceHTTPHeader, // Pragma header
+	"HTTP_HOST":              SourceHTTPHeader, // Host header (can be spoofed)
+	"HTTP_USER_AGENT":        SourceHTTPHeader, // User-Agent header
+	"HTTP_ACCEPT":            SourceHTTPHeader, // Accept header
+	"HTTP_ACCEPT_LANGUAGE":   SourceHTTPHeader, // Accept-Language header
+	"HTTP_ACCEPT_ENCODING":   SourceHTTPHeader, // Accept-Encoding header
+	"HTTP_ACCEPT_CHARSET":    SourceHTTPHeader, // Accept-Charset header
+	"HTTP_CONNECTION":        SourceHTTPHeader, // Connection header
+	"HTTP_REFERER":           SourceHTTPHeader, // Referer header (commonly misspelled)
+	"HTTP_COOKIE":            SourceHTTPCookie, // Raw cookie header
+	"HTTP_AUTHORIZATION":     SourceHTTPHeader, // Authorization header
+	"HTTP_CACHE_CONTROL":     SourceHTTPHeader, // Cache-Control header
+	"HTTP_PRAGMA":            SourceHTTPHeader, // Pragma header
 	"HTTP_IF_MODIFIED_SINCE": SourceHTTPHeader,
 	"HTTP_IF_NONE_MATCH":     SourceHTTPHeader,
 	"HTTP_X_FORWARDED_FOR":   SourceHTTPHeader, // Proxy header (spoofable)

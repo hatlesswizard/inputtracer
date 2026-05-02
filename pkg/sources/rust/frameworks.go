@@ -84,14 +84,14 @@ var actixPatterns = []*common.FrameworkPattern{
 		Tags:          []string{"web", "async"},
 	},
 	{
-		ID:            "actix_web_payload",
-		Framework:     "actix-web",
-		Language:      "rust",
-		Name:          "Payload",
-		Description:   "Actix-web streaming payload",
-		ClassPattern:  "^Payload$",
-		SourceType:    common.SourceHTTPBody,
-		Tags:          []string{"web", "async", "streaming"},
+		ID:           "actix_web_payload",
+		Framework:    "actix-web",
+		Language:     "rust",
+		Name:         "Payload",
+		Description:  "Actix-web streaming payload",
+		ClassPattern: "^Payload$",
+		SourceType:   common.SourceHTTPBody,
+		Tags:         []string{"web", "async", "streaming"},
 	},
 }
 

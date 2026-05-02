@@ -39,8 +39,8 @@ type Location struct {
 // InputSource represents where user input enters the code
 type InputSource struct {
 	ID       string       `json:"id"`
-	Type     string       `json:"type"`      // e.g., "$_GET", "req.body", "argv"
-	Key      string       `json:"key"`       // e.g., "username" in $_GET['username']
+	Type     string       `json:"type"` // e.g., "$_GET", "req.body", "argv"
+	Key      string       `json:"key"`  // e.g., "username" in $_GET['username']
 	Location Location     `json:"location"`
 	Labels   []InputLabel `json:"labels"`
 	Language string       `json:"language"`
@@ -50,10 +50,10 @@ type InputSource struct {
 type TaintedVariable struct {
 	ID       string       `json:"id"`
 	Name     string       `json:"name"`
-	Scope    string       `json:"scope"`    // Function/class scope
-	Source   *InputSource `json:"source"`   // Original input source
+	Scope    string       `json:"scope"`  // Function/class scope
+	Source   *InputSource `json:"source"` // Original input source
 	Location Location     `json:"location"`
-	Depth    int          `json:"depth"`    // How many assignments from original source
+	Depth    int          `json:"depth"` // How many assignments from original source
 	Language string       `json:"language"`
 }
 
@@ -116,9 +116,9 @@ type FlowNode struct {
 
 // FlowEdge connects two nodes showing data flow
 type FlowEdge struct {
-	From     string   `json:"from"`     // Node ID
-	To       string   `json:"to"`       // Node ID
-	Type     string   `json:"type"`     // "assignment", "call", "return"
+	From     string   `json:"from"` // Node ID
+	To       string   `json:"to"`   // Node ID
+	Type     string   `json:"type"` // "assignment", "call", "return"
 	Location Location `json:"location"`
 }
 
@@ -130,13 +130,13 @@ type FlowGraph struct {
 
 // TraceStats contains analysis statistics
 type TraceStats struct {
-	FilesAnalyzed     int           `json:"files_analyzed"`
-	SourcesFound      int           `json:"sources_found"`
-	TaintedVarsFound  int           `json:"tainted_variables_found"`
-	TaintedFuncsFound int           `json:"tainted_functions_found"`
-	PropagationPaths  int           `json:"propagation_paths"`
-	AnalysisDuration  time.Duration `json:"analysis_duration_ns"`
-	DurationMs        int64         `json:"analysis_duration_ms"`
+	FilesAnalyzed     int            `json:"files_analyzed"`
+	SourcesFound      int            `json:"sources_found"`
+	TaintedVarsFound  int            `json:"tainted_variables_found"`
+	TaintedFuncsFound int            `json:"tainted_functions_found"`
+	PropagationPaths  int            `json:"propagation_paths"`
+	AnalysisDuration  time.Duration  `json:"analysis_duration_ns"`
+	DurationMs        int64          `json:"analysis_duration_ms"`
 	ByLanguage        map[string]int `json:"files_by_language"`
 }
 
@@ -185,35 +185,35 @@ type FunctionSummary struct {
 	StartLine       int             `json:"start_line"`
 	EndLine         int             `json:"end_line"`
 	Parameters      []ParameterInfo `json:"parameters"`
-	ParamsToReturn  []int           `json:"params_to_return"`  // Indices of params that flow to return
-	ParamsToParams  map[int][]int   `json:"params_to_params"`  // Param N flows to param M in nested calls
-	IsSource        bool            `json:"is_source"`         // Function itself returns user input
+	ParamsToReturn  []int           `json:"params_to_return"` // Indices of params that flow to return
+	ParamsToParams  map[int][]int   `json:"params_to_params"` // Param N flows to param M in nested calls
+	IsSource        bool            `json:"is_source"`        // Function itself returns user input
 	CalledFunctions []string        `json:"called_functions"`
 }
 
 // Scope represents a variable scope in the code
 type Scope struct {
-	ID        string                       `json:"id"`
-	Type      ScopeType                    `json:"type"`
-	Name      string                       `json:"name"`
-	Parent    *Scope                       `json:"-"` // Avoid circular JSON
-	ParentID  string                       `json:"parent_id,omitempty"`
-	Children  []*Scope                     `json:"-"` // Child scopes
-	Variables map[string]*TaintedVariable  `json:"-"`
-	StartLine int                          `json:"start_line"`
-	EndLine   int                          `json:"end_line"`
-	StartLoc  Location                     `json:"start_location,omitempty"`
+	ID        string                      `json:"id"`
+	Type      ScopeType                   `json:"type"`
+	Name      string                      `json:"name"`
+	Parent    *Scope                      `json:"-"` // Avoid circular JSON
+	ParentID  string                      `json:"parent_id,omitempty"`
+	Children  []*Scope                    `json:"-"` // Child scopes
+	Variables map[string]*TaintedVariable `json:"-"`
+	StartLine int                         `json:"start_line"`
+	EndLine   int                         `json:"end_line"`
+	StartLoc  Location                    `json:"start_location,omitempty"`
 }
 
 // Note: ScopeType is defined in scope.go
 
 // AnalysisState maintains the current state during analysis
 type AnalysisState struct {
-	CurrentScope     *Scope
-	ScopeStack       []*Scope
-	TaintedValues    map[string]*TaintedVariable // variable name -> tainted info
+	CurrentScope      *Scope
+	ScopeStack        []*Scope
+	TaintedValues     map[string]*TaintedVariable // variable name -> tainted info
 	FunctionSummaries map[string]*FunctionSummary
-	VisitedFunctions map[string]bool
+	VisitedFunctions  map[string]bool
 }
 
 // NewAnalysisState creates a new analysis state with global scope

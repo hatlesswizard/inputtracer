@@ -44,47 +44,47 @@ const (
 
 // PathNode represents a node in an execution path
 type PathNode struct {
-	ID           string       `json:"id"`
-	Type         PathNodeType `json:"type"`
-	Name         string       `json:"name"`
-	Expression   string       `json:"expression,omitempty"`
-	FilePath     string       `json:"file_path"`
-	Line         int          `json:"line"`
-	Column       int          `json:"column"`
+	ID         string       `json:"id"`
+	Type       PathNodeType `json:"type"`
+	Name       string       `json:"name"`
+	Expression string       `json:"expression,omitempty"`
+	FilePath   string       `json:"file_path"`
+	Line       int          `json:"line"`
+	Column     int          `json:"column"`
 
 	// Function context
-	FunctionName string       `json:"function_name,omitempty"`
-	ClassName    string       `json:"class_name,omitempty"`
+	FunctionName string `json:"function_name,omitempty"`
+	ClassName    string `json:"class_name,omitempty"`
 
 	// Taint information
-	TaintedVars  []string     `json:"tainted_vars,omitempty"`
-	TaintSource  string       `json:"taint_source,omitempty"`
+	TaintedVars []string `json:"tainted_vars,omitempty"`
+	TaintSource string   `json:"taint_source,omitempty"`
 
 	// Condition information (for condition nodes)
-	Condition    string       `json:"condition,omitempty"`
-	BranchTaken  bool         `json:"branch_taken,omitempty"` // true/false branch
+	Condition   string `json:"condition,omitempty"`
+	BranchTaken bool   `json:"branch_taken,omitempty"` // true/false branch
 
 	// Metadata
-	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // ExecutionPath represents a complete path from source to target
 type ExecutionPath struct {
-	ID          string       `json:"id"`
-	Nodes       []*PathNode  `json:"nodes"`
+	ID    string      `json:"id"`
+	Nodes []*PathNode `json:"nodes"`
 
 	// Source and target info
-	SourceNode  *PathNode    `json:"source_node"`
-	TargetNode  *PathNode    `json:"target_node"`
+	SourceNode *PathNode `json:"source_node"`
+	TargetNode *PathNode `json:"target_node"`
 
 	// Path characteristics
-	Depth       int          `json:"depth"`        // Function call depth
-	Length      int          `json:"length"`       // Number of nodes
-	Feasible    bool         `json:"feasible"`     // Is path feasible?
-	PruneReason PruneReason  `json:"prune_reason,omitempty"`
+	Depth       int         `json:"depth"`    // Function call depth
+	Length      int         `json:"length"`   // Number of nodes
+	Feasible    bool        `json:"feasible"` // Is path feasible?
+	PruneReason PruneReason `json:"prune_reason,omitempty"`
 
 	// Conditions along the path
-	Conditions  []string     `json:"conditions,omitempty"`
+	Conditions []string `json:"conditions,omitempty"`
 }
 
 // PathExpander expands and prunes inter-procedural paths
@@ -98,16 +98,16 @@ type PathExpander struct {
 	enablePruning bool
 
 	// Call graph information
-	callGraph     map[string][]string // caller -> callees
-	reverseGraph  map[string][]string // callee -> callers
+	callGraph    map[string][]string // caller -> callees
+	reverseGraph map[string][]string // callee -> callers
 
 	// Function information
-	functionDefs  map[string]*FunctionInfo
+	functionDefs map[string]*FunctionInfo
 
 	// Statistics
-	pathsExplored  int
-	pathsPruned    int
-	pathsFound     int
+	pathsExplored int
+	pathsPruned   int
+	pathsFound    int
 }
 
 // FunctionInfo stores information about a function
@@ -117,8 +117,8 @@ type FunctionInfo struct {
 	Line         int
 	ClassName    string
 	Parameters   []string
-	Returns      bool       // Does it return a value?
-	TaintThrough []int      // Which params flow to return?
+	Returns      bool  // Does it return a value?
+	TaintThrough []int // Which params flow to return?
 	IsSource     bool
 }
 

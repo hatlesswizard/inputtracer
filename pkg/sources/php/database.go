@@ -71,9 +71,9 @@ var DatabaseQueryMethods = map[string]bool{
 	"prepare": true,
 	"execute": true,
 	// MySQLi
-	"real_query":       true,
-	"multi_query":      true,
-	"send_query":       true,
+	"real_query":         true,
+	"multi_query":        true,
+	"send_query":         true,
 	"real_escape_string": true,
 }
 

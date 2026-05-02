@@ -35,18 +35,18 @@ var (
 // InputPropertyPatterns contains universal property access patterns
 // These match .property access on input objects
 var InputPropertyPatterns = []string{
-	".body",      // Express, Koa, Fastify
-	".query",     // Express, Koa
-	".params",    // Express, Koa
-	".headers",   // Express, generic
-	".cookies",   // Express
-	".value",     // DOM form inputs
-	".search",    // location.search
-	".hash",      // location.hash
-	".href",      // location.href
-	".cookie",    // document.cookie
-	".referrer",  // document.referrer
-	".response",  // XHR
+	".body",         // Express, Koa, Fastify
+	".query",        // Express, Koa
+	".params",       // Express, Koa
+	".headers",      // Express, generic
+	".cookies",      // Express
+	".value",        // DOM form inputs
+	".search",       // location.search
+	".hash",         // location.hash
+	".href",         // location.href
+	".cookie",       // document.cookie
+	".referrer",     // document.referrer
+	".response",     // XHR
 	".responseText", // XHR
 	".responseXML",  // XHR
 }

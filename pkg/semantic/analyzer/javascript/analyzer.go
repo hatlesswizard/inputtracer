@@ -17,9 +17,9 @@ import (
 // JSAnalyzer implements the LanguageAnalyzer interface for JavaScript
 type JSAnalyzer struct {
 	*analyzer.BaseAnalyzer
-	globalSources   map[string]types.SourceType
-	domSources      map[string]types.SourceType
-	nodeSources     map[string]types.SourceType
+	globalSources map[string]types.SourceType
+	domSources    map[string]types.SourceType
+	nodeSources   map[string]types.SourceType
 }
 
 // NewJSAnalyzer creates a new JavaScript analyzer
@@ -560,11 +560,11 @@ func (a *JSAnalyzer) parseAssignment(node *sitter.Node, source []byte, scope str
 	}
 
 	assignment := &types.Assignment{
-		Target:   analyzer.GetNodeText(leftNode, source),
-		Source:   analyzer.GetNodeText(rightNode, source),
-		Line:     int(node.StartPoint().Row) + 1,
-		Column:   int(node.StartPoint().Column),
-		Scope:    scope,
+		Target: analyzer.GetNodeText(leftNode, source),
+		Source: analyzer.GetNodeText(rightNode, source),
+		Line:   int(node.StartPoint().Row) + 1,
+		Column: int(node.StartPoint().Column),
+		Scope:  scope,
 	}
 
 	if opNode != nil {
@@ -785,16 +785,16 @@ func (a *JSAnalyzer) FindInputSources(root *sitter.Node, source []byte) ([]*type
 
 		// Check Express patterns
 		expressPatterns := map[string]types.SourceType{
-			"req.body":    types.SourceHTTPBody,
-			"req.query":   types.SourceHTTPGet,
-			"req.params":  types.SourceHTTPPath,
-			"req.headers": types.SourceHTTPHeader,
-			"req.cookies": types.SourceHTTPCookie,
+			"req.body":        types.SourceHTTPBody,
+			"req.query":       types.SourceHTTPGet,
+			"req.params":      types.SourceHTTPPath,
+			"req.headers":     types.SourceHTTPHeader,
+			"req.cookies":     types.SourceHTTPCookie,
 			"request.body":    types.SourceHTTPBody,
 			"request.query":   types.SourceHTTPGet,
 			"request.params":  types.SourceHTTPPath,
 			"request.headers": types.SourceHTTPHeader,
-			"request.payload": types.SourceHTTPBody,  // Hapi
+			"request.payload": types.SourceHTTPBody, // Hapi
 		}
 		for pattern, sourceType := range expressPatterns {
 			if strings.HasPrefix(text, pattern) || strings.Contains(text, "."+pattern) {
@@ -826,12 +826,12 @@ func (a *JSAnalyzer) FindInputSources(root *sitter.Node, source []byte) ([]*type
 
 		// Check Koa patterns (ctx.request.body, ctx.query, ctx.params)
 		koaPatterns := map[string]types.SourceType{
-			"ctx.request.body": types.SourceHTTPBody,
-			"ctx.query":        types.SourceHTTPGet,
+			"ctx.request.body":  types.SourceHTTPBody,
+			"ctx.query":         types.SourceHTTPGet,
 			"ctx.request.query": types.SourceHTTPGet,
-			"ctx.params":       types.SourceHTTPPath,
-			"ctx.headers":      types.SourceHTTPHeader,
-			"ctx.cookies":      types.SourceHTTPCookie,
+			"ctx.params":        types.SourceHTTPPath,
+			"ctx.headers":       types.SourceHTTPHeader,
+			"ctx.cookies":       types.SourceHTTPCookie,
 		}
 		for pattern, sourceType := range koaPatterns {
 			if strings.HasPrefix(text, pattern) {
@@ -1084,9 +1084,9 @@ func (a *JSAnalyzer) TraceExpression(target types.FlowTarget, state *types.Analy
 			flowMap.AllNodes = append(flowMap.AllNodes, sourceNode)
 
 			flowMap.CarrierChain = &types.CarrierChain{
-				PropertyName:     strings.TrimPrefix(pattern, "req."),
-				PopulationCalls:  []string{info.desc},
-				Framework:        "express",
+				PropertyName:    strings.TrimPrefix(pattern, "req."),
+				PopulationCalls: []string{info.desc},
+				Framework:       "express",
 			}
 		}
 	}

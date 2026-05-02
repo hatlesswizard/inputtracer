@@ -9,6 +9,21 @@ import (
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
+// whitespaceRe collapses runs of whitespace; pre-compiled to avoid per-call allocation.
+var whitespaceRe = regexp.MustCompile(`\s+`)
+
+// regexCache caches compiled boundary-pattern regexes keyed by variable name pattern.
+var regexCache sync.Map // map[string]*regexp.Regexp
+
+func cachedRegex(pattern string) *regexp.Regexp {
+	if cached, ok := regexCache.Load(pattern); ok {
+		return cached.(*regexp.Regexp)
+	}
+	compiled := regexp.MustCompile(pattern)
+	regexCache.Store(pattern, compiled)
+	return compiled
+}
+
 // Assignment represents an assignment operation in code
 type Assignment struct {
 	LHS       string
@@ -77,10 +92,10 @@ func (r *Registry) GetExtractor(language string) Extractor {
 
 // BaseExtractor provides common functionality for AST extraction
 type BaseExtractor struct {
-	lang             string
-	assignmentTypes  []string
-	callTypes        []string
-	identifierTypes  []string
+	lang            string
+	assignmentTypes []string
+	callTypes       []string
+	identifierTypes []string
 }
 
 // NewBaseExtractor creates a new base extractor
@@ -148,8 +163,7 @@ func (e *BaseExtractor) ExpressionContains(node *sitter.Node, varName string, sr
 	}
 
 	// Check with word boundaries (handles $-prefixed and @-prefixed vars)
-	pattern := regexp.MustCompile(patterns.VariableBoundaryPattern(varName))
-	return pattern.MatchString(text)
+	return cachedRegex(patterns.VariableBoundaryPattern(varName)).MatchString(text)
 }
 
 // traverse recursively traverses the AST
@@ -305,7 +319,7 @@ func (e *BaseExtractor) parseArguments(node *sitter.Node, src []byte) []CallArgu
 func truncateString(s string, maxLen int) string {
 	s = strings.ReplaceAll(s, "\n", " ")
 	s = strings.ReplaceAll(s, "\r", "")
-	s = regexp.MustCompile(`\s+`).ReplaceAllString(s, " ")
+	s = whitespaceRe.ReplaceAllString(s, " ")
 	s = strings.TrimSpace(s)
 	if len(s) <= maxLen {
 		return s

@@ -29,7 +29,7 @@ func buildPatternsFromRegistry() {
 		if pattern.MethodPattern != "" {
 			methodName := stripRegexAnchors(pattern.MethodPattern)
 			if methodName != "" {
-				methodSet["->" + methodName + "("] = true
+				methodSet["->"+methodName+"("] = true
 			}
 		}
 
@@ -37,13 +37,13 @@ func buildPatternsFromRegistry() {
 		if pattern.PropertyPattern != "" {
 			propName := stripRegexAnchors(pattern.PropertyPattern)
 			if propName != "" {
-				propertySet["->" + propName + "["] = true
+				propertySet["->"+propName+"["] = true
 			}
 		}
 
 		// Also use CarrierProperty for property patterns
 		if pattern.CarrierProperty != "" {
-			propertySet["->" + pattern.CarrierProperty + "["] = true
+			propertySet["->"+pattern.CarrierProperty+"["] = true
 		}
 	}
 
@@ -122,7 +122,6 @@ func GetPatternsByFramework(framework string) []*common.FrameworkPattern {
 func GetPatternByID(id string) *common.FrameworkPattern {
 	return Registry.GetByID(id)
 }
-
 
 // =============================================================================
 // FRAMEWORK DETECTION
@@ -218,5 +217,3 @@ func DetectFrameworks(imports []string, classNames []string, source string) []st
 
 	return frameworks
 }
-
-

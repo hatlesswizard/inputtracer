@@ -18,7 +18,7 @@ const (
 type ConditionEffect string
 
 const (
-	EffectAllows  ConditionEffect = "allows"  // Condition allows flow if true
-	EffectBlocks  ConditionEffect = "blocks"  // Condition blocks flow if true
+	EffectAllows  ConditionEffect = "allows" // Condition allows flow if true
+	EffectBlocks  ConditionEffect = "blocks" // Condition blocks flow if true
 	EffectUnknown ConditionEffect = "unknown"
 )

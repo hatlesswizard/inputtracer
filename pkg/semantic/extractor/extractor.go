@@ -12,15 +12,15 @@ import (
 
 // ExtractedExpression represents a PHP expression extracted from code
 type ExtractedExpression struct {
-	Expression    string   `json:"expression"`
-	Line          int      `json:"line"`
-	Type          string   `json:"type"` // "superglobal", "method_call", "property_access", "variable", "sql_embedded"
-	Context       string   `json:"context,omitempty"`
-	Key           string   `json:"key,omitempty"`           // The extracted key (e.g., "aid" from $mybb->input['aid'])
-	VarName       string   `json:"var_name,omitempty"`      // Variable name (e.g., "mybb")
-	PropertyName  string   `json:"property_name,omitempty"` // Property name (e.g., "input")
-	IsEscaped     bool     `json:"is_escaped,omitempty"`    // Whether wrapped in escape_string()
-	EscapeWrapper string   `json:"escape_wrapper,omitempty"` // The escape function used
+	Expression    string `json:"expression"`
+	Line          int    `json:"line"`
+	Type          string `json:"type"` // "superglobal", "method_call", "property_access", "variable", "sql_embedded"
+	Context       string `json:"context,omitempty"`
+	Key           string `json:"key,omitempty"`            // The extracted key (e.g., "aid" from $mybb->input['aid'])
+	VarName       string `json:"var_name,omitempty"`       // Variable name (e.g., "mybb")
+	PropertyName  string `json:"property_name,omitempty"`  // Property name (e.g., "input")
+	IsEscaped     bool   `json:"is_escaped,omitempty"`     // Whether wrapped in escape_string()
+	EscapeWrapper string `json:"escape_wrapper,omitempty"` // The escape function used
 }
 
 // ExpressionExtractor extracts traceable PHP expressions from code

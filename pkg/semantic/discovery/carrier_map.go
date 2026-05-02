@@ -13,12 +13,12 @@ import (
 
 // CarrierMap stores discovered input carriers for a codebase
 type CarrierMap struct {
-	CodebasePath string       `json:"codebase_path"`
-	DiscoveredAt time.Time    `json:"discovered_at"`
-	PHPVersion   string       `json:"php_version,omitempty"`
-	Framework    string       `json:"framework,omitempty"`
+	CodebasePath string         `json:"codebase_path"`
+	DiscoveredAt time.Time      `json:"discovered_at"`
+	PHPVersion   string         `json:"php_version,omitempty"`
+	Framework    string         `json:"framework,omitempty"`
 	Carriers     []InputCarrier `json:"carriers"`
-	Statistics   CarrierStats `json:"statistics"`
+	Statistics   CarrierStats   `json:"statistics"`
 }
 
 // CarrierStats holds statistics about the discovery

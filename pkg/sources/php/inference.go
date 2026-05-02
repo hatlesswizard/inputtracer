@@ -14,16 +14,16 @@ import (
 
 // MethodNamePatterns maps patterns in method names to their source types
 var MethodNamePatterns = map[string]common.SourceType{
-	"cookie":  common.SourceHTTPCookie,
-	"header":  common.SourceHTTPHeader,
-	"server":  common.SourceHTTPHeader, // $_SERVER is typically HTTP headers
-	"post":    common.SourceHTTPPost,
-	"body":    common.SourceHTTPPost,
-	"parsed":  common.SourceHTTPPost, // getParsedBody
-	"query":   common.SourceHTTPGet,
-	"get":     common.SourceHTTPGet,
-	"file":    common.SourceHTTPBody,
-	"upload":  common.SourceHTTPBody,
+	"cookie": common.SourceHTTPCookie,
+	"header": common.SourceHTTPHeader,
+	"server": common.SourceHTTPHeader, // $_SERVER is typically HTTP headers
+	"post":   common.SourceHTTPPost,
+	"body":   common.SourceHTTPPost,
+	"parsed": common.SourceHTTPPost, // getParsedBody
+	"query":  common.SourceHTTPGet,
+	"get":    common.SourceHTTPGet,
+	"file":   common.SourceHTTPBody,
+	"upload": common.SourceHTTPBody,
 }
 
 // PropertyNamePatterns maps patterns in property names to their source types

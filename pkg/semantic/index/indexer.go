@@ -37,33 +37,33 @@ const (
 
 // Symbol represents an indexed code symbol
 type Symbol struct {
-	ID          string     `json:"id"`           // Unique identifier
-	Name        string     `json:"name"`         // Symbol name
-	Type        SymbolType `json:"type"`
-	FilePath    string     `json:"file_path"`
-	Line        int        `json:"line"`
-	Column      int        `json:"column"`
-	EndLine     int        `json:"end_line"`
-	EndColumn   int        `json:"end_column"`
+	ID        string     `json:"id"`   // Unique identifier
+	Name      string     `json:"name"` // Symbol name
+	Type      SymbolType `json:"type"`
+	FilePath  string     `json:"file_path"`
+	Line      int        `json:"line"`
+	Column    int        `json:"column"`
+	EndLine   int        `json:"end_line"`
+	EndColumn int        `json:"end_column"`
 
 	// For functions/methods
-	Signature   string     `json:"signature,omitempty"`    // Full signature
-	Parameters  []string   `json:"parameters,omitempty"`   // Parameter names
-	ParamTypes  []string   `json:"param_types,omitempty"`  // Parameter types
-	ReturnType  string     `json:"return_type,omitempty"`
+	Signature  string   `json:"signature,omitempty"`   // Full signature
+	Parameters []string `json:"parameters,omitempty"`  // Parameter names
+	ParamTypes []string `json:"param_types,omitempty"` // Parameter types
+	ReturnType string   `json:"return_type,omitempty"`
 
 	// For methods/properties
-	ClassName   string     `json:"class_name,omitempty"`
-	Visibility  string     `json:"visibility,omitempty"`   // public/private/protected
-	IsStatic    bool       `json:"is_static,omitempty"`
+	ClassName  string `json:"class_name,omitempty"`
+	Visibility string `json:"visibility,omitempty"` // public/private/protected
+	IsStatic   bool   `json:"is_static,omitempty"`
 
 	// Metadata
-	Language    string     `json:"language"`
-	DocComment  string     `json:"doc_comment,omitempty"`
-	Annotations []string   `json:"annotations,omitempty"`
+	Language    string   `json:"language"`
+	DocComment  string   `json:"doc_comment,omitempty"`
+	Annotations []string `json:"annotations,omitempty"`
 
 	// References
-	References  []Reference `json:"references,omitempty"`
+	References []Reference `json:"references,omitempty"`
 }
 
 // Reference represents a usage of a symbol
@@ -77,23 +77,23 @@ type Reference struct {
 
 // SearchQuery represents a search query
 type SearchQuery struct {
-	Name         string      // Exact or partial name
-	NamePattern  string      // Regex pattern for name
-	Type         SymbolType  // Filter by type
-	ClassName    string      // Filter by class
-	FilePath     string      // Filter by file
-	FilePattern  string      // Glob pattern for files
-	Language     string      // Filter by language
-	HasParameter string      // Has parameter matching this name
-	ReturnType   string      // Filter by return type
-	Limit        int         // Max results (0 = unlimited)
+	Name         string     // Exact or partial name
+	NamePattern  string     // Regex pattern for name
+	Type         SymbolType // Filter by type
+	ClassName    string     // Filter by class
+	FilePath     string     // Filter by file
+	FilePattern  string     // Glob pattern for files
+	Language     string     // Filter by language
+	HasParameter string     // Has parameter matching this name
+	ReturnType   string     // Filter by return type
+	Limit        int        // Max results (0 = unlimited)
 }
 
 // SearchResult represents a search result
 type SearchResult struct {
-	Symbol   *Symbol `json:"symbol"`
-	Score    float64 `json:"score"`    // Match quality score
-	MatchedBy string `json:"matched_by"` // What matched (name, signature, etc.)
+	Symbol    *Symbol `json:"symbol"`
+	Score     float64 `json:"score"`      // Match quality score
+	MatchedBy string  `json:"matched_by"` // What matched (name, signature, etc.)
 }
 
 // Indexer provides fast symbol lookup and cross-reference
@@ -101,26 +101,26 @@ type Indexer struct {
 	mu sync.RWMutex
 
 	// Primary indexes
-	symbolsByID     map[string]*Symbol              // id -> symbol
-	symbolsByName   map[string][]*Symbol            // name -> symbols (multiple files)
-	symbolsByFile   map[string][]*Symbol            // filepath -> symbols
+	symbolsByID   map[string]*Symbol   // id -> symbol
+	symbolsByName map[string][]*Symbol // name -> symbols (multiple files)
+	symbolsByFile map[string][]*Symbol // filepath -> symbols
 
 	// Secondary indexes for fast lookup
-	functionIndex   map[string][]*Symbol            // func name -> functions
-	classIndex      map[string]*Symbol              // class name -> class
-	methodIndex     map[string]map[string]*Symbol   // class -> method -> symbol
+	functionIndex map[string][]*Symbol          // func name -> functions
+	classIndex    map[string]*Symbol            // class name -> class
+	methodIndex   map[string]map[string]*Symbol // class -> method -> symbol
 
 	// Signature index for pattern matching
-	signatureIndex  map[string][]*Symbol            // normalized signature -> symbols
+	signatureIndex map[string][]*Symbol // normalized signature -> symbols
 
 	// Reference index
-	referenceIndex  map[string][]Reference          // symbolID -> references
+	referenceIndex map[string][]Reference // symbolID -> references
 
 	// LRU cache for search results
-	searchCache     map[string][]*SearchResult
-	searchCacheLRU  *list.List
-	searchCacheMap  map[string]*list.Element
-	maxCacheSize    int
+	searchCache    map[string][]*SearchResult
+	searchCacheLRU *list.List
+	searchCacheMap map[string]*list.Element
+	maxCacheSize   int
 
 	// Statistics
 	totalSymbols    int

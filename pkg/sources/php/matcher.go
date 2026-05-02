@@ -7,10 +7,23 @@ type Matcher struct {
 	*common.BaseMatcher
 }
 
-// NewMatcher creates a new PHP source matcher
+// NewMatcher creates a new PHP source matcher combining all definition groups.
 func NewMatcher() *Matcher {
-	defs := []common.Definition{
-		// Superglobals - HTTP
+	defs := superglobalDefinitions()
+	defs = append(defs, streamDefinitions()...)
+	defs = append(defs, headerDefinitions()...)
+	defs = append(defs, frameworkDefinitions()...)
+	defs = append(defs, restAPIDefinitions()...)
+	return &Matcher{
+		BaseMatcher: common.NewBaseMatcher("php", defs),
+	}
+}
+
+// superglobalDefinitions returns definitions for PHP superglobals ($_GET, $_POST, etc.)
+// including both bracket-access forms and bare array forms, plus wrappers like extract().
+func superglobalDefinitions() []common.Definition {
+	return []common.Definition{
+		// --- Subscript access ---
 		{
 			Name:         "$_GET",
 			Pattern:      `\$_GET\s*\[`,
@@ -65,150 +78,28 @@ func NewMatcher() *Matcher {
 			NodeTypes:    []string{"subscript_expression", "variable_name"},
 			KeyExtractor: `\$_FILES\s*\[\s*['"]?([^'"\]]+)['"]?\s*\]`,
 		},
-		// $_ENV - NOT user input (server configuration)
+		// $_ENV — server configuration, NOT request data
 		{
 			Name:         "$_ENV",
 			Pattern:      `\$_ENV\s*\[`,
 			Language:     "php",
-			Labels:       []common.InputLabel{common.LabelEnvironment}, // Note: NO LabelUserInput
+			Labels:       []common.InputLabel{common.LabelEnvironment},
 			Description:  "Environment variables (server config, NOT request data)",
 			NodeTypes:    []string{"subscript_expression", "variable_name"},
 			KeyExtractor: `\$_ENV\s*\[\s*['"]?([^'"\]]+)['"]?\s*\]`,
 		},
-		// $_SESSION - NOT user input (stored server-side)
+		// $_SESSION — stored server-side, NOT sent in the request
 		{
 			Name:         "$_SESSION",
 			Pattern:      `\$_SESSION\s*\[`,
 			Language:     "php",
-			Labels:       []common.InputLabel{}, // Note: NO LabelUserInput - session is server-side
+			Labels:       []common.InputLabel{},
 			Description:  "Session data (stored server-side, NOT sent in request)",
 			NodeTypes:    []string{"subscript_expression", "variable_name"},
 			KeyExtractor: `\$_SESSION\s*\[\s*['"]?([^'"\]]+)['"]?\s*\]`,
 		},
 
-		// =====================================================
-		// RAW HTTP REQUEST BODY - TRUE USER INPUT
-		// =====================================================
-		{
-			Name:        "php://input (file_get_contents)",
-			Pattern:     `file_get_contents\s*\(\s*['"]php://input['"]`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelHTTPBody, common.LabelUserInput},
-			Description: "Raw POST body via file_get_contents",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-		{
-			Name:        "php://input (fopen)",
-			Pattern:     `fopen\s*\(\s*['"]php://input['"]`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelHTTPBody, common.LabelUserInput},
-			Description: "Raw POST body via fopen stream",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-
-		// =====================================================
-		// HTTP HEADER FUNCTIONS - TRUE USER INPUT
-		// =====================================================
-		{
-			Name:        "getallheaders()",
-			Pattern:     `\bgetallheaders\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelHTTPHeader, common.LabelUserInput},
-			Description: "Get all HTTP request headers (alias of apache_request_headers)",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-		{
-			Name:        "apache_request_headers()",
-			Pattern:     `\bapache_request_headers\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelHTTPHeader, common.LabelUserInput},
-			Description: "Get all HTTP request headers (Apache SAPI)",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-
-		// =====================================================
-		// FILE OPERATIONS - NOT USER INPUT
-		// These read from the filesystem, NOT HTTP requests
-		// =====================================================
-		{
-			Name:        "file_get_contents",
-			Pattern:     `file_get_contents\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelFile},
-			Description: "File contents reader",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-		{
-			Name:        "fopen",
-			Pattern:     `fopen\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelFile},
-			Description: "File handle opener",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-		{
-			Name:        "fgets",
-			Pattern:     `fgets\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelFile},
-			Description: "Read line from file",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-		{
-			Name:        "fread",
-			Pattern:     `fread\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelFile},
-			Description: "Binary file read",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-		{
-			Name:        "file",
-			Pattern:     `\bfile\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelFile},
-			Description: "Read file into array",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-
-		// getenv
-		{
-			Name:        "getenv",
-			Pattern:     `getenv\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelEnvironment},
-			Description: "Get environment variable",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-
-		// CLI
-		{
-			Name:        "$argv",
-			Pattern:     `\$argv`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelCLI},
-			Description: "Command line arguments",
-			NodeTypes:   []string{"variable_name"},
-		},
-
-		// Stream input
-		{
-			Name:        "php://stdin",
-			Pattern:     `fopen\s*\(\s*['"]php://stdin['"]`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelUserInput},
-			Description: "Standard input stream",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-
-		// =====================================================
-		// UNIVERSAL PATTERNS - Work across all PHP applications
-		// =====================================================
-
-		// Bare superglobals (when passed as arguments or used in foreach)
-		// These detect $_GET, $_POST etc. when NOT followed by bracket
-		// Uses exact match on variable_name nodes with parent exclusion to avoid
-		// duplicating subscript_expression matches (e.g., $_GET['key'])
+		// --- Bare array forms (passed as argument or used in foreach) ---
 		{
 			Name:               "$_GET (bare)",
 			Pattern:            `^\$_GET$`,
@@ -264,10 +155,7 @@ func NewMatcher() *Matcher {
 			ExcludeParentTypes: []string{"subscript_expression"},
 		},
 
-		// =====================================================
-		// SUPERGLOBAL WRAPPERS - Functions that pass through superglobals
-		// These create tainted data from superglobal arrays
-		// =====================================================
+		// --- Superglobal wrapper functions ---
 		{
 			Name:        "extract($_POST)",
 			Pattern:     `\bextract\s*\(\s*\$_POST`,
@@ -316,8 +204,128 @@ func NewMatcher() *Matcher {
 			Description: "wp_unslash() wrapping superglobal",
 			NodeTypes:   []string{"function_call_expression"},
 		},
+	}
+}
 
-		// Generic input getter methods (universal across frameworks)
+// streamDefinitions returns definitions for raw HTTP body streams, file operations,
+// environment variables, and CLI input.
+func streamDefinitions() []common.Definition {
+	return []common.Definition{
+		// Raw HTTP body
+		{
+			Name:        "php://input (file_get_contents)",
+			Pattern:     `file_get_contents\s*\(\s*['"]php://input['"]`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelHTTPBody, common.LabelUserInput},
+			Description: "Raw POST body via file_get_contents",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "php://input (fopen)",
+			Pattern:     `fopen\s*\(\s*['"]php://input['"]`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelHTTPBody, common.LabelUserInput},
+			Description: "Raw POST body via fopen stream",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "php://stdin",
+			Pattern:     `fopen\s*\(\s*['"]php://stdin['"]`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelUserInput},
+			Description: "Standard input stream",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+
+		// File operations (NOT user input from HTTP request)
+		{
+			Name:        "file_get_contents",
+			Pattern:     `file_get_contents\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelFile},
+			Description: "File contents reader",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "fopen",
+			Pattern:     `fopen\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelFile},
+			Description: "File handle opener",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "fgets",
+			Pattern:     `fgets\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelFile},
+			Description: "Read line from file",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "fread",
+			Pattern:     `fread\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelFile},
+			Description: "Binary file read",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "file",
+			Pattern:     `\bfile\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelFile},
+			Description: "Read file into array",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+
+		// Environment / CLI
+		{
+			Name:        "getenv",
+			Pattern:     `getenv\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelEnvironment},
+			Description: "Get environment variable",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "$argv",
+			Pattern:     `\$argv`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelCLI},
+			Description: "Command line arguments",
+			NodeTypes:   []string{"variable_name"},
+		},
+	}
+}
+
+// headerDefinitions returns definitions for HTTP header retrieval functions.
+func headerDefinitions() []common.Definition {
+	return []common.Definition{
+		{
+			Name:        "getallheaders()",
+			Pattern:     `\bgetallheaders\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelHTTPHeader, common.LabelUserInput},
+			Description: "Get all HTTP request headers (alias of apache_request_headers)",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "apache_request_headers()",
+			Pattern:     `\bapache_request_headers\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelHTTPHeader, common.LabelUserInput},
+			Description: "Get all HTTP request headers (Apache SAPI)",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+	}
+}
+
+// frameworkDefinitions returns definitions for framework-agnostic input patterns:
+// PSR-7, Laravel/Symfony-style methods, and generic object input accessors.
+func frameworkDefinitions() []common.Definition {
+	return []common.Definition{
+		// Generic input getters
 		{
 			Name:         "->get_input()",
 			Pattern:      `->\s*get_input\s*\(`,
@@ -328,13 +336,13 @@ func NewMatcher() *Matcher {
 			KeyExtractor: `->\s*get_input\s*\(\s*['"]([^'"]+)`,
 		},
 		{
-			Name:         "->get_var() (non-wpdb)",
-			Pattern:      `->\s*get_var\s*\(`,
-			Language:     "php",
-			Labels:       []common.InputLabel{common.LabelUserInput},
-			Description:  "Generic variable getter method (excludes $wpdb which is database)",
-			NodeTypes:    []string{"member_call_expression"},
-			KeyExtractor: `->\s*get_var\s*\(\s*['"]([^'"]+)`,
+			Name:           "->get_var() (non-wpdb)",
+			Pattern:        `->\s*get_var\s*\(`,
+			Language:       "php",
+			Labels:         []common.InputLabel{common.LabelUserInput},
+			Description:    "Generic variable getter method (excludes $wpdb which is database)",
+			NodeTypes:      []string{"member_call_expression"},
+			KeyExtractor:   `->\s*get_var\s*\(\s*['"]([^'"]+)`,
 			ExcludePattern: `\$wpdb\s*->\s*get_var`,
 		},
 		{
@@ -347,7 +355,7 @@ func NewMatcher() *Matcher {
 			KeyExtractor: `->\s*variable\s*\(\s*['"]([^'"]+)`,
 		},
 
-		// PSR-7 HTTP Message Interface (universal standard)
+		// PSR-7 HTTP Message Interface
 		{
 			Name:        "->getQueryParams()",
 			Pattern:     `->\s*getQueryParams\s*\(`,
@@ -405,7 +413,7 @@ func NewMatcher() *Matcher {
 			NodeTypes:   []string{"member_call_expression"},
 		},
 
-		// Laravel/Symfony style input methods (universal patterns)
+		// Laravel/Symfony-style input methods
 		{
 			Name:         "->input()",
 			Pattern:      `->\s*input\s*\(`,
@@ -469,78 +477,6 @@ func NewMatcher() *Matcher {
 			KeyExtractor: `->\s*file\s*\(\s*['"]([^'"]+)`,
 		},
 
-		// =====================================================
-		// DATA PARSING FUNCTIONS - NOT INPUT SOURCES
-		// These are DATA PROCESSORS, not input sources.
-		// They parse data that may have come from user input,
-		// but the function itself is not where input enters.
-		// Tracking these helps with taint propagation, but they
-		// should NOT be labeled as LabelUserInput.
-		// =====================================================
-		// NOTE: These are kept for taint propagation tracking
-		// but marked with empty labels to indicate they are NOT
-		// the actual source of user input.
-
-		// =====================================================
-		// NETWORK FUNCTIONS - NOT HTTP REQUEST INPUT
-		// These return data from external network calls,
-		// NOT from the current HTTP request.
-		// =====================================================
-		{
-			Name:        "curl_exec()",
-			Pattern:     `\bcurl_exec\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelNetwork}, // Note: NOT LabelUserInput
-			Description: "cURL execute - returns external network data (NOT HTTP request input)",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-		{
-			Name:        "curl_multi_getcontent()",
-			Pattern:     `\bcurl_multi_getcontent\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelNetwork}, // Note: NOT LabelUserInput
-			Description: "cURL multi get content - returns external network data",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-
-		// =====================================================
-		// DATABASE FUNCTIONS - NOT USER INPUT
-		// These return data from database queries,
-		// NOT from the current HTTP request.
-		// =====================================================
-		{
-			Name:        "$wpdb->get_var()",
-			Pattern:     `\$wpdb\s*->\s*get_var\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelDatabase},
-			Description: "WordPress database query - returns single variable (NOT user input)",
-			NodeTypes:   []string{"member_call_expression"},
-		},
-		{
-			Name:        "$wpdb->get_results()",
-			Pattern:     `\$wpdb\s*->\s*get_results\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelDatabase},
-			Description: "WordPress database query - returns result set (NOT user input)",
-			NodeTypes:   []string{"member_call_expression"},
-		},
-		{
-			Name:        "$wpdb->get_row()",
-			Pattern:     `\$wpdb\s*->\s*get_row\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelDatabase},
-			Description: "WordPress database query - returns single row (NOT user input)",
-			NodeTypes:   []string{"member_call_expression"},
-		},
-		{
-			Name:        "get_option()",
-			Pattern:     `\bget_option\s*\(`,
-			Language:    "php",
-			Labels:      []common.InputLabel{common.LabelDatabase},
-			Description: "WordPress options API - reads from wp_options table (NOT user input)",
-			NodeTypes:   []string{"function_call_expression"},
-		},
-
 		// Generic GET method
 		{
 			Name:         "->get()",
@@ -552,7 +488,7 @@ func NewMatcher() *Matcher {
 			KeyExtractor: `->\s*get\s*\(\s*['"]([^'"]+)`,
 		},
 
-		// Object property array access (universal - any object's input/data array)
+		// Object property array access patterns
 		{
 			Name:         "->input[]",
 			Pattern:      `->\s*input\s*\[`,
@@ -598,13 +534,14 @@ func NewMatcher() *Matcher {
 			NodeTypes:    []string{"subscript_expression", "member_access_expression"},
 			KeyExtractor: `->\s*request\s*\[\s*['"]?([^'"\]]+)['"]?\s*\]`,
 		},
+	}
+}
 
-		// =====================================================
-		// WP_REST_Request ArrayAccess patterns
-		// WordPress WP_REST_Request implements ArrayAccess, so
-		// $request['param'] is equivalent to $request->get_param('param').
-		// Common variable names: $request, $req, $api_request, $rest_request
-		// =====================================================
+// restAPIDefinitions returns definitions for REST API input (WP_REST_Request),
+// external network sources, and database sources.
+func restAPIDefinitions() []common.Definition {
+	return []common.Definition{
+		// WP_REST_Request ArrayAccess — $request['param'] equivalent to get_param()
 		{
 			Name:         "$request['...'] (WP_REST_Request ArrayAccess)",
 			Pattern:      `\$(?:request|req|api_request|rest_request)\s*\[\s*['"]`,
@@ -614,9 +551,57 @@ func NewMatcher() *Matcher {
 			NodeTypes:    []string{"subscript_expression"},
 			KeyExtractor: `\[\s*['"]([^'"]+)['"]`,
 		},
-	}
 
-	return &Matcher{
-		BaseMatcher: common.NewBaseMatcher("php", defs),
+		// External network (NOT the current HTTP request)
+		{
+			Name:        "curl_exec()",
+			Pattern:     `\bcurl_exec\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelNetwork},
+			Description: "cURL execute - returns external network data (NOT HTTP request input)",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "curl_multi_getcontent()",
+			Pattern:     `\bcurl_multi_getcontent\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelNetwork},
+			Description: "cURL multi get content - returns external network data",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+
+		// Database sources (NOT user input from the HTTP request)
+		{
+			Name:        "$wpdb->get_var()",
+			Pattern:     `\$wpdb\s*->\s*get_var\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelDatabase},
+			Description: "WordPress database query - returns single variable (NOT user input)",
+			NodeTypes:   []string{"member_call_expression"},
+		},
+		{
+			Name:        "$wpdb->get_results()",
+			Pattern:     `\$wpdb\s*->\s*get_results\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelDatabase},
+			Description: "WordPress database query - returns result set (NOT user input)",
+			NodeTypes:   []string{"member_call_expression"},
+		},
+		{
+			Name:        "$wpdb->get_row()",
+			Pattern:     `\$wpdb\s*->\s*get_row\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelDatabase},
+			Description: "WordPress database query - returns single row (NOT user input)",
+			NodeTypes:   []string{"member_call_expression"},
+		},
+		{
+			Name:        "get_option()",
+			Pattern:     `\bget_option\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelDatabase},
+			Description: "WordPress options API - reads from wp_options table (NOT user input)",
+			NodeTypes:   []string{"function_call_expression"},
+		},
 	}
 }

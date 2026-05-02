@@ -299,11 +299,11 @@ func (a *CSharpAnalyzer) ExtractAssignments(root *sitter.Node, source []byte, sc
 		rightNode := node.ChildByFieldName("right")
 		if leftNode != nil && rightNode != nil {
 			assignment := &types.Assignment{
-				Target:   analyzer.GetNodeText(leftNode, source),
-				Source:   analyzer.GetNodeText(rightNode, source),
-				Line:     int(node.StartPoint().Row) + 1,
-				Column:   int(node.StartPoint().Column),
-				Scope:    scope,
+				Target: analyzer.GetNodeText(leftNode, source),
+				Source: analyzer.GetNodeText(rightNode, source),
+				Line:   int(node.StartPoint().Row) + 1,
+				Column: int(node.StartPoint().Column),
+				Scope:  scope,
 			}
 			assignment.IsTainted, assignment.TaintSource = a.isExpressionTainted(rightNode, source)
 			assignments = append(assignments, assignment)
@@ -317,11 +317,11 @@ func (a *CSharpAnalyzer) ExtractAssignments(root *sitter.Node, source []byte, sc
 		valueNode := node.ChildByFieldName("value")
 		if nameNode != nil && valueNode != nil {
 			assignment := &types.Assignment{
-				Target:   analyzer.GetNodeText(nameNode, source),
-				Source:   analyzer.GetNodeText(valueNode, source),
-				Line:     int(node.StartPoint().Row) + 1,
-				Column:   int(node.StartPoint().Column),
-				Scope:    scope,
+				Target: analyzer.GetNodeText(nameNode, source),
+				Source: analyzer.GetNodeText(valueNode, source),
+				Line:   int(node.StartPoint().Row) + 1,
+				Column: int(node.StartPoint().Column),
+				Scope:  scope,
 			}
 			assignment.IsTainted, assignment.TaintSource = a.isExpressionTainted(valueNode, source)
 			assignments = append(assignments, assignment)
@@ -511,11 +511,11 @@ func (a *CSharpAnalyzer) FindInputSources(root *sitter.Node, source []byte) ([]*
 
 // aspNetAttributes maps ASP.NET attribute names to their source types
 var aspNetAttributes = map[string]types.SourceType{
-	"FromQuery":   types.SourceHTTPGet,
-	"FromBody":    types.SourceHTTPBody,
-	"FromForm":    types.SourceHTTPPost,
-	"FromHeader":  types.SourceHTTPHeader,
-	"FromRoute":   types.SourceHTTPGet,
+	"FromQuery":    types.SourceHTTPGet,
+	"FromBody":     types.SourceHTTPBody,
+	"FromForm":     types.SourceHTTPPost,
+	"FromHeader":   types.SourceHTTPHeader,
+	"FromRoute":    types.SourceHTTPGet,
 	"FromServices": types.SourceUserInput,
 }
 

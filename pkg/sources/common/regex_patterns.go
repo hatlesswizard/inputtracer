@@ -140,8 +140,8 @@ var (
 
 // Regex cache for dynamic pattern compilation
 var (
-	regexCache     = make(map[string]*regexp.Regexp)
-	regexCacheMu   sync.RWMutex
+	regexCache   = make(map[string]*regexp.Regexp)
+	regexCacheMu sync.RWMutex
 )
 
 // GetOrCompileRegex returns a cached or newly compiled regex
@@ -163,15 +163,6 @@ func GetOrCompileRegex(pattern string) (*regexp.Regexp, error) {
 	regexCacheMu.Unlock()
 
 	return re, nil
-}
-
-// MustGetOrCompileRegex returns a cached or newly compiled regex, panicking on error
-func MustGetOrCompileRegex(pattern string) *regexp.Regexp {
-	re, err := GetOrCompileRegex(pattern)
-	if err != nil {
-		panic("failed to compile regex: " + err.Error())
-	}
-	return re
 }
 
 // InputPattern represents a compiled regex pattern for input detection

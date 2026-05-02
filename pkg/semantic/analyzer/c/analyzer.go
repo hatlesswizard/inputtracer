@@ -262,11 +262,11 @@ func (a *CAnalyzer) ExtractAssignments(root *sitter.Node, source []byte, scope s
 		rightNode := node.ChildByFieldName("right")
 		if leftNode != nil && rightNode != nil {
 			assignment := &types.Assignment{
-				Target:   analyzer.GetNodeText(leftNode, source),
-				Source:   analyzer.GetNodeText(rightNode, source),
-				Line:     int(node.StartPoint().Row) + 1,
-				Column:   int(node.StartPoint().Column),
-				Scope:    scope,
+				Target: analyzer.GetNodeText(leftNode, source),
+				Source: analyzer.GetNodeText(rightNode, source),
+				Line:   int(node.StartPoint().Row) + 1,
+				Column: int(node.StartPoint().Column),
+				Scope:  scope,
 			}
 			assignment.IsTainted, assignment.TaintSource = a.isExpressionTainted(rightNode, source)
 			assignments = append(assignments, assignment)

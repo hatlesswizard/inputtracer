@@ -16,8 +16,8 @@ import (
 // PythonAnalyzer implements the LanguageAnalyzer interface for Python
 type PythonAnalyzer struct {
 	*analyzer.BaseAnalyzer
-	inputSources    map[string]types.SourceType
-	inputFunctions  map[string]types.SourceType
+	inputSources   map[string]types.SourceType
+	inputFunctions map[string]types.SourceType
 }
 
 // NewPythonAnalyzer creates a new Python analyzer
@@ -536,11 +536,11 @@ func (a *PythonAnalyzer) parseAssignment(node *sitter.Node, source []byte, scope
 	}
 
 	assignment := &types.Assignment{
-		Target:   analyzer.GetNodeText(leftNode, source),
-		Source:   analyzer.GetNodeText(rightNode, source),
-		Line:     int(node.StartPoint().Row) + 1,
-		Column:   int(node.StartPoint().Column),
-		Scope:    scope,
+		Target: analyzer.GetNodeText(leftNode, source),
+		Source: analyzer.GetNodeText(rightNode, source),
+		Line:   int(node.StartPoint().Row) + 1,
+		Column: int(node.StartPoint().Column),
+		Scope:  scope,
 	}
 
 	// Determine target type

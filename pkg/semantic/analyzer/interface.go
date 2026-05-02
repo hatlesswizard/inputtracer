@@ -82,9 +82,9 @@ type MethodFlowAnalysis struct {
 
 // ReturnInfo represents a return statement
 type ReturnInfo struct {
-	Line       int
-	Expression string
-	IsTainted  bool
+	Line        int
+	Expression  string
+	IsTainted   bool
 	TaintSource string
 }
 
@@ -286,16 +286,16 @@ func NodeLocation(node *sitter.Node, filePath string) types.Location {
 // CreateFlowNode creates a FlowNode from an AST node
 func CreateFlowNode(node *sitter.Node, source []byte, filePath, language string, nodeType types.FlowNodeType) *types.FlowNode {
 	return &types.FlowNode{
-		ID:       GenerateNodeID(filePath, node),
-		Type:     nodeType,
-		Language: language,
-		FilePath: filePath,
-		Line:     int(node.StartPoint().Row) + 1,
-		Column:   int(node.StartPoint().Column),
-		EndLine:  int(node.EndPoint().Row) + 1,
+		ID:        GenerateNodeID(filePath, node),
+		Type:      nodeType,
+		Language:  language,
+		FilePath:  filePath,
+		Line:      int(node.StartPoint().Row) + 1,
+		Column:    int(node.StartPoint().Column),
+		EndLine:   int(node.EndPoint().Row) + 1,
 		EndColumn: int(node.EndPoint().Column),
-		Snippet:  GetNodeText(node, source),
-		Metadata: make(map[string]interface{}),
+		Snippet:   GetNodeText(node, source),
+		Metadata:  make(map[string]interface{}),
 	}
 }
 

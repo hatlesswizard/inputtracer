@@ -49,17 +49,46 @@ func DefaultConfig() *Config {
 
 // Tracer is the main entry point for input tracing
 type Tracer struct {
-	config   *Config
-	parser   *parser.Service
-	sources  *sources.Registry
-	ast      *ast.Registry
-	mu       sync.Mutex
+	config  *Config
+	parser  *parser.Service
+	sources *sources.Registry
+	ast     *ast.Registry
+	mu      sync.Mutex
+}
+
+// Validate checks that the config has valid values.
+func (c *Config) Validate() error {
+	if c.MaxDepth <= 0 {
+		return fmt.Errorf("MaxDepth must be > 0, got %d", c.MaxDepth)
+	}
+	if c.Workers <= 0 {
+		return fmt.Errorf("Workers must be > 0, got %d", c.Workers)
+	}
+	return nil
+}
+
+// newEmptyResult returns a zero-value TraceResult with all slices initialized.
+func newEmptyResult() *TraceResult {
+	return &TraceResult{
+		Sources:          make([]*InputSource, 0),
+		TaintedVariables: make([]*TaintedVariable, 0),
+		TaintedFunctions: make([]*TaintedFunction, 0),
+		FlowGraph: &FlowGraph{
+			Nodes: make([]FlowNode, 0),
+			Edges: make([]FlowEdge, 0),
+		},
+		Stats:  TraceStats{ByLanguage: make(map[string]int)},
+		Errors: make([]string, 0),
+	}
 }
 
 // New creates a new Tracer with the given configuration
 func New(config *Config) *Tracer {
 	if config == nil {
 		config = DefaultConfig()
+	}
+	if err := config.Validate(); err != nil {
+		panic("inputtracer: invalid config: " + err.Error())
 	}
 
 	// Initialize parser service
@@ -93,19 +122,7 @@ func New(config *Config) *Tracer {
 func (t *Tracer) TraceDirectory(dirPath string) (*TraceResult, error) {
 	startTime := time.Now()
 
-	result := &TraceResult{
-		Sources:          make([]*InputSource, 0),
-		TaintedVariables: make([]*TaintedVariable, 0),
-		TaintedFunctions: make([]*TaintedFunction, 0),
-		FlowGraph: &FlowGraph{
-			Nodes: make([]FlowNode, 0),
-			Edges: make([]FlowEdge, 0),
-		},
-		Stats: TraceStats{
-			ByLanguage: make(map[string]int),
-		},
-		Errors: make([]string, 0),
-	}
+	result := newEmptyResult()
 
 	// Collect all files to analyze
 	files, err := t.collectFiles(dirPath)
@@ -167,19 +184,7 @@ func (t *Tracer) TraceDirectory(dirPath string) (*TraceResult, error) {
 func (t *Tracer) TraceFile(filePath string) (*TraceResult, error) {
 	startTime := time.Now()
 
-	result := &TraceResult{
-		Sources:          make([]*InputSource, 0),
-		TaintedVariables: make([]*TaintedVariable, 0),
-		TaintedFunctions: make([]*TaintedFunction, 0),
-		FlowGraph: &FlowGraph{
-			Nodes: make([]FlowNode, 0),
-			Edges: make([]FlowEdge, 0),
-		},
-		Stats: TraceStats{
-			ByLanguage: make(map[string]int),
-		},
-		Errors: make([]string, 0),
-	}
+	result := newEmptyResult()
 
 	fr := t.analyzeFile(filePath)
 	t.mergeFileResult(result, fr)
@@ -218,14 +223,12 @@ func (t *Tracer) analyzeFile(filePath string) *fileResult {
 		Paths:            make([]PropagationPath, 0),
 	}
 
-	// Detect language
 	lang := t.parser.DetectLanguage(filePath)
 	if lang == "" {
 		return fr
 	}
 	fr.Language = lang
 
-	// Check if language is in filter
 	if len(t.config.Languages) > 0 {
 		found := false
 		for _, l := range t.config.Languages {
@@ -239,41 +242,51 @@ func (t *Tracer) analyzeFile(filePath string) *fileResult {
 		}
 	}
 
-	// Parse file
 	parseResult, err := t.parser.ParseFile(filePath)
 	if err != nil {
 		fr.Error = fmt.Sprintf("parse error: %v", err)
 		return fr
 	}
 
-	// Get source matcher for this language
 	sourceMatcher := t.sources.GetMatcher(lang)
 	if sourceMatcher == nil {
 		return fr
 	}
 
-	// Get AST extractor for this language
 	astExtractor := t.ast.GetExtractor(lang)
 	if astExtractor == nil {
 		return fr
 	}
 
-	// Initialize analysis state
+	srcs, taintedFromSources, state := detectSources(sourceMatcher, parseResult, filePath, lang)
+	fr.Sources = srcs
+	fr.TaintedVariables = taintedFromSources
+
+	newVars, paths := trackAssignments(astExtractor, parseResult, filePath, lang, state)
+	fr.TaintedVariables = append(fr.TaintedVariables, newVars...)
+	fr.Paths = paths
+
+	fr.TaintedFunctions = analyzeTaintedCalls(astExtractor, parseResult, filePath, lang, state)
+
+	return fr
+}
+
+// detectSources finds all input sources in the parsed file and initializes analysis state.
+func detectSources(matcher sources.Matcher, parseResult *parser.ParseResult, filePath, lang string) ([]*InputSource, []*TaintedVariable, *AnalysisState) {
+	srcs := make([]*InputSource, 0)
+	tainted := make([]*TaintedVariable, 0)
 	state := NewAnalysisState()
 
-	// Phase 1: Find all input sources
-	sourceMatches := sourceMatcher.FindSources(parseResult.Root, parseResult.Source)
-	for _, match := range sourceMatches {
-		// Convert labels
+	for _, match := range matcher.FindSources(parseResult.Root, parseResult.Source) {
 		labels := make([]InputLabel, len(match.Labels))
 		for i, l := range match.Labels {
 			labels[i] = InputLabel(l)
 		}
 
 		src := &InputSource{
-			ID:       uuid.New().String(),
-			Type:     match.SourceType,
-			Key:      match.Key,
+			ID:   uuid.New().String(),
+			Type: match.SourceType,
+			Key:  match.Key,
 			Location: Location{
 				FilePath:  filePath,
 				Line:      match.Line,
@@ -285,11 +298,10 @@ func (t *Tracer) analyzeFile(filePath string) *fileResult {
 			Labels:   labels,
 			Language: lang,
 		}
-		fr.Sources = append(fr.Sources, src)
+		srcs = append(srcs, src)
 
-		// If source is assigned to a variable, track it
 		if match.Variable != "" {
-			tainted := &TaintedVariable{
+			tv := &TaintedVariable{
 				ID:       uuid.New().String(),
 				Name:     match.Variable,
 				Scope:    "file",
@@ -298,62 +310,70 @@ func (t *Tracer) analyzeFile(filePath string) *fileResult {
 				Depth:    0,
 				Language: lang,
 			}
-			fr.TaintedVariables = append(fr.TaintedVariables, tainted)
-			state.SetTainted(match.Variable, tainted)
+			tainted = append(tainted, tv)
+			state.SetTainted(match.Variable, tv)
 		}
 	}
 
-	// Phase 2: Track propagation through assignments
-	assignments := astExtractor.ExtractAssignments(parseResult.Root, parseResult.Source)
-	for _, assign := range assignments {
-		// Check if RHS contains any tainted variable
+	return srcs, tainted, state
+}
+
+// trackAssignments propagates taint through variable assignments in the parsed file.
+func trackAssignments(extractor ast.Extractor, parseResult *parser.ParseResult, filePath, lang string, state *AnalysisState) ([]*TaintedVariable, []PropagationPath) {
+	var newVars []*TaintedVariable
+	var paths []PropagationPath
+
+	for _, assign := range extractor.ExtractAssignments(parseResult.Root, parseResult.Source) {
 		for varName, tainted := range state.TaintedValues {
-			if astExtractor.ExpressionContains(assign.RHS, varName, parseResult.Source) {
-				// Propagate taint to LHS
+			if extractor.ExpressionContains(assign.RHS, varName, parseResult.Source) {
+				loc := Location{
+					FilePath:  filePath,
+					Line:      assign.Line,
+					Column:    assign.Column,
+					EndLine:   assign.EndLine,
+					EndColumn: assign.EndColumn,
+					Snippet:   assign.Snippet,
+				}
 				newTainted := &TaintedVariable{
 					ID:       uuid.New().String(),
 					Name:     assign.LHS,
 					Scope:    assign.Scope,
 					Source:   tainted.Source,
-					Location: Location{
-						FilePath:  filePath,
-						Line:      assign.Line,
-						Column:    assign.Column,
-						EndLine:   assign.EndLine,
-						EndColumn: assign.EndColumn,
-						Snippet:   assign.Snippet,
-					},
+					Location: loc,
 					Depth:    tainted.Depth + 1,
 					Language: lang,
 				}
-				fr.TaintedVariables = append(fr.TaintedVariables, newTainted)
+				newVars = append(newVars, newTainted)
 				state.SetTainted(assign.LHS, newTainted)
 
-				// Record propagation path
-				fr.Paths = append(fr.Paths, PropagationPath{
+				paths = append(paths, PropagationPath{
 					Source: tainted.Source,
 					Steps: []PropagationStep{
 						{
 							Type:     StepAssignment,
 							Variable: assign.LHS,
-							Location: newTainted.Location,
+							Location: loc,
 						},
 					},
-					Destination: newTainted.Location,
+					Destination: loc,
 				})
 			}
 		}
 	}
 
-	// Phase 3: Find function calls with tainted arguments
-	calls := astExtractor.ExtractCalls(parseResult.Root, parseResult.Source)
-	for _, call := range calls {
-		taintedParams := make([]TaintedParam, 0)
+	return newVars, paths
+}
+
+// analyzeTaintedCalls finds function calls that receive tainted arguments.
+func analyzeTaintedCalls(extractor ast.Extractor, parseResult *parser.ParseResult, filePath, lang string, state *AnalysisState) []*TaintedFunction {
+	var funcs []*TaintedFunction
+
+	for _, call := range extractor.ExtractCalls(parseResult.Root, parseResult.Source) {
+		var taintedParams []TaintedParam
 
 		for i, arg := range call.Arguments {
-			// Check if argument is tainted
 			for varName, tainted := range state.TaintedValues {
-				if astExtractor.ExpressionContains(arg.Node, varName, parseResult.Source) {
+				if extractor.ExpressionContains(arg.Node, varName, parseResult.Source) {
 					taintedParams = append(taintedParams, TaintedParam{
 						Index:  i,
 						Name:   arg.Name,
@@ -387,19 +407,18 @@ func (t *Tracer) analyzeFile(filePath string) *fileResult {
 		}
 
 		if len(taintedParams) > 0 {
-			fn := &TaintedFunction{
+			funcs = append(funcs, &TaintedFunction{
 				ID:            uuid.New().String(),
 				Name:          call.Name,
 				FilePath:      filePath,
 				Line:          call.Line,
 				Language:      lang,
 				TaintedParams: taintedParams,
-			}
-			fr.TaintedFunctions = append(fr.TaintedFunctions, fn)
+			})
 		}
 	}
 
-	return fr
+	return funcs
 }
 
 // mergeFileResult merges a file result into the main result
@@ -539,7 +558,7 @@ func (t *Tracer) collectFiles(dirPath string) ([]string, error) {
 
 	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return nil // Skip errors
+			return err
 		}
 
 		// Skip directories in skip list

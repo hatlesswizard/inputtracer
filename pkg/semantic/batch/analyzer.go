@@ -44,14 +44,14 @@ type SnippetResult struct {
 
 // BatchOutput represents the output of batch analysis
 type BatchOutput struct {
-	CodebasePath   string          `json:"codebase_path"`
-	AnalyzedAt     string          `json:"analyzed_at"`
-	TotalSnippets  int             `json:"total_snippets"`
-	WithUserInput  int             `json:"with_user_input"`
-	TotalExprs     int             `json:"total_expressions"`
-	TracedExprs    int             `json:"traced_expressions"`
-	InputExprs     int             `json:"input_expressions"`
-	Results        []SnippetResult `json:"results"`
+	CodebasePath  string          `json:"codebase_path"`
+	AnalyzedAt    string          `json:"analyzed_at"`
+	TotalSnippets int             `json:"total_snippets"`
+	WithUserInput int             `json:"with_user_input"`
+	TotalExprs    int             `json:"total_expressions"`
+	TracedExprs   int             `json:"traced_expressions"`
+	InputExprs    int             `json:"input_expressions"`
+	Results       []SnippetResult `json:"results"`
 }
 
 // BatchAnalyzer performs batch analysis of code snippets

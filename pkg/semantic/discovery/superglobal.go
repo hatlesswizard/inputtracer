@@ -21,20 +21,20 @@ var PHPSuperglobals = sources.SuperglobalNames()
 
 // SuperglobalUsage tracks where a superglobal is used in the codebase
 type SuperglobalUsage struct {
-	Superglobal  string `json:"superglobal"`       // "$_GET", "$_POST", etc.
-	Key          string `json:"key"`               // The accessed key, e.g., "id" from $_GET['id'], or "*" for all keys
+	Superglobal  string `json:"superglobal"` // "$_GET", "$_POST", etc.
+	Key          string `json:"key"`         // The accessed key, e.g., "id" from $_GET['id'], or "*" for all keys
 	FilePath     string `json:"file_path"`
 	Line         int    `json:"line"`
 	Column       int    `json:"column"`
-	AssignedTo   string `json:"assigned_to"`       // Variable or property it's assigned to
-	Context      string `json:"context"`           // "assignment", "function_arg", "method_arg", "return", "foreach", "direct"
-	ClassName    string `json:"class_name"`        // If inside a class method
-	MethodName   string `json:"method_name"`       // If inside a method/function
-	CalledMethod string `json:"called_method"`     // Method being called when context is "function_arg" (e.g., "parse_incoming")
-	CodeSnippet  string `json:"code_snippet"`      // The actual code line
-	IsLoopVar    bool   `json:"is_loop_var"`       // True if used as foreach source
-	LoopKeyVar   string `json:"loop_key_var"`      // The key variable in foreach
-	LoopValVar   string `json:"loop_value_var"`    // The value variable in foreach
+	AssignedTo   string `json:"assigned_to"`    // Variable or property it's assigned to
+	Context      string `json:"context"`        // "assignment", "function_arg", "method_arg", "return", "foreach", "direct"
+	ClassName    string `json:"class_name"`     // If inside a class method
+	MethodName   string `json:"method_name"`    // If inside a method/function
+	CalledMethod string `json:"called_method"`  // Method being called when context is "function_arg" (e.g., "parse_incoming")
+	CodeSnippet  string `json:"code_snippet"`   // The actual code line
+	IsLoopVar    bool   `json:"is_loop_var"`    // True if used as foreach source
+	LoopKeyVar   string `json:"loop_key_var"`   // The key variable in foreach
+	LoopValVar   string `json:"loop_value_var"` // The value variable in foreach
 }
 
 // SuperglobalFinder finds all superglobal usages in a codebase

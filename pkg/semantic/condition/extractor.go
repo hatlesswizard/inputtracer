@@ -37,23 +37,23 @@ const (
 // KeyCondition represents a condition that guards code execution
 type KeyCondition struct {
 	// Location
-	FilePath   string `json:"file_path"`
-	Line       int    `json:"line"`
-	Column     int    `json:"column"`
+	FilePath string `json:"file_path"`
+	Line     int    `json:"line"`
+	Column   int    `json:"column"`
 
 	// Condition details
-	Expression    string          `json:"expression"` // The condition expression
-	Type          ConditionType   `json:"type"`
-	Effect        ConditionEffect `json:"effect"`
-	IsNegated     bool            `json:"is_negated"` // If inside else or has !
+	Expression string          `json:"expression"` // The condition expression
+	Type       ConditionType   `json:"type"`
+	Effect     ConditionEffect `json:"effect"`
+	IsNegated  bool            `json:"is_negated"` // If inside else or has !
 
 	// Variables involved
 	Variables   []string `json:"variables"`    // Variables referenced
 	TaintedVars []string `json:"tainted_vars"` // Which are tainted
 
 	// Scope
-	GuardsLines     []int         `json:"guards_lines"`              // Lines guarded by this condition
-	NestingDepth    int           `json:"nesting_depth"`             // How nested this condition is
+	GuardsLines     []int         `json:"guards_lines"`  // Lines guarded by this condition
+	NestingDepth    int           `json:"nesting_depth"` // How nested this condition is
 	ParentCondition *KeyCondition `json:"parent_condition,omitempty"`
 }
 
@@ -62,7 +62,7 @@ type ConditionPath struct {
 	Conditions []*KeyCondition `json:"conditions"`
 	TargetLine int             `json:"target_line"`
 	TargetExpr string          `json:"target_expr,omitempty"`
-	Feasible   bool            `json:"feasible"`      // Is this path feasible?
+	Feasible   bool            `json:"feasible"`         // Is this path feasible?
 	Reason     string          `json:"reason,omitempty"` // Why infeasible if not
 }
 

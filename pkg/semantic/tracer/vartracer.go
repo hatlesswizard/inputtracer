@@ -25,12 +25,12 @@ type VariableTracer struct {
 
 // VariableDefinition represents one definition of a variable
 type VariableDefinition struct {
-	File         string   `json:"file"`
-	Line         int      `json:"line"`
-	FunctionName string   `json:"function_name,omitempty"`
-	ClassName    string   `json:"class_name,omitempty"`
-	InitialValue string   `json:"initial_value"`
-	CodeSnippet  string   `json:"code_snippet"`
+	File         string `json:"file"`
+	Line         int    `json:"line"`
+	FunctionName string `json:"function_name,omitempty"`
+	ClassName    string `json:"class_name,omitempty"`
+	InitialValue string `json:"initial_value"`
+	CodeSnippet  string `json:"code_snippet"`
 }
 
 // VariableTraceResult contains the complete trace for a variable in one file
@@ -49,10 +49,10 @@ type VariableTraceResult struct {
 
 // Assignment represents one assignment to the variable
 type Assignment struct {
-	Line        int      `json:"line"`
-	Expression  string   `json:"expression"`
-	HasInput    bool     `json:"has_input"`
-	Sources     []string `json:"sources,omitempty"`
+	Line       int      `json:"line"`
+	Expression string   `json:"expression"`
+	HasInput   bool     `json:"has_input"`
+	Sources    []string `json:"sources,omitempty"`
 }
 
 // ParameterTaintInfo tracks taint propagation through function parameters
@@ -76,12 +76,12 @@ type CallSiteInfo struct {
 
 // TraceReport is the complete report for a variable
 type TraceReport struct {
-	Variable           string                `json:"variable"`
-	Codebase           string                `json:"codebase"`
-	TotalDefinitions   int                   `json:"total_definitions"`
-	WithUserInput      int                   `json:"with_user_input"`
-	WithoutUserInput   int                   `json:"without_user_input"`
-	Definitions        []VariableTraceResult `json:"definitions"`
+	Variable         string                `json:"variable"`
+	Codebase         string                `json:"codebase"`
+	TotalDefinitions int                   `json:"total_definitions"`
+	WithUserInput    int                   `json:"with_user_input"`
+	WithoutUserInput int                   `json:"without_user_input"`
+	Definitions      []VariableTraceResult `json:"definitions"`
 }
 
 // NewVariableTracer creates a new variable tracer
@@ -176,6 +176,18 @@ func (t *VariableTracer) findAllDefinitions(varName string) ([]VariableDefinitio
 	return definitions, err
 }
 
+// walkDefsContext carries the immutable and mutable state for walkForDefinitions,
+// replacing 9 positional parameters with a single pointer.
+type walkDefsContext struct {
+	content      []byte
+	lines        []string
+	filePath     string
+	varName      string
+	currentClass string
+	currentFunc  string
+	seenScopes   map[string]bool
+}
+
 // findDefinitionsInFile finds variable definitions in a single file
 func (t *VariableTracer) findDefinitionsInFile(filePath string, content []byte, varName string) []VariableDefinition {
 	var definitions []VariableDefinition
@@ -186,19 +198,20 @@ func (t *VariableTracer) findDefinitionsInFile(filePath string, content []byte, 
 	}
 	defer tree.Close()
 
-	lines := strings.Split(string(content), "\n")
-
-	// Track which functions/scopes we've seen definitions in
-	seenScopes := make(map[string]bool)
-
-	// Walk the AST to find assignments
-	t.walkForDefinitions(tree.RootNode(), content, lines, filePath, varName, "", "", &definitions, seenScopes)
+	ctx := &walkDefsContext{
+		content:    content,
+		lines:      strings.Split(string(content), "\n"),
+		filePath:   filePath,
+		varName:    varName,
+		seenScopes: make(map[string]bool),
+	}
+	t.walkForDefinitions(tree.RootNode(), ctx, &definitions)
 
 	return definitions
 }
 
 // walkForDefinitions walks AST to find variable definitions
-func (t *VariableTracer) walkForDefinitions(node *sitter.Node, content []byte, lines []string, filePath, varName, currentClass, currentFunc string, definitions *[]VariableDefinition, seenScopes map[string]bool) {
+func (t *VariableTracer) walkForDefinitions(node *sitter.Node, ctx *walkDefsContext, definitions *[]VariableDefinition) {
 	if node == nil {
 		return
 	}
@@ -209,7 +222,7 @@ func (t *VariableTracer) walkForDefinitions(node *sitter.Node, content []byte, l
 	if nodeType == "class_declaration" {
 		nameNode := node.ChildByFieldName("name")
 		if nameNode != nil {
-			currentClass = nameNode.Content(content)
+			ctx.currentClass = nameNode.Content(ctx.content)
 		}
 	}
 
@@ -217,7 +230,7 @@ func (t *VariableTracer) walkForDefinitions(node *sitter.Node, content []byte, l
 	if nodeType == "method_declaration" || nodeType == "function_definition" {
 		nameNode := node.ChildByFieldName("name")
 		if nameNode != nil {
-			currentFunc = nameNode.Content(content)
+			ctx.currentFunc = nameNode.Content(ctx.content)
 		}
 	}
 
@@ -227,28 +240,28 @@ func (t *VariableTracer) walkForDefinitions(node *sitter.Node, content []byte, l
 		rightNode := node.ChildByFieldName("right")
 
 		if leftNode != nil && rightNode != nil {
-			leftContent := leftNode.Content(content)
+			leftContent := leftNode.Content(ctx.content)
 
 			// Check if this is an assignment to our variable (exact match or concatenation)
-			if leftContent == varName || strings.HasPrefix(leftContent, varName+"[") {
-				scopeKey := filePath + ":" + currentClass + ":" + currentFunc
+			if leftContent == ctx.varName || strings.HasPrefix(leftContent, ctx.varName+"[") {
+				scopeKey := ctx.filePath + ":" + ctx.currentClass + ":" + ctx.currentFunc
 
 				// Only record the first definition per scope
-				if !seenScopes[scopeKey] {
-					seenScopes[scopeKey] = true
+				if !ctx.seenScopes[scopeKey] {
+					ctx.seenScopes[scopeKey] = true
 
 					line := int(node.StartPoint().Row) + 1
 					snippet := ""
-					if line > 0 && line <= len(lines) {
-						snippet = strings.TrimSpace(lines[line-1])
+					if line > 0 && line <= len(ctx.lines) {
+						snippet = strings.TrimSpace(ctx.lines[line-1])
 					}
 
 					def := VariableDefinition{
-						File:         t.relativePath(filePath),
+						File:         t.relativePath(ctx.filePath),
 						Line:         line,
-						FunctionName: currentFunc,
-						ClassName:    currentClass,
-						InitialValue: rightNode.Content(content),
+						FunctionName: ctx.currentFunc,
+						ClassName:    ctx.currentClass,
+						InitialValue: rightNode.Content(ctx.content),
 						CodeSnippet:  snippet,
 					}
 					*definitions = append(*definitions, def)
@@ -257,9 +270,15 @@ func (t *VariableTracer) walkForDefinitions(node *sitter.Node, content []byte, l
 		}
 	}
 
-	// Recurse into children
+	// Recurse into children — note: ctx.currentClass/currentFunc are passed by value
+	// through pointer mutation, so we save and restore them around each child subtree
+	// to maintain correct scope tracking at sibling boundaries.
+	savedClass := ctx.currentClass
+	savedFunc := ctx.currentFunc
 	for i := 0; i < int(node.ChildCount()); i++ {
-		t.walkForDefinitions(node.Child(i), content, lines, filePath, varName, currentClass, currentFunc, definitions, seenScopes)
+		t.walkForDefinitions(node.Child(i), ctx, definitions)
+		ctx.currentClass = savedClass
+		ctx.currentFunc = savedFunc
 	}
 }
 

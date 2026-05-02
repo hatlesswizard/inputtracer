@@ -26,10 +26,10 @@ func TestBareSuperglobalDetection(t *testing.T) {
 	matcher := NewMatcher()
 
 	tests := []struct {
-		name       string
-		code       string
-		wantBare   string // expected bare source name, empty if none
-		wantCount  int    // total matches expected for this superglobal
+		name      string
+		code      string
+		wantBare  string // expected bare source name, empty if none
+		wantCount int    // total matches expected for this superglobal
 	}{
 		{
 			name:      "bare $_GET as function argument",
@@ -104,8 +104,8 @@ func TestSubscriptDoesNotProduceBareMatch(t *testing.T) {
 	matcher := NewMatcher()
 
 	tests := []struct {
-		name     string
-		code     string
+		name       string
+		code       string
 		noBareName string // this bare source should NOT appear
 	}{
 		{

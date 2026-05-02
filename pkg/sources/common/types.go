@@ -39,9 +39,9 @@ type Definition struct {
 
 // Match represents a matched source in code
 type Match struct {
-	SourceType string       // e.g., "$_GET", "req.body"
-	Key        string       // e.g., "username" in $_GET['username']
-	Variable   string       // Variable name if assigned
+	SourceType string // e.g., "$_GET", "req.body"
+	Key        string // e.g., "username" in $_GET['username']
+	Variable   string // Variable name if assigned
 	Line       int
 	Column     int
 	EndLine    int

@@ -162,11 +162,11 @@ func ToDOT(r *TraceResult) string {
 
 	// Create nodes
 	nodeStyles := map[types.FlowNodeType]string{
-		types.NodeSource:    "[shape=ellipse, style=filled, fillcolor=\"#ff6b6b\", fontcolor=white]",
-		types.NodeVariable:  "[shape=box, style=filled, fillcolor=\"#4ecdc4\"]",
-		types.NodeFunction:  "[shape=box, style=filled, fillcolor=\"#45b7d1\"]",
-		types.NodeCarrier:   "[shape=box, style=filled, fillcolor=\"#9b59b6\", fontcolor=white]",
-		types.NodeParam: "[shape=box, style=filled, fillcolor=\"#2ecc71\"]",
+		types.NodeSource:   "[shape=ellipse, style=filled, fillcolor=\"#ff6b6b\", fontcolor=white]",
+		types.NodeVariable: "[shape=box, style=filled, fillcolor=\"#4ecdc4\"]",
+		types.NodeFunction: "[shape=box, style=filled, fillcolor=\"#45b7d1\"]",
+		types.NodeCarrier:  "[shape=box, style=filled, fillcolor=\"#9b59b6\", fontcolor=white]",
+		types.NodeParam:    "[shape=box, style=filled, fillcolor=\"#2ecc71\"]",
 	}
 
 	sb.WriteString("  // Nodes\n")

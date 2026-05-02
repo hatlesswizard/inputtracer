@@ -18,19 +18,19 @@ const (
 type FlowEdgeType string
 
 const (
-	EdgeAssignment  FlowEdgeType = "assignment"   // $x = $y
-	EdgeParameter   FlowEdgeType = "parameter"    // func($x)
-	EdgeReturn      FlowEdgeType = "return"       // return $x
-	EdgeProperty    FlowEdgeType = "property"     // $obj->prop = $x
-	EdgeArraySet    FlowEdgeType = "array_set"    // $arr['key'] = $x
-	EdgeArrayGet    FlowEdgeType = "array_get"    // $x = $arr['key']
-	EdgeMethodCall  FlowEdgeType = "method_call"  // $obj->method($x)
-	EdgeConstructor FlowEdgeType = "constructor"  // new Class($x)
-	EdgeFramework   FlowEdgeType = "framework"    // Framework-specific flow
-	EdgeConcatenate FlowEdgeType = "concatenate"  // $x . $y
-	EdgeDestructure FlowEdgeType = "destructure"  // const {a, b} = obj
-	EdgeIteration   FlowEdgeType = "iteration"    // foreach/for loop
-	EdgeConditional FlowEdgeType = "conditional"  // if/else branch
-	EdgeCall        FlowEdgeType = "call"         // Function call
-	EdgeDataFlow    FlowEdgeType = "data_flow"    // Generic data flow
+	EdgeAssignment  FlowEdgeType = "assignment"  // $x = $y
+	EdgeParameter   FlowEdgeType = "parameter"   // func($x)
+	EdgeReturn      FlowEdgeType = "return"      // return $x
+	EdgeProperty    FlowEdgeType = "property"    // $obj->prop = $x
+	EdgeArraySet    FlowEdgeType = "array_set"   // $arr['key'] = $x
+	EdgeArrayGet    FlowEdgeType = "array_get"   // $x = $arr['key']
+	EdgeMethodCall  FlowEdgeType = "method_call" // $obj->method($x)
+	EdgeConstructor FlowEdgeType = "constructor" // new Class($x)
+	EdgeFramework   FlowEdgeType = "framework"   // Framework-specific flow
+	EdgeConcatenate FlowEdgeType = "concatenate" // $x . $y
+	EdgeDestructure FlowEdgeType = "destructure" // const {a, b} = obj
+	EdgeIteration   FlowEdgeType = "iteration"   // foreach/for loop
+	EdgeConditional FlowEdgeType = "conditional" // if/else branch
+	EdgeCall        FlowEdgeType = "call"        // Function call
+	EdgeDataFlow    FlowEdgeType = "data_flow"   // Generic data flow
 )

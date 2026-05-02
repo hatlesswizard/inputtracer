@@ -159,7 +159,6 @@ func GetHTTPInputMethods() []InputMethod {
 	return GetMethodsByCategory(CategoryHTTP)
 }
 
-
 // GetFileMethods returns all file-related methods
 func GetFileMethods() []InputMethod {
 	return GetMethodsByCategory(CategoryFile)

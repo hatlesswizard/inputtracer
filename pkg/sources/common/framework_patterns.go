@@ -33,10 +33,10 @@ type FrameworkPattern struct {
 
 // FrameworkPatternRegistry manages framework patterns for a language
 type FrameworkPatternRegistry struct {
-	language     string
-	patterns     []*FrameworkPattern
-	byID         map[string]*FrameworkPattern
-	byFramework  map[string][]*FrameworkPattern
+	language    string
+	patterns    []*FrameworkPattern
+	byID        map[string]*FrameworkPattern
+	byFramework map[string][]*FrameworkPattern
 }
 
 // NewFrameworkPatternRegistry creates a new registry for a language

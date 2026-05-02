@@ -624,11 +624,11 @@ func (a *PHPAnalyzer) parseAssignment(node *sitter.Node, source []byte, scope st
 	}
 
 	assignment := &types.Assignment{
-		Target:   analyzer.GetNodeText(leftNode, source),
-		Source:   analyzer.GetNodeText(rightNode, source),
-		Line:     int(node.StartPoint().Row) + 1,
-		Column:   int(node.StartPoint().Column),
-		Scope:    scope,
+		Target: analyzer.GetNodeText(leftNode, source),
+		Source: analyzer.GetNodeText(rightNode, source),
+		Line:   int(node.StartPoint().Row) + 1,
+		Column: int(node.StartPoint().Column),
+		Scope:  scope,
 	}
 
 	if opNode != nil {

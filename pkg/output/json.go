@@ -61,23 +61,23 @@ func (e *JSONExporter) ExportToFile(result *tracer.TraceResult, filePath string)
 
 // SummaryReport generates a summary report of the trace
 type SummaryReport struct {
-	TotalFiles           int                       `json:"total_files"`
-	TotalSources         int                       `json:"total_sources"`
-	TotalTaintedVars     int                       `json:"total_tainted_variables"`
-	TotalTaintedFuncs    int                       `json:"total_tainted_functions"`
-	SourcesByType        map[string]int            `json:"sources_by_type"`
-	SourcesByLanguage    map[string]int            `json:"sources_by_language"`
-	TaintedByLanguage    map[string]int            `json:"tainted_by_language"`
-	MostTaintedFiles     []FileStatistic           `json:"most_tainted_files"`
-	PropagationDepthDist map[int]int               `json:"propagation_depth_distribution"`
+	TotalFiles           int             `json:"total_files"`
+	TotalSources         int             `json:"total_sources"`
+	TotalTaintedVars     int             `json:"total_tainted_variables"`
+	TotalTaintedFuncs    int             `json:"total_tainted_functions"`
+	SourcesByType        map[string]int  `json:"sources_by_type"`
+	SourcesByLanguage    map[string]int  `json:"sources_by_language"`
+	TaintedByLanguage    map[string]int  `json:"tainted_by_language"`
+	MostTaintedFiles     []FileStatistic `json:"most_tainted_files"`
+	PropagationDepthDist map[int]int     `json:"propagation_depth_distribution"`
 }
 
 // FileStatistic represents statistics for a single file
 type FileStatistic struct {
-	FilePath       string `json:"file_path"`
-	SourceCount    int    `json:"source_count"`
-	TaintedVars    int    `json:"tainted_variables"`
-	TaintedFuncs   int    `json:"tainted_functions"`
+	FilePath     string `json:"file_path"`
+	SourceCount  int    `json:"source_count"`
+	TaintedVars  int    `json:"tainted_variables"`
+	TaintedFuncs int    `json:"tainted_functions"`
 }
 
 // GenerateSummary generates a summary report from trace results

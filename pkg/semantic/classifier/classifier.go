@@ -15,8 +15,8 @@ import (
 
 // Classifier classifies code snippets for user input
 type Classifier struct {
-	carrierMap     *discovery.CarrierMap
-	extractor      *extractor.ExpressionExtractor
+	carrierMap      *discovery.CarrierMap
+	extractor       *extractor.ExpressionExtractor
 	carrierPatterns []*carrierPattern
 }
 
@@ -29,11 +29,11 @@ type carrierPattern struct {
 
 // ClassificationResult contains the complete analysis of a snippet
 type ClassificationResult struct {
-	Snippet        string              `json:"snippet"`
-	HasUserInput   bool                `json:"has_user_input"`
-	NeedsTracing   bool                `json:"needs_tracing"`
-	Expressions    []ExpressionResult  `json:"expressions"`
-	Summary        ClassificationSummary `json:"summary"`
+	Snippet      string                `json:"snippet"`
+	HasUserInput bool                  `json:"has_user_input"`
+	NeedsTracing bool                  `json:"needs_tracing"`
+	Expressions  []ExpressionResult    `json:"expressions"`
+	Summary      ClassificationSummary `json:"summary"`
 }
 
 // ExpressionResult contains the classification of a single expression
@@ -336,7 +336,7 @@ func LoadSimpleBatchInput(path string) ([]BatchInput, error) {
 	inputs := make([]BatchInput, 0, len(snippets))
 	for i, snippet := range snippets {
 		inputs = append(inputs, BatchInput{
-			Finding:  string(rune('A' + i%26)) + string(rune('0'+i/26)),
+			Finding:  string(rune('A'+i%26)) + string(rune('0'+i/26)),
 			Snippets: []string{snippet},
 		})
 	}

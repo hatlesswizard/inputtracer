@@ -84,6 +84,15 @@ func (t *Tracer) runInterproceduralAnalysisImpl(result *TraceResult) {
 	result.TaintedVariables = state.TaintedVariables
 }
 
+// astWalkState bundles per-file context shared by AST walker helpers,
+// replacing the recurring (src, filePath, language, state) parameter group.
+type astWalkState struct {
+	src      []byte
+	filePath string
+	language string
+	state    *FullAnalysisState
+}
+
 // buildSummariesFromAST walks an AST tree and builds function summaries for all
 // function definitions found.
 func buildSummariesFromAST(analyzer *InterproceduralAnalyzer, node *sitter.Node, src []byte, filePath string, language string) {
@@ -140,29 +149,31 @@ func (t *Tracer) propagateReturnTaint(analyzer *InterproceduralAnalyzer, state *
 		if err != nil || parseResult == nil {
 			continue
 		}
-		findReturnTaintCallSites(parseResult.Root, parseResult.Source, filePath, parseResult.Language, state)
+		ws := &astWalkState{src: parseResult.Source, filePath: filePath, language: parseResult.Language, state: state}
+		findReturnTaintCallSites(parseResult.Root, ws)
 	}
 }
 
 // findReturnTaintCallSites walks an AST looking for assignments where the RHS
 // is a call to a function that returns tainted data.
-func findReturnTaintCallSites(node *sitter.Node, src []byte, filePath string, language string, state *FullAnalysisState) {
+func findReturnTaintCallSites(node *sitter.Node, ws *astWalkState) {
 	if node == nil {
 		return
 	}
 
 	if isAssignmentNode(node.Type()) {
-		checkAssignmentForReturnTaint(node, src, filePath, language, state)
+		checkAssignmentForReturnTaint(node, ws)
 	}
 
 	for i := 0; i < int(node.ChildCount()); i++ {
-		findReturnTaintCallSites(node.Child(i), src, filePath, language, state)
+		findReturnTaintCallSites(node.Child(i), ws)
 	}
 }
 
 // checkAssignmentForReturnTaint checks if an assignment's RHS calls a function
 // that returns tainted data, and if so taints the LHS variable.
-func checkAssignmentForReturnTaint(node *sitter.Node, src []byte, filePath string, language string, state *FullAnalysisState) {
+func checkAssignmentForReturnTaint(node *sitter.Node, ws *astWalkState) {
+	src, filePath, language, state := ws.src, ws.filePath, ws.language, ws.state
 	var lhsName string
 	var rhsNode *sitter.Node
 
@@ -244,27 +255,29 @@ func (t *Tracer) propagateCallTaint(state *FullAnalysisState, filePaths map[stri
 		if err != nil || parseResult == nil {
 			continue
 		}
-		findNewTaintedCalls(parseResult.Root, parseResult.Source, filePath, parseResult.Language, state)
+		ws := &astWalkState{src: parseResult.Source, filePath: filePath, language: parseResult.Language, state: state}
+		findNewTaintedCalls(parseResult.Root, ws)
 	}
 }
 
 // findNewTaintedCalls walks an AST looking for function calls with tainted arguments.
-func findNewTaintedCalls(node *sitter.Node, src []byte, filePath string, language string, state *FullAnalysisState) {
+func findNewTaintedCalls(node *sitter.Node, ws *astWalkState) {
 	if node == nil {
 		return
 	}
 
 	if isCallNode(node.Type()) {
-		checkCallForTaintedArgs(node, src, filePath, language, state)
+		checkCallForTaintedArgs(node, ws)
 	}
 
 	for i := 0; i < int(node.ChildCount()); i++ {
-		findNewTaintedCalls(node.Child(i), src, filePath, language, state)
+		findNewTaintedCalls(node.Child(i), ws)
 	}
 }
 
 // checkCallForTaintedArgs checks if a function call has tainted arguments.
-func checkCallForTaintedArgs(node *sitter.Node, src []byte, filePath string, language string, state *FullAnalysisState) {
+func checkCallForTaintedArgs(node *sitter.Node, ws *astWalkState) {
+	src, filePath, language, state := ws.src, ws.filePath, ws.language, ws.state
 	var funcName string
 	for i := 0; i < int(node.ChildCount()); i++ {
 		child := node.Child(i)
