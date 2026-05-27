@@ -1,0 +1,28 @@
+# Binaries & build output
+/inputtracer
+/genpatterns
+/bin/
+*.exe
+*.phar
+coverage.out
+
+# Local test corpora (large, cloned separately)
+testapps/
+testdata/
+
+# Dependencies
+vendor/
+__pycache__/
+*.pyc
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
