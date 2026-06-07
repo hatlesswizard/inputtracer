@@ -34,9 +34,16 @@ type Service struct {
 	parserPools map[string]*sync.Pool // Parser pools per language for reuse
 }
 
-// ParseResult contains the result of parsing a file
+// ParseResult contains the result of parsing a file.
+//
+// Tree holds the owning tree-sitter tree. It MUST stay referenced for as long
+// as Root (or any node descended from it) is used: the C memory backing the
+// nodes lives in the tree, and the go-tree-sitter binding frees it via a
+// finalizer once the tree becomes unreachable. Callers that traverse Root
+// should keep Tree alive (e.g. runtime.KeepAlive) until traversal completes.
 type ParseResult struct {
 	Root     *sitter.Node
+	Tree     *sitter.Tree
 	Source   []byte
 	Language string
 	FilePath string
@@ -137,6 +144,7 @@ func (s *Service) ParseFile(filePath string) (*ParseResult, error) {
 	if cached := s.cache.Get(filePath); cached != nil {
 		return &ParseResult{
 			Root:     cached.Root,
+			Tree:     cached.Tree,
 			Source:   cached.Source,
 			Language: lang,
 			FilePath: filePath,
@@ -167,6 +175,7 @@ func (s *Service) ParseFile(filePath string) (*ParseResult, error) {
 
 	return &ParseResult{
 		Root:     root,
+		Tree:     tree,
 		Source:   source,
 		Language: lang,
 		FilePath: filePath,

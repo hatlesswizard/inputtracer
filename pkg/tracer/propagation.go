@@ -180,6 +180,38 @@ func (prop *TaintPropagator) findTaintInfo(value string) *TaintInfo {
 		}
 	}
 
+	// Follow alias chain: if baseName is an alias for a tainted variable,
+	// resolve through up to 3 levels to find the original tainted source.
+	// Aliases are stored without sigil prefix ($/@), so strip it for lookup.
+	if prop.state.Aliases != nil {
+		strippedBase := stripVarSigil(baseName)
+		resolvedName := strippedBase
+		visited := make(map[string]bool)
+		const maxAliasDepth = 3
+		for i := 0; i < maxAliasDepth; i++ {
+			aliased, ok := prop.state.Aliases[resolvedName]
+			if !ok || visited[resolvedName] {
+				break
+			}
+			visited[resolvedName] = true
+			resolvedName = aliased
+			// Try lookup with resolved name as-is (for non-sigil languages)
+			if tv, ok := prop.state.TaintedValues[resolvedName]; ok {
+				return &TaintInfo{
+					Source: tv.Source,
+					Depth:  tv.Depth,
+				}
+			}
+			// Try lookup with $ prefix (for PHP variables stored with sigil)
+			if tv, ok := prop.state.TaintedValues["$"+resolvedName]; ok {
+				return &TaintInfo{
+					Source: tv.Source,
+					Depth:  tv.Depth,
+				}
+			}
+		}
+	}
+
 	// Boundary-aware fallback for expressions where the base name did not match
 	// directly (e.g. complex concatenations or language-specific sigil differences).
 	for _, tv := range prop.state.TaintedVariables {

@@ -139,54 +139,48 @@ func (c *Cache) Put(key string, data *CachedParse) {
 	c.currentMem += memUsage
 }
 
-// evictOldest removes the least recently used entry - O(1)
-// MEMORY FIX: Now properly closes the tree to release AST memory
+// evictOldest removes the least recently used entry - O(1).
+//
+// It drops the cache's reference to the entry but does NOT close the tree:
+// a previously returned ParseResult may still hold Root nodes that point into
+// it, and closing here would free that C memory out from under an in-flight
+// traversal (use-after-free -> SIGSEGV). The go-tree-sitter finalizer frees the
+// tree's C memory once it becomes unreachable, bounding memory safely.
 func (c *Cache) evictOldest() {
 	elem := c.evictList.Back()
 	if elem == nil {
 		return
 	}
 	entry := elem.Value.(*cacheEntry)
-	// CRITICAL: Close the tree to release AST memory
-	if entry.data != nil && entry.data.Tree != nil {
-		entry.data.Tree.Close()
-	}
 	c.evictList.Remove(elem)
 	delete(c.items, entry.key)
 	c.currentMem -= entry.memory
 }
 
-// Remove removes an entry from the cache - O(1)
-// MEMORY FIX: Now properly closes the tree to release AST memory
+// Remove removes an entry from the cache - O(1).
+//
+// As with evictOldest, the tree is not closed here: outstanding ParseResults
+// may still reference its nodes. The finalizer reclaims it once unreachable.
 func (c *Cache) Remove(key string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	if elem, exists := c.items[key]; exists {
 		entry := elem.Value.(*cacheEntry)
-		// CRITICAL: Close the tree to release AST memory
-		if entry.data != nil && entry.data.Tree != nil {
-			entry.data.Tree.Close()
-		}
 		c.evictList.Remove(elem)
 		delete(c.items, key)
 		c.currentMem -= entry.memory
 	}
 }
 
-// Clear clears all entries from the cache - O(n) but infrequent
-// MEMORY FIX: Now properly closes all trees to release AST memory
+// Clear clears all entries from the cache - O(n) but infrequent.
+//
+// Trees are not closed here: outstanding ParseResults may still reference their
+// nodes. Dropping the cache's references lets the finalizer reclaim each tree
+// once it is no longer used anywhere.
 func (c *Cache) Clear() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-
-	// CRITICAL: Close all trees before clearing
-	for elem := c.evictList.Front(); elem != nil; elem = elem.Next() {
-		entry := elem.Value.(*cacheEntry)
-		if entry.data != nil && entry.data.Tree != nil {
-			entry.data.Tree.Close()
-		}
-	}
 
 	c.items = make(map[string]*list.Element, c.maxEntries)
 	c.evictList = list.New()

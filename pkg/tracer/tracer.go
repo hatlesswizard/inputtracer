@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -256,6 +257,11 @@ func (t *Tracer) analyzeFile(filePath string) *fileResult {
 		fr.Error = fmt.Errorf("parse error in %s: %w", filePath, err)
 		return fr
 	}
+	// The tree-sitter nodes traversed below point into parseResult.Tree's C
+	// memory, which the binding frees via a finalizer once the tree is
+	// unreachable. Keep the tree alive until all traversal completes so a
+	// concurrent cache eviction can't let it be finalized mid-traversal.
+	defer runtime.KeepAlive(parseResult.Tree)
 
 	sourceMatcher := t.sources.GetMatcher(lang)
 	if sourceMatcher == nil {
@@ -333,6 +339,17 @@ func trackAssignments(extractor ast.Extractor, parseResult *parser.ParseResult, 
 	var paths []PropagationPath
 
 	for _, assign := range extractor.ExtractAssignments(parseResult.Root, parseResult.Source) {
+		// Record simple variable aliases (e.g. $r = $request).
+		// A "simple" RHS is a bare variable name with no property access,
+		// subscript, method call, or operators.
+		if rhsText := strings.TrimSpace(assign.RHSText); rhsText != "" && isBareVariable(rhsText) {
+			lhs := stripVarSigil(assign.LHS)
+			rhs := stripVarSigil(rhsText)
+			if lhs != "" && rhs != "" && lhs != rhs {
+				state.Aliases[lhs] = rhs
+			}
+		}
+
 		for varName, tainted := range state.TaintedValues {
 			if extractor.ExpressionContains(assign.RHS, varName, parseResult.Source) {
 				loc := Location{
@@ -371,6 +388,33 @@ func trackAssignments(extractor ast.Extractor, parseResult *parser.ParseResult, 
 	}
 
 	return newVars, paths
+}
+
+// isBareVariable reports whether s looks like a bare variable name (possibly
+// with a $ or @ sigil prefix) and contains no operators, property access,
+// subscript, or function call syntax.
+func isBareVariable(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, ch := range s {
+		switch ch {
+		case '.', '[', ']', '(', ')', '{', '}', '+', '-', '*', '/', '&', '|', '!', '=', '<', '>', ',', ':', '?', ' ', '\t':
+			return false
+		}
+	}
+	// After ruling out operators, must start with a letter, underscore, $, or @
+	first := rune(s[0])
+	return first == '$' || first == '@' || first == '_' || (first >= 'a' && first <= 'z') || (first >= 'A' && first <= 'Z')
+}
+
+// stripVarSigil removes a leading $ or @ from a variable name so that alias
+// keys are stored without language-specific sigil prefixes.
+func stripVarSigil(name string) string {
+	if len(name) > 1 && (name[0] == '$' || name[0] == '@') {
+		return name[1:]
+	}
+	return name
 }
 
 // analyzeTaintedCalls finds function calls that receive tainted arguments.
@@ -505,12 +549,6 @@ func (t *Tracer) collectFiles(dirPath string) ([]string, []error, error) {
 		}
 	}
 
-	absRoot, absRootErr := filepath.Abs(dirPath)
-	if absRootErr != nil {
-		// Fall back to the raw path so path comparisons still work on a best-effort basis.
-		absRoot = dirPath
-	}
-
 	var walkErrors []error
 
 	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
@@ -528,20 +566,6 @@ func (t *Tracer) collectFiles(dirPath string) ([]string, []error, error) {
 		if info.IsDir() {
 			if skipDirs[info.Name()] {
 				return filepath.SkipDir
-			}
-
-			// Skip non-root directories that contain composer.json (third-party packages)
-			if phpIncluded {
-				absPath, absPathErr := filepath.Abs(path)
-				if absPathErr != nil {
-					absPath = path
-				}
-				if absPath != absRoot {
-					composerPath := filepath.Join(path, "composer.json")
-					if _, err := os.Stat(composerPath); err == nil {
-						return filepath.SkipDir
-					}
-				}
 			}
 
 			return nil

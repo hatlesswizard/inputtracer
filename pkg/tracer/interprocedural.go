@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hatlesswizard/inputtracer/pkg/ast"
 	"github.com/hatlesswizard/inputtracer/pkg/parser"
+	"github.com/hatlesswizard/inputtracer/pkg/sources/patterns"
 	sitter "github.com/smacker/go-tree-sitter"
 )
 
@@ -278,7 +279,7 @@ func (ipa *InterproceduralAnalyzer) traverseForFlow(node *sitter.Node, src []byt
 	if strings.Contains(nodeType, "return") {
 		// Check if any parameter is used in return value
 		for i, param := range summary.Parameters {
-			if strings.Contains(nodeText, param.Name) {
+			if containsVariableBoundaryAware(nodeText, param.Name) {
 				// This parameter flows to return
 				if !slices.Contains(summary.ParamsToReturn, i) {
 					summary.ParamsToReturn = append(summary.ParamsToReturn, i)
@@ -365,7 +366,7 @@ func (ipa *InterproceduralAnalyzer) PropagateInterproceduralTaint(callNode *sitt
 	for i, arg := range args {
 		// Check if argument is tainted
 		for _, tv := range callerState.TaintedVariables {
-			if strings.Contains(arg, tv.Name) {
+			if containsVariableBoundaryAware(arg, tv.Name) {
 				// If this param flows to return, mark call result as tainted
 				if slices.Contains(summary.ParamsToReturn, i) {
 					// The call result is tainted
@@ -428,18 +429,29 @@ func (ipa *InterproceduralAnalyzer) extractCallArguments(node *sitter.Node, src 
 	return args
 }
 
-// findAssignmentTarget finds assignment target if call is part of assignment
+// findAssignmentTarget finds assignment target if call is part of assignment.
+// It walks up the AST looking for assignment or declarator parents and returns
+// the left-hand side variable name. Handles patterns such as:
+//   - $var = functionCall()        (PHP)
+//   - var = obj.method()           (JS/Python/Go)
+//   - var := functionCall()        (Go short_var_declaration)
 func (ipa *InterproceduralAnalyzer) findAssignmentTarget(node *sitter.Node, src []byte) string {
 	parent := node.Parent()
 	for parent != nil {
 		parentType := parent.Type()
 		if strings.Contains(parentType, "assignment") ||
-			strings.Contains(parentType, "declarator") {
-			// Find left-hand side
+			strings.Contains(parentType, "declarator") ||
+			parentType == "short_var_declaration" {
+			// Find left-hand side: stop at the first operator ("=", ":=")
+			// to avoid picking up identifiers from the RHS.
 			for i := 0; i < int(parent.ChildCount()); i++ {
 				child := parent.Child(i)
 				childType := child.Type()
-				if childType == "identifier" || childType == "variable_name" {
+				// Stop scanning once we hit the assignment operator.
+				if childType == "=" || childType == ":=" {
+					break
+				}
+				if childType == "identifier" || childType == "variable_name" || childType == "name" {
 					return string(src[child.StartByte():child.EndByte()])
 				}
 			}
@@ -481,6 +493,24 @@ func (fs *FunctionSummary) GetParamName(index int) string {
 		return fs.Parameters[index].Name
 	}
 	return ""
+}
+
+// containsVariableBoundaryAware checks whether text contains varName as a
+// standalone variable reference, using word-boundary-aware matching that handles
+// PHP $-prefixed and Ruby @-prefixed variables correctly. This prevents false
+// positives such as "$request" matching inside "$request_id".
+// The compiled regex is cached by getOrCompileRegex (thread-safe LRU), so
+// repeated calls with the same varName do not re-compile.
+func containsVariableBoundaryAware(text, varName string) bool {
+	if text == "" || varName == "" {
+		return false
+	}
+	// Fast path: if the variable name does not appear at all, skip regex.
+	if !strings.Contains(text, varName) {
+		return false
+	}
+	pattern := patterns.VariableBoundaryPattern(varName)
+	return getOrCompileRegex(pattern).MatchString(text)
 }
 
 // Helper functions
@@ -794,7 +824,7 @@ func checkCallForTaintedArgs(node *sitter.Node, ws *astWalkState) {
 	var taintedParams []TaintedParam
 	for i, argText := range args {
 		for _, tv := range state.TaintedVariables {
-			if strings.Contains(argText, tv.Name) {
+			if containsVariableBoundaryAware(argText, tv.Name) {
 				taintedParams = append(taintedParams, TaintedParam{
 					Index:  i,
 					Name:   argText,

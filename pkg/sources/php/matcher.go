@@ -38,6 +38,28 @@ func NewMatcher() *Matcher {
 	defs = append(defs, phpRequestFactoryDefinitions()...)
 	defs = append(defs, phpPSR7SingleParamDefinitions()...)
 	defs = append(defs, phpSymfonyParameterBagDefinitions()...)
+	// Framework-specific definitions (gap analysis additions)
+	defs = append(defs, laravelExtraDefinitions()...)
+	defs = append(defs, symfonyExtraDefinitions()...)
+	defs = append(defs, codeigniterDefinitions()...)
+	defs = append(defs, cakephpDefinitions()...)
+	defs = append(defs, phalconDefinitions()...)
+	defs = append(defs, yiiDefinitions()...)
+	defs = append(defs, phpbbDefinitions()...)
+	defs = append(defs, mantisbtDefinitions()...)
+	defs = append(defs, moodleDefinitions()...)
+	defs = append(defs, matomoDefinitions()...)
+	defs = append(defs, roundcubeDefinitions()...)
+	defs = append(defs, freshRSSDefinitions()...)
+	defs = append(defs, vanillaDefinitions()...)
+	defs = append(defs, prestashopDefinitions()...)
+	defs = append(defs, typo3Definitions()...)
+	// Dynamic dispatch patterns (call_user_func_array with route params)
+	defs = append(defs, phpDispatcherDefinitions()...)
+	// Non-HTTP input sources (IMAP, EXIF, SNMP, LDAP, CSV, CLI console)
+	defs = append(defs, phpNonHTTPInputDefinitions()...)
+	// PHP 8 attribute-based input sources (Symfony 6.3+ MapRequest* attributes)
+	defs = append(defs, phpAttributeSourceDefinitions()...)
 	return &Matcher{
 		BaseMatcher: common.NewBaseMatcher("php", defs),
 	}
@@ -501,15 +523,17 @@ func frameworkDefinitions() []common.Definition {
 			KeyExtractor: `->\s*file\s*\(\s*['"]([^'"]+)`,
 		},
 
-		// Generic GET method
+		// Generic GET method (restricted to request-like receivers to avoid false positives
+		// from config/DI/routing objects that also have ->get() methods)
 		{
-			Name:         "->get()",
-			Pattern:      `->\s*get\s*\(\s*['"]`,
-			Language:     "php",
-			Labels:       []common.InputLabel{common.LabelHTTPGet, common.LabelUserInput},
-			Description:  "Generic/Symfony style GET parameter",
-			NodeTypes:    []string{"member_call_expression"},
-			KeyExtractor: `->\s*get\s*\(\s*['"]([^'"]+)`,
+			Name:           "->get()",
+			Pattern:        `(?:request|req|input|params|query)\s*->\s*get\s*\(\s*['"]`,
+			Language:       "php",
+			Labels:         []common.InputLabel{common.LabelHTTPGet, common.LabelUserInput},
+			Description:    "Symfony/Laravel style GET parameter (only on request-like receivers)",
+			NodeTypes:      []string{"member_call_expression"},
+			KeyExtractor:   `->\s*get\s*\(\s*['"]([^'"]+)`,
+			ExcludePattern: `(?:settings|config|container|dic|app|db|cache|logger|router|factory|registry|manager)\s*->\s*get\s*\(`,
 		},
 
 		// Object property array access patterns
@@ -633,6 +657,41 @@ func frameworkDefinitions() []common.Definition {
 			Description:  "Magento-style file upload getter",
 			NodeTypes:    []string{"member_call_expression"},
 			KeyExtractor: `->\s*getFiles\s*\(\s*['"]([^'"]+)['"]`,
+		},
+
+		// HTTP body reader methods (previously blocked by ExcludeMethodPattern)
+		{
+			Name:         "->getData()",
+			Pattern:      `->\s*getData\s*\(`,
+			Language:     "php",
+			Labels:       []common.InputLabel{common.LabelHTTPBody, common.LabelUserInput},
+			Description:  "CakePHP/Generic body data accessor",
+			NodeTypes:    []string{"member_call_expression"},
+			KeyExtractor: `->\s*getData\s*\(\s*['"]([^'"]+)['"]`,
+		},
+		{
+			Name:        "->getBody()",
+			Pattern:     `->\s*getBody\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelHTTPBody, common.LabelUserInput},
+			Description: "PSR-7 body stream accessor",
+			NodeTypes:   []string{"member_call_expression"},
+		},
+		{
+			Name:        "->getRawBody()",
+			Pattern:     `->\s*getRawBody\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelHTTPBody, common.LabelUserInput},
+			Description: "Raw HTTP body accessor (Yii2, Phalcon)",
+			NodeTypes:   []string{"member_call_expression"},
+		},
+		{
+			Name:        "->getRawInput()",
+			Pattern:     `->\s*getRawInput\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelHTTPBody, common.LabelUserInput},
+			Description: "Raw request input accessor (CI4, MediaWiki)",
+			NodeTypes:   []string{"member_call_expression"},
 		},
 	}
 }

@@ -1909,3 +1909,76 @@ func TestSymfonyParameterBagPatterns(t *testing.T) {
 		})
 	}
 }
+
+func TestPHP8AttributeSourceDetection(t *testing.T) {
+	matcher := NewMatcher()
+
+	tests := []struct {
+		name      string
+		code      string
+		wantType  string
+		wantLabel common.InputLabel
+	}{
+		{
+			name:      "MapRequestPayload basic",
+			code:      `<?php class UserController { public function create(#[MapRequestPayload] CreateUserDto $dto) {} }`,
+			wantType:  "#[MapRequestPayload]",
+			wantLabel: common.LabelHTTPBody,
+		},
+		{
+			name:      "MapRequestPayload with options",
+			code:      `<?php class UserController { public function create(#[MapRequestPayload(acceptFormat: 'json')] CreateUserDto $dto) {} }`,
+			wantType:  "#[MapRequestPayload]",
+			wantLabel: common.LabelHTTPBody,
+		},
+		{
+			name:      "MapQueryString basic",
+			code:      `<?php class SearchController { public function list(#[MapQueryString] SearchFilter $filter) {} }`,
+			wantType:  "#[MapQueryString]",
+			wantLabel: common.LabelHTTPGet,
+		},
+		{
+			name:      "MapQueryParameter basic",
+			code:      `<?php class ListController { public function index(#[MapQueryParameter] int $page) {} }`,
+			wantType:  "#[MapQueryParameter]",
+			wantLabel: common.LabelHTTPGet,
+		},
+		{
+			name:      "MapUploadedFile basic",
+			code:      `<?php class UploadController { public function upload(#[MapUploadedFile] UploadedFile $file) {} }`,
+			wantType:  "#[MapUploadedFile]",
+			wantLabel: common.LabelFile,
+		},
+		{
+			name:      "MapRequestHeader basic",
+			code:      `<?php class ApiController { public function handle(#[MapRequestHeader] string $accept) {} }`,
+			wantType:  "#[MapRequestHeader]",
+			wantLabel: common.LabelHTTPHeader,
+		},
+		{
+			name:      "MapRequestPayload with whitespace after #[",
+			code:      `<?php class Ctrl { public function act(#[ MapRequestPayload] Dto $d) {} }`,
+			wantType:  "#[MapRequestPayload]",
+			wantLabel: common.LabelHTTPBody,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			root, src := parsePHP(t, tt.code)
+			matches := matcher.FindSources(root, src)
+
+			found := false
+			for _, m := range matches {
+				if m.SourceType == tt.wantType && slices.Contains(m.Labels, tt.wantLabel) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("expected match type=%q with label=%q but got none; all matches: %v",
+					tt.wantType, tt.wantLabel, sourceTypes(matches))
+			}
+		})
+	}
+}

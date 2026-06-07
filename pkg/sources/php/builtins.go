@@ -1254,3 +1254,259 @@ func phpSymfonyParameterBagDefinitions() []common.Definition {
 		},
 	}
 }
+
+// phpDispatcherDefinitions returns definitions for PHP dynamic dispatch patterns
+// where framework routers pass user-controlled route parameters to controller
+// methods via call_user_func_array or similar mechanisms.
+func phpDispatcherDefinitions() []common.Definition {
+	return []common.Definition{
+		// call_user_func_array with route/request params as args
+		{
+			Name:        "call_user_func_array($fn, $routeParams)",
+			Pattern:     `\bcall_user_func_array\s*\(\s*\[?\s*\$\w+\s*,?\s*(?:\$\w+|['"]?\w*['"]?)\s*\]?\s*,\s*\$(?:params|args|arguments|routeParams|parameters|matches)`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelUserInput},
+			Description: "Dynamic dispatch with route/request parameters — dispatched function receives tainted args",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		// ReflectionMethod->invokeArgs with route params
+		{
+			Name:        "->invokeArgs($obj, $params)",
+			Pattern:     `->\s*invokeArgs\s*\(\s*\$\w+\s*,\s*\$(?:params|args|arguments|routeParams|parameters)`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelUserInput},
+			Description: "Reflection invoke with route parameters — method receives tainted args",
+			NodeTypes:   []string{"member_call_expression"},
+		},
+		// call_user_func with route-like variable names
+		{
+			Name:        "call_user_func($fn, ...$routeParams)",
+			Pattern:     `\bcall_user_func\s*\(\s*\$\w+\s*,\s*\.\.\.\s*\$(?:params|args|arguments|routeParams|parameters|matches)`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelUserInput},
+			Description: "Dynamic dispatch with spread route parameters",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		// Spread operator with route params in direct call
+		{
+			Name:        "$controller->$action(...$params)",
+			Pattern:     `->\s*\$\w+\s*\(\s*\.\.\.\s*\$(?:params|args|arguments|routeParams|parameters|preparedArguments)`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelUserInput},
+			Description: "Dynamic method call with spread route parameters (TYPO3 Extbase pattern)",
+			NodeTypes:   []string{"member_call_expression"},
+		},
+	}
+}
+
+// phpNonHTTPInputDefinitions returns definitions for PHP built-in functions that
+// read input from sources OTHER than HTTP requests. These include email/IMAP,
+// file metadata (EXIF), network protocols (SNMP, LDAP), and data import (CSV).
+func phpNonHTTPInputDefinitions() []common.Definition {
+	return []common.Definition{
+		// ── Email/IMAP ────────────────────────────────────────────────────────
+		{
+			Name:        "imap_body()",
+			Pattern:     `\bimap_body\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelNetwork, common.LabelUserInput},
+			Description: "IMAP message body — email content from mailbox",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "imap_fetchbody()",
+			Pattern:     `\bimap_fetchbody\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelNetwork, common.LabelUserInput},
+			Description: "IMAP fetch body part — specific MIME part from mailbox",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "imap_headerinfo()",
+			Pattern:     `\bimap_headerinfo\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelNetwork, common.LabelUserInput},
+			Description: "IMAP header info — email headers from mailbox",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "imap_qprint()",
+			Pattern:     `\bimap_qprint\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelNetwork},
+			Description: "IMAP quoted-printable decode",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "imap_base64()",
+			Pattern:     `\bimap_base64\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelNetwork},
+			Description: "IMAP base64 decode",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		// ── File metadata ────────────────────────────────────────────────────
+		{
+			Name:        "exif_read_data()",
+			Pattern:     `\bexif_read_data\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelFile, common.LabelUserInput},
+			Description: "EXIF metadata from uploaded image — user-controlled EXIF tags",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "iptcparse()",
+			Pattern:     `\biptcparse\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelFile, common.LabelUserInput},
+			Description: "IPTC metadata from uploaded image — user-controlled tags",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		// ── Network/SNMP ─────────────────────────────────────────────────────
+		{
+			Name:        "snmpget()",
+			Pattern:     `\bsnmpget\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelNetwork},
+			Description: "SNMP get — network device data",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "snmpwalk()",
+			Pattern:     `\bsnmpwalk\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelNetwork},
+			Description: "SNMP walk — network device tree",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "snmp2_get()",
+			Pattern:     `\bsnmp2_get\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelNetwork},
+			Description: "SNMPv2 get — network device data",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "snmp2_walk()",
+			Pattern:     `\bsnmp2_walk\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelNetwork},
+			Description: "SNMPv2 walk — network device tree",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "snmp3_get()",
+			Pattern:     `\bsnmp3_get\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelNetwork},
+			Description: "SNMPv3 get — network device data",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "snmp3_walk()",
+			Pattern:     `\bsnmp3_walk\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelNetwork},
+			Description: "SNMPv3 walk — network device tree",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		// ── Directory services/LDAP ──────────────────────────────────────────
+		{
+			Name:        "ldap_get_entries()",
+			Pattern:     `\bldap_get_entries\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelNetwork},
+			Description: "LDAP entries — directory service data",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "ldap_get_values()",
+			Pattern:     `\bldap_get_values\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelNetwork},
+			Description: "LDAP values — directory attribute values",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		// ── Data import/CSV ──────────────────────────────────────────────────
+		{
+			Name:        "fgetcsv()",
+			Pattern:     `\bfgetcsv\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelFile, common.LabelUserInput},
+			Description: "CSV line from file — user-uploaded CSV data",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		{
+			Name:        "str_getcsv()",
+			Pattern:     `\bstr_getcsv\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelUserInput},
+			Description: "CSV string parse — may contain user-controlled data",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		// ── SOAP/XML-RPC ─────────────────────────────────────────────────────
+		{
+			Name:        "xmlrpc_server_call_method()",
+			Pattern:     `\bxmlrpc_server_call_method\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelNetwork, common.LabelUserInput},
+			Description: "XML-RPC method call — remote procedure data",
+			NodeTypes:   []string{"function_call_expression"},
+		},
+		// ── CLI console framework accessors ──────────────────────────────────
+		{
+			Name:         "->argument()",
+			Pattern:      `->\s*argument\s*\(`,
+			Language:     "php",
+			Labels:       []common.InputLabel{common.LabelCLI},
+			Description:  "Console command argument (Laravel/Symfony)",
+			NodeTypes:    []string{"member_call_expression"},
+			KeyExtractor: `->\s*argument\s*\(\s*['"]([^'"]+)['"]`,
+		},
+		{
+			Name:         "->option()",
+			Pattern:      `->\s*option\s*\(`,
+			Language:     "php",
+			Labels:       []common.InputLabel{common.LabelCLI},
+			Description:  "Console command option (Laravel/Symfony)",
+			NodeTypes:    []string{"member_call_expression"},
+			KeyExtractor: `->\s*option\s*\(\s*['"]([^'"]+)['"]`,
+		},
+		{
+			Name:         "->ask()",
+			Pattern:      `->\s*ask\s*\(`,
+			Language:     "php",
+			Labels:       []common.InputLabel{common.LabelCLI},
+			Description:  "Console interactive ask (Laravel)",
+			NodeTypes:    []string{"member_call_expression"},
+			KeyExtractor: `->\s*ask\s*\(\s*['"]([^'"]+)['"]`,
+		},
+		{
+			Name:        "->secret()",
+			Pattern:     `->\s*secret\s*\(`,
+			Language:    "php",
+			Labels:      []common.InputLabel{common.LabelCLI},
+			Description: "Console secret input (Laravel)",
+			NodeTypes:   []string{"member_call_expression"},
+		},
+		{
+			Name:         "->getArgument()",
+			Pattern:      `->\s*getArgument\s*\(`,
+			Language:     "php",
+			Labels:       []common.InputLabel{common.LabelCLI},
+			Description:  "Symfony Console getArgument()",
+			NodeTypes:    []string{"member_call_expression"},
+			KeyExtractor: `->\s*getArgument\s*\(\s*['"]([^'"]+)['"]`,
+		},
+		{
+			Name:         "->getOption()",
+			Pattern:      `->\s*getOption\s*\(`,
+			Language:     "php",
+			Labels:       []common.InputLabel{common.LabelCLI},
+			Description:  "Symfony Console getOption()",
+			NodeTypes:    []string{"member_call_expression"},
+			KeyExtractor: `->\s*getOption\s*\(\s*['"]([^'"]+)['"]`,
+		},
+	}
+}

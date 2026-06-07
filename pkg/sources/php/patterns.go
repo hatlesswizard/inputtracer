@@ -31,8 +31,10 @@ var (
 	InputObjectPattern = regexp.MustCompile(`(?i)(request|input|req|params?|http|ctx|context|getRequest\(\)|getApplication\(\))`)
 
 	// ExcludeMethodPattern matches method names to EXCLUDE from input detection (false positive prevention)
-	// These are methods that might match patterns but aren't typically user input
-	ExcludeMethodPattern = regexp.MustCompile(`(?i)^(getData|getBody|getContent|fetch|find|load|read)$`)
+	// These are ORM/data-layer methods that aren't user input.
+	// NOTE: getData, getBody, getContent were removed — they are legitimate HTTP body
+	// readers on request objects and are handled by explicit Definition entries.
+	ExcludeMethodPattern = regexp.MustCompile(`(?i)^(fetch|find|load|read)$`)
 
 	// ContextDependentMethodPattern matches methods like getVal, getText, getInt, getBool
 	// used in MediaWiki on request objects but also on many other objects
@@ -215,7 +217,7 @@ func BuildPropertyAccessPattern(propertyName string) *regexp.Regexp {
 
 // BuildMethodCallPattern creates a pattern for ->methodName(
 func BuildMethodCallPattern(methodName string) *regexp.Regexp {
-	return regexp.MustCompile(`->` + methodName + MethodCallSuffix)
+	return regexp.MustCompile(`->` + stripRegexAnchors(methodName) + `\s*` + MethodCallSuffix)
 }
 
 // =============================================================================

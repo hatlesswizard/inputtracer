@@ -26,3 +26,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Research/analysis output
+findings/

@@ -360,6 +360,7 @@ type AnalysisState struct {
 	TaintedValues     map[string]*TaintedVariable // variable name -> tainted info (taint tracking)
 	FunctionSummaries map[string]*FunctionSummary
 	VisitedFunctions  map[string]bool
+	Aliases           map[string]string // variable alias tracking (e.g. "r" -> "request")
 }
 
 // NewAnalysisState creates a new analysis state with global scope
@@ -369,6 +370,7 @@ func NewAnalysisState() *AnalysisState {
 		TaintedValues:     make(map[string]*TaintedVariable),
 		FunctionSummaries: make(map[string]*FunctionSummary),
 		VisitedFunctions:  make(map[string]bool),
+		Aliases:           make(map[string]string),
 	}
 }
 
